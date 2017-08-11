@@ -1,6 +1,8 @@
+# -*- coding: UTF-8 -*-
+
 import sqlalchemy as sq
 
-from DBHandler import DBHandler
+from Resources.DBHandler import DBHandler, Base
 
 
 class User(Base):
@@ -26,4 +28,13 @@ Users = [
 
 if __name__ == '__main__':
 	handler = DBHandler(debug=True)
+	session = handler.getSession()
 	users = [User(name=user['name'], password=user['password']) for user in Users]
+	session.add_all(users)
+	session.commit()
+
+	result = session.query(User).filter(User.name.in_(['Stephan', 'Klaus'])).all()
+	for us in result:
+		print(str(us))
+
+
