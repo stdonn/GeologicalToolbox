@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import GeoPoint
-import DBHandler
+
+import Resources.GeoPoint as GeoPoint
+from Resources.DBHandler import Base
 
 
-class Line( object ):
+class Line(Base):
 	def __init__ ( self ):
 		self.__lineID = -1
 		"""@AttributeType int"""
