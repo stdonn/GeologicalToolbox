@@ -1,9 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import DBHandler
+
+from Resources.DBHandler import Base
 
 
-class GeoPoint( object ):
+class GeoPoint(Base):
 	def __init__ ( self ):
 		self.__easting = 0
 		"""@AttributeType float"""
