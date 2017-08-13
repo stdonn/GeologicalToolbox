@@ -5,7 +5,7 @@ import sqlalchemy as sq
 
 
 class Stratigraphy(Base):
-	__tablename__ = 'Stratigraphy'
+	__tablename__ = 'stratigraphy'
 
 	id = sq.Column(sq.INTEGER, sq.Sequence('horizons_id_seq'), primary_key=True)
 	name = sq.Column(sq.TEXT(50), unique=True)
