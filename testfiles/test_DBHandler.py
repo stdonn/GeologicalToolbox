@@ -2,6 +2,7 @@
 
 import sqlalchemy as sq
 from sqlalchemy.orm import relationship
+from sqlalchemy.exc import IntegrityError
 
 from Resources.DBHandler import DBHandler, Base
 
@@ -15,7 +16,8 @@ class User(Base):
 	addresses = relationship("Address", back_populates='user')
 
 	def __repr__(self):
-		return "<User[{}] name='{}': password='{}' - addresses: {})>".format(self.id, self.name, self.password, self.addresses)
+		return "<User[{}] name='{}': password='{}' - addresses: {})>"\
+			.format(self.id, self.name, self.password, self.addresses)
 
 	def __str__(self):
 		return "[{}] name='{}': password='{}' - addresses: {}".format(self.id, self.name, self.password, self.addresses)
@@ -60,7 +62,7 @@ if __name__ == '__main__':
 
 	try:
 		session.commit()
-	except sq.exc.IntegrityError as e:
+	except IntegrityError as e:
 		print('Cannot commit changes, Integrity Error (double unique values?)')
 		print(e)
 		session.rollback()
