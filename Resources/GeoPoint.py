@@ -1,92 +1,65 @@
 # -*- coding: UTF-8 -*-
 
+import sqlalchemy as sq
+from sqlalchemy.orm import relationship
+
 from Resources.DBHandler import Base
+# from Resources.Stratigraphy import Stratigraphy
 
 
 class GeoPoint(Base):
-	def __init__ ( self ):
-		self.__easting = 0
-		"""@AttributeType float"""
-		self.__northing = 0
-		"""@AttributeType float"""
-		self.__altitude = 0
-		"""@AttributeType float"""
-		self.__pointID = -1
-		"""@AttributeType float"""
-		self.__horizon = ""
-		"""@AttributeType string"""
-		self.__lastErrorMessage = ""
-		"""@AttributeType string"""
+	__tablename__ = 'geopoints'
 
-	def getAltitude ( self ):
-		"""@ReturnType float"""
-		return self.__altitude
+	id = sq.Column(sq.INTEGER, sq.Sequence('horizons_id_seq'), primary_key=True)
+	east = sq.Column(sq.REAL(10, 4))
+	north = sq.Column(sq.REAL(10, 4))
+	alt = sq.Column(sq.REAL(10, 4))
+	age = sq.Column(sq.INTEGER())
+	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
 
-	def getEasting ( self ):
-		"""@ReturnType float"""
-		return self.__easting
+	hor = relationship("Stratigraphy")
 
-	def getHorizon ( self ):
-		"""@ReturnType string"""
-		return self.__horizon
+	def __init__(self, easting, northing, altitude, horizon):
+		self.east = easting
+		self.north = northing
+		self.alt = altitude
+		self.hor = horizon
 
-	def getNorthing ( self ):
-		"""@ReturnType float"""
-		return self.__northing
+	def __repr__(self):
+		return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}')>"\
+			.format(self.id, self.east, self.north, self.altitude, str(self.horizon))
 
-	def getPointID ( self ):
-		"""@ReturnType int"""
-		self.__pointID
+	def __str__(self):
+		return "[{}] {} - {} - {} : {}".format(self.id, self.east, self.north, self.altitude, str(self.horizon))
 
-	def setAltitude ( self, alt ):
-		"""@ParamType alt float"""
-		try:
-			self.__altitude = float( alt )
-			return True
-		except ValueError:
-			self.__lastErrorMessage = 'Cannot convert value to float: ' + str( alt )
-			raise ValueError(self.__lastErrorMessage)
+	@property
+	def easting(self):
+		return self.east
 
-	def setEasting ( self, east ):
-		"""@ParamType east float"""
-		try:
-			self.__altitude = float( east )
-			return True
-		except ValueError:
-			self.__lastErrorMessage = 'Cannot convert value to float: ' + str( east )
-			raise ValueError(self.__lastErrorMessage)
+	@easting.setter
+	def easting(self, value):
+		self.east = value
 
-	def setHorizon ( self, hor ):
-		"""@ParamType hor string"""
-		try:
-			self.__altitude = str( hor )
-			return True
-		except ValueError:
-			self.__lastErrorMessage = 'Cannot set horizon string: ' + str( hor )
-			raise ValueError(self.__lastErrorMessage)
+	@property
+	def northing(self):
+		return self.north
 
-	def setNorthing ( self, north ):
-		"""@ParamType north double"""
-		try:
-			self.__altitude = float( north )
-			return True
-		except ValueError:
-			self.__lastErrorMessage = 'Cannot convert value to float: ' + str( north )
-			raise ValueError(self.__lastErrorMessage)
+	@northing.setter
+	def northing(self, value):
+		self.north = value
 
-	def setPointID ( self, ID ):
-		"""@ParamType ID int"""
-		try:
-			self.__altitude = int( ID )
-			return True
-		except ValueError:
-			self.__lastErrorMessage = 'Cannot convert value to ID (integer): ' + str( ID )
-			raise ValueError(self.__lastErrorMessage)
+	@property
+	def altitude(self):
+		return self.alt
 
-	def savePointToDB ( self, handler ):
-		"""@ParamType handler DBHandler"""
-		handler.insertPoint(self)
+	@altitude.setter
+	def altitude(self, value):
+		self.alt = value
 
-	def getLastErrorMessage ( self ):
-		"""@ReturnType string"""
-		return self.__lastErrorMessage;
+	@property
+	def horizon(self):
+		return self.hor
+
+	@horizon.setter
+	def horizon(self, value):
+		self.hor = value

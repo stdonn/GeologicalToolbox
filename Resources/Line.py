@@ -90,9 +90,9 @@ class Line(Base):
 		raise ValueError( self.__lastErrorMessage )
 
 	def deletePoint ( self, easting, northing, altitude ):
-		"""@ParamType easting float
-		@ParamType northing float
-		@ParamType altitude float"""
+		"""@ParamType east float
+		@ParamType north float
+		@ParamType alt float"""
 		try:
 			easting = float( easting )
 			northing = float( northing )
