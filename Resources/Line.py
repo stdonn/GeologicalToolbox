@@ -4,7 +4,7 @@ import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 
-import Resources.GeoPoint as GeoPoint
+from Resources.GeoPoint import GeoPoint
 from Resources.DBHandler import Base
 
 
