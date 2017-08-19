@@ -23,9 +23,10 @@ class Line(Base):
 	point_ids = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'))
 	points = relationship("GeoPoints", back_populates="line", order_by=GeoPoint.id)
 
-	def __init__(self, ):
-		self.__last_error_message = ""
-		"""@AttributeType string"""
+	def __init__(self, closed, horizon, points):
+		self.is_closed = closed
+		self.horizon = horizon
+		self.points = points
 
 	def __repr__(self):
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
