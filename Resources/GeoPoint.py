@@ -2,6 +2,7 @@
 
 import sqlalchemy as sq
 from sqlalchemy.orm import relationship
+from sqlalchemy.exc import IntegrityError
 
 from Resources.DBHandler import Base
 
@@ -67,3 +68,14 @@ class GeoPoint(Base):
 	@horizon.setter
 	def horizon(self, value):
 		self.hor = value
+
+	def save_to_db(self, handler):
+		"""@ParamType handler DBHandler"""
+		session = handler.get_session()
+		session.add(self)
+		try:
+			session.commit()
+		except IntegrityError as e:
+			print('Cannot commit changes, Integrity Error (double unique values?)')
+			print(e)
+			session.rollback()
