@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 	Points = [GeoPoint(easting=point['east'], northing=point['north'], altitude=point['alt'],
 	                   horizon=Stratigraphy(point['horizon'], point['age'])) for point in points]
-	session = handler.getSession()
+	session = handler.get_session()
 	session.add_all(Points)
 
 	try:

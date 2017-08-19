@@ -1,129 +1,133 @@
 # -*- coding: UTF-8 -*-
 
+import sqlalchemy as sq
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import relationship
+
 import Resources.GeoPoint as GeoPoint
 from Resources.DBHandler import Base
 
 
 class Line(Base):
-	def __init__ ( self ):
-		self.__lineID = -1
-		"""@AttributeType int"""
-		self.__closed = False
-		"""@AttributeType bool"""
-		self.__lastErrorMessage = ""
-		"""@AttributeType string"""
-		self.__points = [ ]
+	__tablename__ = 'lines'
+
+	id = sq.Column(sq.INTEGER, sq.Sequence('line_id_seq'), primary_key=True)
+	closed = sq.Column(sq.BOOLEAN)
+
+	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
+	hor = relationship("Stratigraphy")
 
 	# @AssociationType GeoPoint
 	# @AssociationMultiplicity 2..*
 
-	def getLineID ( self ):
-		"""@ReturnType int"""
-		return self.__lineID
+	point_ids = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'))
+	points = relationship("GeoPoints", back_populates="line", order_by=GeoPoint.id)
 
-	def getPoints ( self ):
-		"""@ReturnType GeoPoint []"""
-		return self.__points
+	def __init__(self, ):
+		self.__last_error_message = ""
+		"""@AttributeType string"""
 
-	def isClosed ( self ):
-		"""@ReturnType bool"""
-		return self.__closed
+	def __repr__(self):
+		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
+			.format(self.id, self.closed, str(self.horizon), str(self.points))
 
-	def setLineID ( self, ID ):
-		"""@ParamType ID int
-		@ReturnType bool"""
-		# if type(ID) != int or cannot be converted, then raise a ValueError
-		try:
-			ID = int( ID )
-		except ValueError as e:
-			self.__lastErrorMessage = 'Cannot convert new lineID to an integer value!'
-			raise ValueError( e )
+	def __str__(self):
+		return "[{}] {} - {}\n{}".format(self.id, self.closed, str(self.horizon), str(self.points))
 
-		self.__lineID = ID
-		return True
+	@property
+	def is_closed(self):
+		return self.closed
 
-	def insertPoint ( self, point, position ):
+	@is_closed.setter
+	def is_closed(self, value):
+		self.closed = value
+
+	@property
+	def horizon(self):
+		return self.hor
+
+	@horizon.setter
+	def horizon(self, value):
+		self.hor = value
+
+	def insert_point(self, point, position):
 		"""@ParamType point GeoPoint
 		@ParamType position int
 		@ReturnType bool"""
 		if type( point ) is GeoPoint:
-			self.__points.insert( position, point )
+			self.points.insert(position, point)
 			return True
 		else:
-			self.__lastErrorMessage = 'point is not of type GeoPoint!'
-			raise TypeError( 'point is not of type GeoPoint!' )
+			self.__last_error_message = 'point is not of type GeoPoint!'
+			raise TypeError(self.__last_error_message)
 
-	def insertPoints ( self, points, position ):
+	def insert_points(self, points, position):
 		"""@ParamType points GeoPoint[]
 		@ParamType position int
 		@ReturnType bool"""
 
 		if type( position ) is int:
-			self.__lastErrorMessage( 'Position is not of type int!' )
-			raise TypeError( 'Position is not of type int!' )
+			self.__last_error_message = 'Position is not of type int!'
+			raise TypeError(self.__last_error_message)
 
 		for pnt in points:
 			if type( pnt ) is not GeoPoint:
-				self.__lastErrorMessage( 'At least on point in points is not of type GeoPoint!' )
-				raise TypeError( 'At least on point in points is not of type GeoPoint!' )
+				self.__last_error_message = 'At least on point in points is not of type GeoPoint!'
+				raise TypeError(self.__last_error_message)
 		# use slicing for points insert
-		self.__points[ position:position ] = points
+		self.points[position:position] = points
 		return True
 
-	# for point in points: self.__points.insert( position + points.index( point ), point )
+	# for point in points: self.points.insert( position + points.index( point ), point )
 
-	def getPointIndex ( self, point ):
+	def get_point_index(self, point):
 		"""@ParamType point GeoPoint
 		@ReturnType int"""
-		return self.__points.index( point )
+		return self.points.index(point)
 
-	def deletePoint ( self, pointID ):
-		"""@ParamType pointID int"""
-		pointID = int( pointID )
+	#
+	# to be updated!!!
+	#
+	def deletePoint(self, point):
+		"""@ParamType point GeoPoint"""
 
-		for i in range( len( self.__points ) ):
-			if self.__points[ i ].getPointID() == pointID:
-				self.__points.pop( i )
-				return True
+		try:
+			self.points.remove(point)
+			return True
+		except ValueError as e:
+			self.__last_error_message = str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!'
+			raise ValueError(self.__last_error_message)
 
-		self.__lastErrorMessage = 'Geopoint with ID ' + str( pointID ) + ' not found!'
-		raise ValueError( self.__lastErrorMessage )
-
-	def deletePoint ( self, easting, northing, altitude ):
-		"""@ParamType east float
-		@ParamType north float
-		@ParamType alt float"""
+	def deletePointByCoordinates(self, easting, northing, altitude):
+		"""@ParamType easting float
+		@ParamType northing float
+		@ParamType altitude float"""
 		try:
 			easting = float( easting )
 			northing = float( northing )
 			altitude = float( altitude )
 		except ValueError:
-			self.__lastErrorMessage = 'On of the input coordinates is not of type float!'
-			raise ValueError( self.__lastErrorMessage )
+			self.__last_error_message = 'On of the input coordinates is not of type float!'
+			raise ValueError(self.__last_error_message)
 
-		for i in range( len( self.__points ) ):
-			pnt = self.__points[ i ]
-			if (pnt.getEasting() == easting) and (pnt.getNorthing() == northing) and (pnt.getAltitude() == altitude):
-				self.__points.pop( i )
+		for pnt in self.points[:]:
+			if (pnt.easting == easting) and (pnt.northing == northing) and (pnt.altitude == altitude):
+				self.points.remove(pnt)
 				return True
+		self.__last_error_message = 'Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude)
+		raise ValueError(self.__last_error_message)
 
-		self.__lastErrorMessage = 'Point not found with coordinates {0}/{1}/{2}'.format( easting, northing, altitude )
-		raise ValueError( self.__lastErrorMessage )
-
-	def deleteGeoPoint ( self, point ):
-		"""@ParamType point GeoPoint
-		@ReturnType bool"""
-		pass
-
-	def saveLineToDB ( self, handler ):
+	def save_line_to_db(self, handler):
 		"""@ParamType handler DBHandler"""
-		pass
+		session = handler.get_session()
+		session.add(self)
+		try:
+			session.commit()
+		except IntegrityError as e:
+			print('Cannot commit changes, Integrity Error (double unique values?)')
+			print(e)
+			session.rollback()
 
-	def getLastErrorMessage ( self ):
+	def last_error_message(self):
 		"""@ReturnType string"""
-		pass
-
-	def setClosed ( self, val ):
-		"""@ParamType val bool
-		@ReturnType bool"""
-		pass
+		return self.__last_error_message
