@@ -13,5 +13,5 @@ class DBHandler:
 		Base.metadata.create_all(engine)
 		self.__Session = sessionmaker(bind=engine)
 
-	def getSession(self):
+	def get_session(self):
 		return self.__Session()

@@ -4,6 +4,8 @@ import sqlalchemy as sq
 from sqlalchemy.orm import relationship
 
 from Resources.DBHandler import Base
+
+
 # from Resources.Stratigraphy import Stratigraphy
 
 
@@ -16,21 +18,23 @@ class GeoPoint(Base):
 	alt = sq.Column(sq.REAL(10, 4))
 	age = sq.Column(sq.INTEGER())
 	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
-
 	hor = relationship("Stratigraphy")
 
+	line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'))
+	line = relationship("Line", back_populates="points")
+
 	def __init__(self, easting, northing, altitude, horizon):
-		self.east = easting
-		self.north = northing
-		self.alt = altitude
-		self.hor = horizon
+		self.easting = easting
+		self.northing = northing
+		self.altitude = altitude
+		self.horizon = horizon
 
 	def __repr__(self):
-		return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}')>"\
-			.format(self.id, self.east, self.north, self.altitude, str(self.horizon))
+		return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}')>" \
+			.format(self.id, self.easting, self.northing, self.altitude, str(self.horizon))
 
 	def __str__(self):
-		return "[{}] {} - {} - {} : {}".format(self.id, self.east, self.north, self.altitude, str(self.horizon))
+		return "[{}] {} - {} - {} : {}".format(self.id, self.easting, self.northing, self.altitude, str(self.horizon))
 
 	@property
 	def easting(self):

@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 import sqlalchemy as sq
-from sqlalchemy.orm import relationship
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import relationship
 
 from Resources.DBHandler import DBHandler, Base
 
@@ -41,7 +41,7 @@ class Address(Base):
 if __name__ == '__main__':
 	# handler = DBHandler(connection='sqlite:///D:\\data.db', debug=False)
 	handler = DBHandler(connection='sqlite:///D:\\data.db', debug=False)
-	session = handler.getSession()
+	session = handler.get_session()
 
 	Users = [
 		{'name': 'Stephan', 'password': 'asdf'},
