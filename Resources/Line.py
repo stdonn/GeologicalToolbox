@@ -117,7 +117,7 @@ class Line(Base):
 		self.__last_error_message = 'Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude)
 		raise ValueError(self.__last_error_message)
 
-	def save_line_to_db(self, handler):
+	def save_to_db(self, handler):
 		"""@ParamType handler DBHandler"""
 		session = handler.get_session()
 		session.add(self)
