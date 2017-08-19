@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 from sqlalchemy.exc import IntegrityError
 
 from Resources.DBHandler import DBHandler
