@@ -11,7 +11,7 @@ class Stratigraphy(Base):
 	name = sq.Column(sq.TEXT(50), unique=True)
 	age = sq.Column(sq.INTEGER())
 
-	def __init__(self, name, age):
+	def __init__(self, name, age=-1):
 		self.name = name
 		self.age = age
 
