@@ -4,7 +4,7 @@ import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 
-from Resources.DBHandler import Base
+from Resources.DBHandler import Base, DBHandler
 
 class GeoPoint(Base):
 	__tablename__ = 'geopoints'
@@ -19,11 +19,14 @@ class GeoPoint(Base):
 
 	line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'))
 
-	def __init__(self, easting, northing, altitude, horizon):
+	def __init__(self, easting, northing, altitude, horizon, handler):
 		self.easting = easting
 		self.northing = northing
 		self.altitude = altitude
 		self.horizon = horizon
+		if type(handler) != DBHandler:
+			raise TypeError("handler is not of type DBHandler!")
+		self.__handler = handler
 
 	def __repr__(self):
 		return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}')>" \
@@ -64,9 +67,9 @@ class GeoPoint(Base):
 	def horizon(self, value):
 		self.hor = value
 
-	def save_to_db(self, handler):
+	def save_to_db(self):
 		"""@ParamType handler DBHandler"""
-		session = handler.get_session()
+		session = self.__handler.get_session()
 		session.add(self)
 		try:
 			session.commit()
@@ -88,12 +91,17 @@ class Line(Base):
 	# @AssociationMultiplicity 2..*
 
 	point_ids = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'))
-	points = relationship("GeoPoints", order_by=GeoPoint.id)
+	points = relationship("GeoPoint", order_by=GeoPoint.id, backref="line", primaryjoin='Line.id==GeoPoint.line_id')
 
-	def __init__(self, closed, horizon, points):
+	def __init__(self, closed, horizon, handler, points):
 		self.is_closed = closed
 		self.horizon = horizon
 		self.points = points
+		self.__last_error_message = ''
+
+		if type(handler) != DBHandler:
+			raise TypeError("handler is not of type DBHandler!")
+		self.__handler = handler
 
 	def __repr__(self):
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
@@ -156,7 +164,7 @@ class Line(Base):
 	#
 	# to be updated!!!
 	#
-	def deletePoint(self, point):
+	def delete_point(self, point):
 		"""@ParamType point GeoPoint"""
 
 		try:
@@ -166,7 +174,7 @@ class Line(Base):
 			self.__last_error_message = str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!'
 			raise ValueError(self.__last_error_message)
 
-	def deletePointByCoordinates(self, easting, northing, altitude):
+	def delete_point_by_coordinates(self, easting, northing, altitude):
 		"""@ParamType easting float
 		@ParamType northing float
 		@ParamType altitude float"""
@@ -184,10 +192,10 @@ class Line(Base):
 				return True
 		self.__last_error_message = 'Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude)
 		raise ValueError(self.__last_error_message)
-
-	def save_to_db(self, handler):
+	
+	def save_to_db(self):
 		"""@ParamType handler DBHandler"""
-		session = handler.get_session()
+		session = self.__handler.get_session()
 		session.add(self)
 		try:
 			session.commit()
