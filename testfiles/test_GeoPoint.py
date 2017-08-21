@@ -3,7 +3,7 @@
 from sqlalchemy.exc import IntegrityError
 
 from Resources.DBHandler import DBHandler
-from Resources.GeoPoint import GeoPoint
+from Resources.Geometries import GeoPoint
 from Resources.Stratigraphy import Stratigraphy
 
 if __name__ == '__main__':
