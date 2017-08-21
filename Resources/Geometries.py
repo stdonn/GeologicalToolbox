@@ -4,12 +4,15 @@ import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 
-from Resources.DBHandler import Base, DBHandler
+from Exceptions import DatabaseException
+from Resources.DBHandler import Base
+from Resources.Stratigraphy import Stratigraphy
+
 
 class GeoPoint(Base):
 	__tablename__ = 'geopoints'
 
-	id = sq.Column(sq.INTEGER, sq.Sequence('horizons_id_seq'), primary_key=True)
+	id = sq.Column(sq.INTEGER, sq.Sequence('geopoints_id_seq'), primary_key=True)
 	east = sq.Column(sq.REAL(10, 4))
 	north = sq.Column(sq.REAL(10, 4))
 	alt = sq.Column(sq.REAL(10, 4))
@@ -19,14 +22,12 @@ class GeoPoint(Base):
 
 	line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'))
 
-	def __init__(self, easting, northing, altitude, horizon, handler):
+	def __init__(self, easting, northing, altitude, horizon, session):
 		self.easting = easting
 		self.northing = northing
 		self.altitude = altitude
+		self.__session = session
 		self.horizon = horizon
-		if type(handler) != DBHandler:
-			raise TypeError("handler is not of type DBHandler!")
-		self.__handler = handler
 
 	def __repr__(self):
 		return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}')>" \
@@ -65,18 +66,24 @@ class GeoPoint(Base):
 
 	@horizon.setter
 	def horizon(self, value):
-		self.hor = value
+		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
+		if result.count() == 0:
+			self.hor = value
+		elif result.count() == 1:
+			self.hor = result.one()
+		else:
+			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
+			                        .format(result.count(), value.name))
 
 	def save_to_db(self):
 		"""@ParamType handler DBHandler"""
-		session = self.__handler.get_session()
-		session.add(self)
+		self.__session.add(self)
 		try:
-			session.commit()
+			self.__session.commit()
 		except IntegrityError as e:
 			print('Cannot commit changes, Integrity Error (double unique values?)')
 			print(e)
-			session.rollback()
+			self.__session.rollback()
 
 class Line(Base):
 	__tablename__ = 'lines'
@@ -93,15 +100,12 @@ class Line(Base):
 	point_ids = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'))
 	points = relationship("GeoPoint", order_by=GeoPoint.id, backref="line", primaryjoin='Line.id==GeoPoint.line_id')
 
-	def __init__(self, closed, horizon, handler, points):
+	def __init__(self, closed, session, horizon, points):
 		self.is_closed = closed
+		self.__session = session
 		self.horizon = horizon
 		self.points = points
 		self.__last_error_message = ''
-
-		if type(handler) != DBHandler:
-			raise TypeError("handler is not of type DBHandler!")
-		self.__handler = handler
 
 	def __repr__(self):
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
@@ -124,7 +128,14 @@ class Line(Base):
 
 	@horizon.setter
 	def horizon(self, value):
-		self.hor = value
+		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
+		if result.count() == 0:
+			self.hor = value
+		elif result.count() == 1:
+			self.hor = result.one()
+		else:
+			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
+			                        .format(result.count(), value.name))
 
 	def insert_point(self, point, position):
 		"""@ParamType point GeoPoint
@@ -192,17 +203,16 @@ class Line(Base):
 				return True
 		self.__last_error_message = 'Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude)
 		raise ValueError(self.__last_error_message)
-	
+
 	def save_to_db(self):
 		"""@ParamType handler DBHandler"""
-		session = self.__handler.get_session()
-		session.add(self)
+		self.__session.add(self)
 		try:
-			session.commit()
+			self.__session.commit()
 		except IntegrityError as e:
 			print('Cannot commit changes, Integrity Error (double unique values?)')
 			print(e)
-			session.rollback()
+			self.__session.rollback()
 
 	def last_error_message(self):
 		"""@ReturnType string"""
