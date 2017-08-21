@@ -1,13 +1,14 @@
 # -*- coding: UTF-8 -*-
 
-from Resources.DBHandler import Base
 import sqlalchemy as sq
+
+from Resources.DBHandler import Base
 
 
 class Stratigraphy(Base):
 	__tablename__ = 'stratigraphy'
 
-	id = sq.Column(sq.INTEGER, sq.Sequence('horizons_id_seq'), primary_key=True)
+	id = sq.Column(sq.INTEGER, sq.Sequence('strat_id_seq'), primary_key=True)
 	name = sq.Column(sq.TEXT(50), unique=True)
 	age = sq.Column(sq.INTEGER())
 
