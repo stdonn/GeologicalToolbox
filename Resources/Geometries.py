@@ -16,11 +16,13 @@ class GeoPoint(Base):
 	east = sq.Column(sq.REAL(10, 4))
 	north = sq.Column(sq.REAL(10, 4))
 	alt = sq.Column(sq.REAL(10, 4))
-	age = sq.Column(sq.INTEGER())
-	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
+	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'), default=-1)
 	hor = relationship("Stratigraphy")
 
-	line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'))
+	line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=-1)
+
+	# make the points unique -> coordinates + horizon + belongs to one line?
+	sq.UniqueConstraint(east, north, alt, horizon_id, line_id, name='u_point_constraint')
 
 	def __init__(self, easting, northing, altitude, horizon, session):
 		self.easting = easting
@@ -76,7 +78,6 @@ class GeoPoint(Base):
 			                        .format(result.count(), value.name))
 
 	def save_to_db(self):
-		"""@ParamType handler DBHandler"""
 		self.__session.add(self)
 		try:
 			self.__session.commit()
@@ -84,6 +85,16 @@ class GeoPoint(Base):
 			print('Cannot commit changes, Integrity Error (double unique values?)')
 			print(e)
 			self.__session.rollback()
+
+	@classmethod
+	def load_all_from_db(cls, session):
+		return session.query(cls).all()
+
+	@classmethod
+	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
+		return session.query(cls).filter(min_easting <= cls.easting, cls.easting <= max_easting,
+		                                 min_northing <= cls.northing, cls.northing <= max_northing).all()
+
 
 class Line(Base):
 	__tablename__ = 'lines'
@@ -98,7 +109,8 @@ class Line(Base):
 	# @AssociationMultiplicity 2..*
 
 	point_ids = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'))
-	points = relationship("GeoPoint", order_by=GeoPoint.id, backref="line", primaryjoin='Line.id==GeoPoint.line_id')
+	points = relationship("GeoPoint", order_by=GeoPoint.id, backref="line", primaryjoin='Line.id==GeoPoint.line_id',
+	                      cascade="all, delete, delete-orphan")
 
 	def __init__(self, closed, session, horizon, points):
 		self.is_closed = closed
@@ -141,7 +153,7 @@ class Line(Base):
 		"""@ParamType point GeoPoint
 		@ParamType position int
 		@ReturnType bool"""
-		if type( point ) is GeoPoint:
+		if type(point) is GeoPoint:
 			self.points.insert(position, point)
 			return True
 		else:
@@ -153,12 +165,12 @@ class Line(Base):
 		@ParamType position int
 		@ReturnType bool"""
 
-		if type( position ) is int:
+		if type(position) is int:
 			self.__last_error_message = 'Position is not of type int!'
 			raise TypeError(self.__last_error_message)
 
 		for pnt in points:
-			if type( pnt ) is not GeoPoint:
+			if type(pnt) is not GeoPoint:
 				self.__last_error_message = 'At least on point in points is not of type GeoPoint!'
 				raise TypeError(self.__last_error_message)
 		# use slicing for points insert
@@ -190,9 +202,9 @@ class Line(Base):
 		@ParamType northing float
 		@ParamType altitude float"""
 		try:
-			easting = float( easting )
-			northing = float( northing )
-			altitude = float( altitude )
+			easting = float(easting)
+			northing = float(northing)
+			altitude = float(altitude)
 		except ValueError:
 			self.__last_error_message = 'On of the input coordinates is not of type float!'
 			raise ValueError(self.__last_error_message)
@@ -213,6 +225,18 @@ class Line(Base):
 			print('Cannot commit changes, Integrity Error (double unique values?)')
 			print(e)
 			self.__session.rollback()
+
+	@classmethod
+	def load_all_from_db(cls, session):
+		return session.query(cls).all()
+
+	@classmethod
+	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
+		return session.query(cls).filter(min_easting <= cls.easting, cls.easting <= max_easting,
+		                                 min_northing <= cls.northing, cls.northing <= max_northing).all()
+
+		# SELECT
+
 
 	def last_error_message(self):
 		"""@ReturnType string"""
