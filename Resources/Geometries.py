@@ -68,11 +68,17 @@ class GeoPoint(Base):
 
 	@horizon.setter
 	def horizon(self, value):
+		if value is None:
+			self.hor = None
+			self.horizon_id = -1
+			return
+
 		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
 		if result.count() == 0:
 			self.hor = value
 		elif result.count() == 1:
 			self.hor = result.one()
+			self.hor.session = self.__session
 		else:
 			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
 			                        .format(result.count(), value.name))
@@ -82,9 +88,10 @@ class GeoPoint(Base):
 		try:
 			self.__session.commit()
 		except IntegrityError as e:
-			print('Cannot commit changes, Integrity Error (double unique values?)')
-			print(e)
 			self.__session.rollback()
+			raise IntegrityError(
+					'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
+							e.statement), e.params, e.orig, e.connection_invalidated)
 
 	@classmethod
 	def load_all_from_db(cls, session):
@@ -108,7 +115,6 @@ class Line(Base):
 	# @AssociationType GeoPoint
 	# @AssociationMultiplicity 2..*
 
-	point_ids = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'))
 	points = relationship("GeoPoint", order_by=GeoPoint.id, backref="line", primaryjoin='Line.id==GeoPoint.line_id',
 	                      cascade="all, delete, delete-orphan")
 
@@ -124,7 +130,14 @@ class Line(Base):
 			.format(self.id, self.closed, str(self.horizon), str(self.points))
 
 	def __str__(self):
-		return "[{}] {} - {}\n{}".format(self.id, self.closed, str(self.horizon), str(self.points))
+		#return "[{}] {} - {}\n{}".format(self.id, self.closed, str(self.horizon), str(self.points))
+		text = "Line: id='{}', closed='{}', horizon='{}', points:" \
+			.format(self.id, self.closed, str(self.horizon))
+
+		for point in self.points:
+			text += "\n{}".format(str(point))
+
+		return text
 
 	@property
 	def is_closed(self):
@@ -138,13 +151,25 @@ class Line(Base):
 	def horizon(self):
 		return self.hor
 
+	# @horizon.setter
+	# def horizon(self, value):
+	#	if (value is not None) and (type(value) != Stratigraphy):
+	#		raise TypeError("Wrong type of value. Should be Stratigraphy or None, is {}".format(type(value)))
+	#	self.hor = value  # unique check is performed by Stratigraphy class setter horizon
+
 	@horizon.setter
 	def horizon(self, value):
+		if value is None:
+			self.hor = None
+			self.horizon_id = -1
+			return
+
 		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
 		if result.count() == 0:
 			self.hor = value
 		elif result.count() == 1:
 			self.hor = result.one()
+			self.hor.session = self.__session
 		else:
 			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
 			                        .format(result.count(), value.name))
@@ -218,13 +243,20 @@ class Line(Base):
 
 	def save_to_db(self):
 		"""@ParamType handler DBHandler"""
+		# self.horizon.save_to_db()
 		self.__session.add(self)
+
 		try:
+			# first: all points should have the same horizon as the line
+			for pnt in self.points:
+				pnt.hor = self.horizon  # directly set hor variable, hor still checked...
+				pnt.horizon_id = self.horizon_id
 			self.__session.commit()
 		except IntegrityError as e:
-			print('Cannot commit changes, Integrity Error (double unique values?)')
-			print(e)
 			self.__session.rollback()
+			raise IntegrityError(
+					'Cannot commit changes in lines table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
+							e.statement), e.params, e.orig, e.connection_invalidated)
 
 	@classmethod
 	def load_all_from_db(cls, session):
@@ -234,9 +266,6 @@ class Line(Base):
 	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
 		return session.query(cls).filter(min_easting <= cls.easting, cls.easting <= max_easting,
 		                                 min_northing <= cls.northing, cls.northing <= max_northing).all()
-
-		# SELECT
-
 
 	def last_error_message(self):
 		"""@ReturnType string"""
