@@ -33,11 +33,23 @@ if __name__ == '__main__':
 		}
 	]
 
+	#points = [GeoPoint(easting=point['east'], northing=point['north'], altitude=point['alt'],
+	#                   horizon=Stratigraphy(session, point['horizon'], point['age']), session=session) for point in points]
+
 	points = [GeoPoint(easting=point['east'], northing=point['north'], altitude=point['alt'],
-	                   horizon=Stratigraphy(point['horizon'], point['age']), session=session) for point in points]
+	                   horizon=None, session=session) for point in points]
 
-	line = Line(closed=True, session=session, horizon=Stratigraphy("so"), points=points)
+	line = Line(closed=True, session=session, horizon=Stratigraphy(session=session, name="so", age=1), points=points)
 
-	print(str(line))
+	print("Line before db insert:\n{}".format(str(line)))
 
 	line.save_to_db()
+
+	print("Line after db insert:\n{}".format(str(line)))
+
+	line.points[1].easting = 1010101.01
+	line.points[1].horizon = Stratigraphy(session=session, name="mu", age=2)
+
+	line.save_to_db()
+
+	print("Line after db update:\n{}".format(str(line)))
