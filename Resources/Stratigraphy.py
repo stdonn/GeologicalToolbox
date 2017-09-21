@@ -3,8 +3,8 @@
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 
-from Resources.DBHandler import Base
 from Exceptions import DatabaseException
+from Resources.DBHandler import Base
 
 
 class Stratigraphy(Base):
@@ -15,11 +15,9 @@ class Stratigraphy(Base):
 	age = sq.Column(sq.INTEGER(), default=-1)
 
 	def __init__(self, session, name, age=-1, update=False):
-		#print("Stratigraphy.__init__({}, {}, {}, {}".format(session, name, age, update))
-		#print(self)
 		self.__session = session
 		self.horizon = name
-		if update or age is None:
+		if update or (self.age is None):
 			self.age = age
 
 	def __repr__(self):
@@ -27,6 +25,17 @@ class Stratigraphy(Base):
 
 	def __str__(self):
 		return "horizon [{}]: name='{}', age='{}'".format(self.id, self.name, self.age)
+
+	@property
+	def horizon_age(self):
+		return self.age
+
+	@horizon_age.setter
+	def horizon_age(self, value):
+		if value <= -1:
+			self.age = -1
+		else:
+			self.age = value
 
 	@property
 	def horizon(self):
