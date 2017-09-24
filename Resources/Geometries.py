@@ -125,8 +125,10 @@ class GeoPoint(Base):
 
 	@classmethod
 	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-		return session.query(cls).filter(min_easting <= cls.easting, cls.easting <= max_easting,
-		                                 min_northing <= cls.northing, cls.northing <= max_northing).all()
+		return session.query(GeoPoint). \
+					filter(GeoPoint.line_id == -1). \
+					filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
+					filter(sq.between(GeoPoint.north, min_northing, max_northing)).all()
 
 
 class Line(Base):
