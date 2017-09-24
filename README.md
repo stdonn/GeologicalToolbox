@@ -17,6 +17,12 @@ If the installation doesn't work, try to check for multiple python installations
 
 After the installation of SQLAlchemy you have to add this toolbox to your ArcToolbox section. Therefore open the ArcToolbox section if it isn't open yet (Geoprocessing -> ArcToolbox), right click on ArcToolbox (the folder on top of the list inside the ArcToolbox section) and select "Add Toolbox". In the following "Add Toolbox" window you have to select the "Modelling-Toolbox.tbx" file in this directory.
 
+Some test files additionally use the GDAL library in order to create shapefiles os independent. To use them you additionally have to install GDAL manually and add the GDAL python bindings pygdal: 
+
+```
+pip install pygdal
+```
+
 ## System Requirements
 
 This toolbox was tested with ArcMap version 10.2.2 and version 10.5
