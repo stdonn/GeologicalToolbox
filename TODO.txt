@@ -1,5 +1,11 @@
 TODO:
 
+Line:
+    - check delete functionality
+
+GeoPoint:
+    - test load_..._from_db(...) functions
+
 COMMENTS:
 
 - Doubled lines can exists in the DB.
