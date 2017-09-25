@@ -11,6 +11,7 @@ from Resources.Stratigraphy import Stratigraphy
 
 
 class GeoPoint(Base):
+	# define db table name and columns
 	__tablename__ = 'geopoints'
 
 	id = sq.Column(sq.INTEGER, sq.Sequence('geopoints_id_seq'), primary_key=True)
@@ -19,6 +20,8 @@ class GeoPoint(Base):
 	alt = sq.Column(sq.REAL(10, 4))
 	has_z = sq.Column(sq.BOOLEAN, default=False)
 	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'), default=-1)
+
+	# define relationship to stratigraphic table
 	hor = relationship("Stratigraphy")
 
 	line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=-1)
@@ -49,6 +52,7 @@ class GeoPoint(Base):
 		return "[{}] {} - {} - {} : {} - {} - {}" \
 			.format(self.id, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id, self.line_pos)
 
+	# define setter and getter for columns and local data
 	@property
 	def easting(self):
 		return self.east
@@ -80,34 +84,21 @@ class GeoPoint(Base):
 
 	@horizon.setter
 	def horizon(self, value):
+		# check if horizon exists in db -> if true take the db version, don't create a new one
 		if value is None:
 			self.hor = None
 			self.horizon_id = -1
 			return
 
 		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
-		if result.count() == 0:
+		if result.count() == 0:  # horizon doesn't exist -> use the committed value
 			self.hor = value
-		elif result.count() == 1:
+		elif result.count() == 1:  # horizon exists in the db -> use the db value
 			self.hor = result.one()
 			self.hor.session = self.__session
-		else:
+		else:  # more than one horizon with this name in the db => heavy failure, name should be unique => DatabaseException
 			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
 			                        .format(result.count(), value.name))
-
-	def del_z(self):
-		self.alt = 0
-		self.has_z = False
-
-	def save_to_db(self):
-		self.__session.add(self)
-		try:
-			self.__session.commit()
-		except IntegrityError as e:
-			self.__session.rollback()
-			raise IntegrityError(
-					'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
-							e.statement), e.params, e.orig, e.connection_invalidated)
 
 	@property
 	def point_name(self):
@@ -119,31 +110,54 @@ class GeoPoint(Base):
 			value = value[:100]
 		self.name = value
 
+	# delete z-dimension and information from point
+	def del_z(self):
+		self.alt = 0
+		self.has_z = False
+
+	# save point to db / update point
+	def save_to_db(self):
+		self.__session.add(self)
+		try:
+			self.__session.commit()
+		except IntegrityError as e:
+			# Failure during database processing? -> rollback changes and raise error again
+			self.__session.rollback()
+			raise IntegrityError(
+					'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
+							e.statement), e.params, e.orig, e.connection_invalidated)
+
+	# load points from db
 	@classmethod
-	def load_all_from_db(cls, session):
-		return session.query(cls).all()
+	def load_all_from_db(cls, session, get_lines=False):
+		if get_lines:
+			return session.query(cls).all()
+		return session.query(cls).filter(GeoPoint.line_id == -1).all()
 
 	@classmethod
-	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-		return session.query(GeoPoint). \
-					filter(GeoPoint.line_id == -1). \
-					filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
-					filter(sq.between(GeoPoint.north, min_northing, max_northing)).all()
+	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
+		result = session.query(GeoPoint)
+		if not get_lines:
+			result.filter(GeoPoint.line_id == -1)
+
+		return result.filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
+			filter(sq.between(GeoPoint.north, min_northing, max_northing)).all()
 
 
 class Line(Base):
+	# define db table name and columns
 	__tablename__ = 'lines'
 
 	id = sq.Column(sq.INTEGER, sq.Sequence('line_id_seq'), primary_key=True)
 	closed = sq.Column(sq.BOOLEAN)
 	name = sq.Column(sq.TEXT(100), default="")
 
+	# set stratigraphy of the line
 	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
 	hor = relationship("Stratigraphy")
 
-	# @AssociationType GeoPoint
-	# @AssociationMultiplicity 2..*
-
+	# add GeoPoint relation, important is the ordering by line_pos value
+	# collection_class function automatically reorders this value in case of insertion or deletion of points
 	points = relationship("GeoPoint", order_by=GeoPoint.line_pos, collection_class=ordering_list('line_pos'),
 	                      backref="line", primaryjoin='Line.id==GeoPoint.line_id',
 	                      cascade="all, delete, delete-orphan")
@@ -154,7 +168,6 @@ class Line(Base):
 		self.horizon = horizon
 		self.points = points
 		self.line_name = name
-		self.__last_error_message = ""
 
 	def __repr__(self):
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
@@ -176,17 +189,13 @@ class Line(Base):
 
 	@is_closed.setter
 	def is_closed(self, value):
-		self.closed = value
+		if type(value) != bool:
+			raise TypeError('Value must be of type bool, but is {}'.format(str(type(value))))
+		self.closed = bool(value)
 
 	@property
 	def horizon(self):
 		return self.hor
-
-	# @horizon.setter
-	# def horizon(self, value):
-	#	if (value is not None) and (type(value) != Stratigraphy):
-	#		raise TypeError("Wrong type of value. Should be Stratigraphy or None, is {}".format(type(value)))
-	#	self.hor = value  # unique check is performed by Stratigraphy class setter horizon
 
 	@horizon.setter
 	def horizon(self, value):
@@ -195,13 +204,14 @@ class Line(Base):
 			self.horizon_id = -1
 			return
 
+		# check if horizon exists (unique name)
 		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
 		if result.count() == 0:
 			self.hor = value
 		elif result.count() == 1:
 			self.hor = result.one()
 			self.hor.session = self.__session
-		else:
+		else:  # more than one result? => heavy failure, name should be unique => DatabaseException
 			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
 			                        .format(result.count(), value.name))
 
@@ -216,75 +226,50 @@ class Line(Base):
 		self.name = value
 
 	def insert_point(self, point, position):
-		"""@ParamType point GeoPoint
-		@ParamType position int
-		@ReturnType bool"""
 		if type(point) is GeoPoint:
 			self.points.insert(position, point)
-			return True
 		else:
-			self.__last_error_message = 'point is not of type GeoPoint!'
-			raise TypeError(self.__last_error_message)
+			raise TypeError('point is not of type GeoPoint!')
 
 	def insert_points(self, points, position):
-		"""@ParamType points GeoPoint[]
-		@ParamType position int
-		@ReturnType bool"""
-
 		if type(position) is int:
-			self.__last_error_message = 'Position is not of type int!'
-			raise TypeError(self.__last_error_message)
+			raise TypeError('Position is not of type int!')
 
 		for pnt in points:
 			if type(pnt) is not GeoPoint:
-				self.__last_error_message = 'At least on point in points is not of type GeoPoint!'
-				raise TypeError(self.__last_error_message)
+				raise TypeError('At least on point in points is not of type GeoPoint!')
+
 		# use slicing for points insert
 		self.points[position:position] = points
-		return True
-
-	# for point in points: self.points.insert( position + points.index( point ), point )
 
 	def get_point_index(self, point):
-		"""@ParamType point GeoPoint
-		@ReturnType int"""
 		return self.points.index(point)
 
 	#
-	# to be updated!!!
+	# !!! TO BE CHECKED AND UPDATED !!!
 	#
 	def delete_point(self, point):
-		"""@ParamType point GeoPoint"""
-
 		try:
 			self.points.remove(point)
-			return True
 		except ValueError as e:
-			self.__last_error_message = str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!'
-			raise ValueError(self.__last_error_message)
+			raise ValueError(str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!')
 
 	def delete_point_by_coordinates(self, easting, northing, altitude):
-		"""@ParamType easting float
-		@ParamType northing float
-		@ParamType altitude float"""
 		try:
 			easting = float(easting)
 			northing = float(northing)
 			altitude = float(altitude)
 		except ValueError:
-			self.__last_error_message = 'On of the input coordinates is not of type float!'
-			raise ValueError(self.__last_error_message)
+			raise ValueError('On of the input coordinates is not of type float!')
 
+		# iterate over a copy of the list to avoid iteration issues caused by the deletion of values
 		for pnt in self.points[:]:
 			if (pnt.easting == easting) and (pnt.northing == northing) and (pnt.altitude == altitude):
 				self.points.remove(pnt)
 				return True
-		self.__last_error_message = 'Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude)
-		raise ValueError(self.__last_error_message)
+		raise ValueError('Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude))
 
 	def save_to_db(self):
-		"""@ParamType handler DBHandler"""
-		# self.horizon.save_to_db()
 		self.__session.add(self)
 
 		try:
@@ -294,24 +279,26 @@ class Line(Base):
 				pnt.horizon_id = self.horizon_id
 			self.__session.commit()
 		except IntegrityError as e:
+			# Failure during database processing? -> rollback changes and raise error again
 			self.__session.rollback()
-			self.__last_error_message = 'Cannot commit changes in lines table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
-					e.statement)
-			raise IntegrityError(self.__last_error_message, e.params, e.orig, e.connection_invalidated)
+			raise IntegrityError(
+					'Cannot commit changes in lines table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
+							e.statement), e.params, e.orig, e.connection_invalidated)
 
 	@classmethod
 	def load_all_from_db(cls, session):
 		return session.query(cls).all()
 
 	@classmethod
-	def load_by_id_from_db(cls, id, session):
-		return session.query(cls).filter(cls.id == id).one()
+	def load_by_id_from_db(cls, line_id, session):
+		return session.query(cls).filter(cls.id == line_id).one()
 
 	@classmethod
 	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
+		# select the points with a line_id that are located inside the extent
+		# -> result will be a list of tuples with only a single line-id value
+		# -> convert this list to a set in order to remove doubled values
 
-		# select the points, result will be a list of tuples with only an line-id value
-		# -> convert to list and the to a set to remove doubled values
 		points = set(
 				[x[0] for x in session.query(GeoPoint.line_id). \
 					filter(GeoPoint.line_id != -1). \
@@ -321,10 +308,3 @@ class Line(Base):
 
 		# return line with points in extend
 		return session.query(Line).filter(Line.id.in_(points)).all()
-
-	# return session.query(cls).filter(min_easting <= cls.easting, cls.easting <= max_easting,
-	#                                min_northing <= cls.northing, cls.northing <= max_northing).all()
-
-	def last_error_message(self):
-		"""@ReturnType string"""
-		return self.__last_error_message
