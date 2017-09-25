@@ -8,6 +8,7 @@ from Resources.DBHandler import Base
 
 
 class Stratigraphy(Base):
+	# define db table name and columns
 	__tablename__ = 'stratigraphy'
 
 	id = sq.Column(sq.INTEGER, sq.Sequence('strat_id_seq'), primary_key=True)
@@ -26,6 +27,7 @@ class Stratigraphy(Base):
 	def __str__(self):
 		return "horizon [{}]: name='{}', age='{}'".format(self.id, self.name, self.age)
 
+	# define setter and getter for columns and local data
 	@property
 	def horizon_age(self):
 		return self.age
@@ -43,6 +45,7 @@ class Stratigraphy(Base):
 
 	@horizon.setter
 	def horizon(self, value):
+		# check if horizon exists (unique name)
 		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value)
 		if result.count() == 0:
 			self.name = value
@@ -51,14 +54,12 @@ class Stratigraphy(Base):
 			self.name = result.one().horizon
 			self.age = result.one().age
 			self.id = result.one().id
-			#print("Found horizon in db:")
-			#print(str(result.one()))
-			#print(str(self))
-		else:
+		else:  # more than one result? => heavy failure, name should be unique => DatabaseException
 			for res in result.all():
 				print(res)
 			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
 			                        .format(result.count(), value.name))
+
 	@property
 	def session(self):
 		return self.__session
@@ -72,6 +73,7 @@ class Stratigraphy(Base):
 		try:
 			self.__session.commit()
 		except IntegrityError as e:
-			print('Cannot commit changes in stratigraphy table, Integrity Error (double unique values?)')
-			print(e)
-			self.__session.rollback()
+			# Failure during database processing? -> rollback changes and raise error again
+			raise IntegrityError(
+					'Cannot commit changes in stratigraphy table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
+							e.statement), e.params, e.orig, e.connection_invalidated)
