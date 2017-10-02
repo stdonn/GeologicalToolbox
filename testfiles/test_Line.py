@@ -79,10 +79,10 @@ class TestLineClass(unittest.TestCase):
 			points = list()
 			for point in line['points']:
 				points.append(GeoPoint(point[0], point[1], None, None, self.session, ""))
-			newLine = Line(line['closed'], self.session,
-			               Stratigraphy(self.session, line['horizon'], line['age'], line['update']),
-			               points, line['name'])
-			newLine.save_to_db()
+			new_line = Line(line['closed'], self.session,
+			                Stratigraphy(self.session, line['horizon'], line['age'], line['update']), points,
+			                line['name'])
+			new_line.save_to_db()
 
 	def test_init(self):
 		"""
@@ -111,14 +111,27 @@ class TestLineClass(unittest.TestCase):
 		self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
 		                      format(stored_horizons, horizons))
 
-	def test_insert(self):
+	def test_insert_one(self):
 		"""
-		Test the insertion of one and more points
+		Test the insertion of one point
 
 		:return: None
 		:rtype: None
 		"""
+		insert_point = GeoPoint(1204200, 620800, None, "mu", self.session)
 		self.assertEqual(1, 1)
+
+	def test_insert_multiple(self):
+		"""
+		Test the insertion of multiple points
+
+		:return: None
+		:rtype: None
+		"""
+		insert_point_1 = GeoPoint(1204200, 620800, None, "mu", self.session)
+		insert_point_2 = GeoPoint(1204500, 621200, None, "mu", self.session)
+		insert_point_3 = GeoPoint(1204700, 621000, None, "mu", self.session)
+
 
 	def tearDown(self):
 		"""
