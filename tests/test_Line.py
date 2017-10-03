@@ -118,8 +118,37 @@ class TestLineClass(unittest.TestCase):
 		:return: None
 		:rtype: None
 		"""
-		insert_point = GeoPoint(1204200, 620800, None, "mu", self.session)
-		self.assertEqual(1, 1)
+		insert_point = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
+		line_query_1 = self.session.query(Line.id).filter_by(id=1)
+		count = line_query_1.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		line = line_query_1.one()
+		line.insert_point(insert_point, 1)
+		line.save_to_db()
+
+		# point is inserted, now delete insert details
+		del count
+		del insert_point
+		del line
+		del line_query_1
+
+		# test the insertion-process
+		line_query_1 = self.session.query(Line.id).filter_by(id=1)
+		count = line_query_1.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		# 21 Point initially, new point was Nr 22 -> id=21, line-pos should be 1
+		self.assertEqual(line.points[1].id, 21, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[1].id, 21))
+		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
+		                 format(line.points[1].line_pos, 1))
+		self.assertEqual(line.points[1].easting, 1204200, "Wrong easting ({} / should be {})". \
+		                 format(line.points[1].easting, 1204200))
+		self.assertEqual(line.points[1].northing, 620800, "Wrong northing ({} / should be {})". \
+		                 format(line.points[1].northing, 620800))
+		self.assertEqual(line.points[1].altitude, 0, "Wrong altitude ({} / should be {})". \
+		                 format(line.points[1].altitude, 0))
+		self.assertEqual(line.points[1].has_z, False, "Wrong has_z ({} / should be {})". \
+		                 format(line.points[1].has_z, False))
 
 	def test_insert_multiple(self):
 		"""
@@ -128,10 +157,9 @@ class TestLineClass(unittest.TestCase):
 		:return: None
 		:rtype: None
 		"""
-		insert_point_1 = GeoPoint(1204200, 620800, None, "mu", self.session)
-		insert_point_2 = GeoPoint(1204500, 621200, None, "mu", self.session)
-		insert_point_3 = GeoPoint(1204700, 621000, None, "mu", self.session)
-
+		insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
+		insert_point_2 = GeoPoint(1204500, 621200, None, Stratigraphy(self.session, "mu"), self.session)
+		insert_point_3 = GeoPoint(1204700, 621000, None, Stratigraphy(self.session, "mu"), self.session)
 
 	def tearDown(self):
 		"""
