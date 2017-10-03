@@ -1,10 +1,17 @@
 TODO:
 
 Line:
-    - check delete functionality
+- integrate docstrings
+- possibly: integrate has_z
 
-GeoPoint:
-    - test load_..._from_db(...) functions
+GeoPoints:
+- integrate docstrings
+
+test_GeoPoint:
+- create unittest for GeoPoint
+
+test_Line:
+- test loading functionality
 
 COMMENTS:
 
