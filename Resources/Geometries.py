@@ -170,6 +170,9 @@ class Line(Base):
 		self.points = points
 		self.line_name = name
 
+		# check doubled values in a line
+		self.remove_doubled_points()
+
 	def __repr__(self):
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
 			.format(self.id, self.closed, str(self.horizon), str(self.points))
@@ -242,6 +245,9 @@ class Line(Base):
 		else:
 			raise TypeError('point is not of type GeoPoint!')
 
+		# check doubled values in a line
+		self.remove_doubled_points()
+
 	def insert_points(self, points, position):
 		if type(position) is not int:
 			raise TypeError('Position is not of type int (is {})!'.format(type(position)))
@@ -252,6 +258,9 @@ class Line(Base):
 
 		# use slicing for points insert
 		self.points[position:position] = points
+
+		# check doubled values in a line
+		self.remove_doubled_points()
 
 	def get_point_index(self, point):
 		return self.points.index(point)
@@ -265,6 +274,9 @@ class Line(Base):
 		except ValueError as e:
 			raise ValueError(str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!')
 
+		# check doubled values in a line
+		self.__remove_doubled_points()
+
 	def delete_point_by_coordinates(self, easting, northing, altitude):
 		try:
 			easting = float(easting)
@@ -277,8 +289,14 @@ class Line(Base):
 		for pnt in self.points[:]:
 			if (pnt.easting == easting) and (pnt.northing == northing) and (pnt.altitude == altitude):
 				self.points.remove(pnt)
+				# check doubled values in a line
+				self.__remove_doubled_points()
 				return True
 		raise ValueError('Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude))
+
+	def __remove_doubled_points(self):
+		# to be implemented !!!!
+		pass
 
 	def save_to_db(self):
 		self.__session.add(self)
