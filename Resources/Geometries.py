@@ -3,7 +3,8 @@
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.session import Session
 
 from Exceptions import DatabaseException
 from Resources.DBHandler import Base
@@ -231,8 +232,8 @@ class Line(Base):
 
 	@session.setter
 	def session(self, value):
-		if not type(value) == sessionmaker:
-			raise TypeError("Value is not of type sessionmaker (is {})!".format(str(type(value))))
+		if not isinstance(value, Session):
+			raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
 		self.__session = value
 
 	def insert_point(self, point, position):
