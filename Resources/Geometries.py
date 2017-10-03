@@ -171,7 +171,7 @@ class Line(Base):
 		self.line_name = name
 
 		# check doubled values in a line
-		self.remove_doubled_points()
+		self.__remove_doubled_points()
 
 	def __repr__(self):
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
@@ -246,7 +246,7 @@ class Line(Base):
 			raise TypeError('point is not of type GeoPoint!')
 
 		# check doubled values in a line
-		self.remove_doubled_points()
+		self.__remove_doubled_points()
 
 	def insert_points(self, points, position):
 		if type(position) is not int:
@@ -260,7 +260,7 @@ class Line(Base):
 		self.points[position:position] = points
 
 		# check doubled values in a line
-		self.remove_doubled_points()
+		self.__remove_doubled_points()
 
 	def get_point_index(self, point):
 		return self.points.index(point)
@@ -291,12 +291,37 @@ class Line(Base):
 				self.points.remove(pnt)
 				# check doubled values in a line
 				self.__remove_doubled_points()
-				return True
+				return
+
 		raise ValueError('Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude))
 
 	def __remove_doubled_points(self):
-		# to be implemented !!!!
-		pass
+		# type: () -> None
+		"""
+		remove points with the same coordinates, if they follow up each other in the points list.
+
+		:return: None
+		:rtype: None
+		"""
+
+		# create a full copy of the point-list
+		tmp_pnts = self.points[:]
+		for i in range(len(tmp_pnts) - 1):
+			coord_1 = (tmp_pnts[i].easting, tmp_pnts[i].northing, tmp_pnts[i].altitude)
+			coord_2 = (tmp_pnts[i + 1].easting, tmp_pnts[i + 1].northing, tmp_pnts[i + 1].altitude)
+
+			# remove doubled points
+			if coord_1 == coord_2:
+				self.points.remove(tmp_pnts[i + 1])
+
+		# test for first and last point
+		# if identical, then remove last point and set closed to True
+		coord_1 = (self.points[0].easting, self.points[0].northing, self.points[0].altitude)
+		coord_2 = (self.points[-1].easting, self.points[-1].northing, self.points[-1].altitude)
+
+		if coord_1 == coord_2:
+			del self.points[-1]
+			self.closed = True
 
 	def save_to_db(self):
 		self.__session.add(self)
