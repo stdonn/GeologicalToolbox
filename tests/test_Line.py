@@ -12,6 +12,7 @@ from Resources.Stratigraphy import Stratigraphy
 
 class TestLineClass(unittest.TestCase):
 	def setUp(self):
+		# type: () -> None
 		"""
 		Initialise a temporary database connection for all test cases and fill the database with test data
 		:return: None
@@ -85,6 +86,7 @@ class TestLineClass(unittest.TestCase):
 			new_line.save_to_db()
 
 	def test_init(self):
+		# type: () -> None
 		"""
 		Test the initialisation of the database
 
@@ -103,7 +105,7 @@ class TestLineClass(unittest.TestCase):
 		horizons = set([x['horizon'] for x in self.lines])
 
 		self.assertEqual(count_points, pnts,
-		                 "Number of points {} doesn't match the nu,mber of stored database points {}!". \
+		                 "Number of points {} doesn't match the number of stored database points {}!". \
 		                 format(count_points, pnts))
 		self.assertEqual(count_lines, len(self.lines),
 		                 "Number of lines {} doesn't match the number of stored database lines {}!". \
@@ -112,35 +114,42 @@ class TestLineClass(unittest.TestCase):
 		                      format(stored_horizons, horizons))
 
 	def test_insert_one(self):
+		# type: () -> None
 		"""
-		Test the insertion of one point
+		Test the insertion of one point. Additionally test get_point_index(point) function
 
 		:return: None
 		:rtype: None
 		"""
 		insert_point = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
-		line_query_1 = self.session.query(Line.id).filter_by(id=1)
-		count = line_query_1.count()
+		line_query = self.session.query(Line).filter_by(id=1)
+		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
-		line = line_query_1.one()
+		line = line_query.one()
+		line.session = self.session
 		line.insert_point(insert_point, 1)
 		line.save_to_db()
 
 		# point is inserted, now delete insert details
 		del count
-		del insert_point
 		del line
-		del line_query_1
+		del line_query
 
 		# test the insertion-process
-		line_query_1 = self.session.query(Line.id).filter_by(id=1)
-		count = line_query_1.count()
+		line_query = self.session.query(Line).filter_by(id=1)
+		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
-		# 21 Point initially, new point was Nr 22 -> id=21, line-pos should be 1
-		self.assertEqual(line.points[1].id, 21, "Wrong id ({}) for new point (should be {})". \
-		                 format(line.points[1].id, 21))
+		line = line_query.one()
+		# 21 Point initially, new point is Nr 22 -> id=22
+		# !!!ATTENTION!!! counting starts with 1 not 0 in sqlite-DB!
+		# line-pos and get_point_index should be 1
+		self.assertEqual(line.points[1].id, 22, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[1].id, 22))
 		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
 		                 format(line.points[1].line_pos, 1))
+		self.assertEqual(line.get_point_index(insert_point), 1,
+		                 "Wrong get_point_index(...) value ({}) in the line (should be {})". \
+		                 format(line.get_point_index(insert_point), 1))
 		self.assertEqual(line.points[1].easting, 1204200, "Wrong easting ({} / should be {})". \
 		                 format(line.points[1].easting, 1204200))
 		self.assertEqual(line.points[1].northing, 620800, "Wrong northing ({} / should be {})". \
@@ -151,8 +160,9 @@ class TestLineClass(unittest.TestCase):
 		                 format(line.points[1].has_z, False))
 
 	def test_insert_multiple(self):
+		# type: () -> None
 		"""
-		Test the insertion of multiple points
+		Test the insertion of multiple points. Although test remove of doubled values in a line.
 
 		:return: None
 		:rtype: None
@@ -160,8 +170,77 @@ class TestLineClass(unittest.TestCase):
 		insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
 		insert_point_2 = GeoPoint(1204500, 621200, None, Stratigraphy(self.session, "mu"), self.session)
 		insert_point_3 = GeoPoint(1204700, 621000, None, Stratigraphy(self.session, "mu"), self.session)
+		insert_point_4 = GeoPoint(1204700, 621000, None, Stratigraphy(self.session, "mu"), self.session)
+
+		points = [insert_point_1, insert_point_2, insert_point_3, insert_point_4]
+		line_query = self.session.query(Line).filter_by(id=1)
+		count = line_query.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		line = line_query.one()
+		line.session = self.session
+		line.insert_points(points, 1)
+		line.save_to_db()
+
+		# point is inserted, now delete insert details
+		del count
+		del insert_point_1, insert_point_2, insert_point_3, points
+		del line
+		del line_query
+
+		# test the insertion-process
+		line_query = self.session.query(Line).filter_by(id=1)
+		count = line_query.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		line = line_query.one()
+		# 21 Point initially, new point are Nr 22-24 -> id=22 to 24
+		# !!!ATTENTION!!! counting starts with 1 not 0 in sqlite-DB!
+		# line-pos should be 1, 2 and 3
+		self.assertEqual(line.points[1].id, 22, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[1].id, 22))
+		self.assertEqual(line.points[2].id, 23, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[2].id, 23))
+		self.assertEqual(line.points[3].id, 24, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[3].id, 24))
+		self.assertEqual(line.points[4].id, 2, "Wrong id ({}) for point after insert (should be {})". \
+		                 format(line.points[4].id, 2))
+		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
+		                 format(line.points[1].line_pos, 1))
+		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
+		                 format(line.points[2].line_pos, 2))
+		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
+		                 format(line.points[3].line_pos, 3))
+		self.assertEqual(line.points[1].easting, 1204200, "Wrong easting ({} / should be {})". \
+		                 format(line.points[1].easting, 1204200))
+		self.assertEqual(line.points[1].northing, 620800, "Wrong northing ({} / should be {})". \
+		                 format(line.points[1].northing, 620800))
+		self.assertEqual(line.points[1].altitude, 0, "Wrong altitude ({} / should be {})". \
+		                 format(line.points[1].altitude, 0))
+		self.assertEqual(line.points[1].has_z, False, "Wrong has_z ({} / should be {})". \
+		                 format(line.points[1].has_z, False))
+
+		print(str(line))
+
+	def test_delete_point(self):
+		# type: () -> None
+		"""
+		Test the deletion of a point
+
+		:return: None
+		:rtype: None
+		"""
+
+		line_query = self.session.query(Line).filter_by(id=2)
+		count = line_query.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		line = line_query.one()
+		line.session = self.session
+		line.delete_point(line.points[2])
+		self.assertEqual(len(line.points), 4, "Wrong Nr of points ({}), should be {}".format(len(line.points), 4))
+		line.save_to_db()
+
 
 	def tearDown(self):
+		# type: () -> None
 		"""
 		Empty function, nothing to shut down after the testing process
 
