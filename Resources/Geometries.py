@@ -9,6 +9,7 @@ from sqlalchemy.orm.session import Session
 from Exceptions import DatabaseException
 from Resources.DBHandler import Base
 from Resources.Stratigraphy import Stratigraphy
+from Resources.constants import float_precision
 
 
 class GeoPoint(Base):
@@ -277,7 +278,7 @@ class Line(Base):
 		# check doubled values in a line
 		self.__remove_doubled_points()
 
-	def delete_point_by_coordinates(self, easting, northing, altitude):
+	def delete_point_by_coordinates(self, easting, northing, altitude=0):
 		try:
 			easting = float(easting)
 			northing = float(northing)
@@ -287,7 +288,9 @@ class Line(Base):
 
 		# iterate over a copy of the list to avoid iteration issues caused by the deletion of values
 		for pnt in self.points[:]:
-			if (pnt.easting == easting) and (pnt.northing == northing) and (pnt.altitude == altitude):
+			if (abs(float(pnt.easting) - easting) < float_precision) and (
+						abs(float(pnt.northing) - northing) < float_precision) and (
+						(abs(float(pnt.altitude) - altitude) < float_precision) or not pnt.has_z):
 				self.points.remove(pnt)
 				# check doubled values in a line
 				self.__remove_doubled_points()
