@@ -3,7 +3,7 @@
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, sessionmaker
 
 from Exceptions import DatabaseException
 from Resources.DBHandler import Base
@@ -224,6 +224,16 @@ class Line(Base):
 		if len(value) > 100:
 			value = value[:100]
 		self.name = value
+
+	@property
+	def session(self):
+		return self.__session
+
+	@session.setter
+	def session(self, value):
+		if not type(value) == sessionmaker:
+			raise TypeError("Value is not of type sessionmaker (is {})!".format(str(type(value))))
+		self.__session = value
 
 	def insert_point(self, point, position):
 		if type(point) is GeoPoint:
