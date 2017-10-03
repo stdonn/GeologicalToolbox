@@ -243,8 +243,8 @@ class Line(Base):
 			raise TypeError('point is not of type GeoPoint!')
 
 	def insert_points(self, points, position):
-		if type(position) is int:
-			raise TypeError('Position is not of type int!')
+		if type(position) is not int:
+			raise TypeError('Position is not of type int (is {})!'.format(type(position)))
 
 		for pnt in points:
 			if type(pnt) is not GeoPoint:
