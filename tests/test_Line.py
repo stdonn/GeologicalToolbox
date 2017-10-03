@@ -47,11 +47,10 @@ class TestLineClass(unittest.TestCase):
 				'points' : ((1179553.6811741155, 647105.5431482664),
 				            (1179553.6811741155, 626292.3013778647),
 				            (1194354.20865529, 626292.3013778647),
-				            (1194354.20865529, 647105.5431482664),
-				            (1179553.6811741155, 647105.5431482664)),
+				            (1194354.20865529, 647105.5431482664)),
 				'name'   : 'Line_2'
 			}, {
-				'closed' : True,
+				'closed' : False,
 				'horizon': 'mm',
 				'age'    : 4,
 				'update' : True,
@@ -59,8 +58,7 @@ class TestLineClass(unittest.TestCase):
 				            (1161053.0218226474, 667456.2684348812),
 				            (1214704.933941905, 641092.8288590391),
 				            (1228580.428455506, 682719.3123998424),
-				            (1218405.0658121984, 721108.1805541387),
-				            (1179091.1646903288, 712782.8838459781)),
+				            (1218405.0658121984, 721108.1805541387)),
 				'name'   : 'Line_3'
 			}, {
 				'closed' : False,
@@ -71,6 +69,7 @@ class TestLineClass(unittest.TestCase):
 				            (1149490.1097279799, 648030.5761158396),
 				            (1191579.1097525698, 648030.5761158396),
 				            (1191579.1097525698, 691044.6091080031),
+				            (1191579.1097525698, 648030.5761158396),
 				            (1149490.1097279799, 691044.6091080031)),
 				'name'   : 'Line_2'
 			}
@@ -98,8 +97,13 @@ class TestLineClass(unittest.TestCase):
 		for line in self.lines:
 			pnts += len(line['points'])
 
+		# 2 points will be automatically deleted and the lines will be closed
+		pnts -= 2
+
 		count_points = self.session.query(GeoPoint).count()
-		count_lines = self.session.query(Line).count()
+		lines = self.session.query(Line)
+		count_lines = lines.count()
+		lines = lines.all()
 		stored_horizons = [x.name for x in self.session.query(Stratigraphy.name).all()]
 		# expected number of horizons
 		horizons = set([x['horizon'] for x in self.lines])
@@ -112,6 +116,18 @@ class TestLineClass(unittest.TestCase):
 		                 format(count_lines, len(self.lines)))
 		self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
 		                      format(stored_horizons, horizons))
+		self.assertEqual(len(lines[0].points), 4,
+		                 "Number of points of the line with ID 1 should be {}, but is {}".format(4, len(lines[0].points)))
+		self.assertTrue(lines[0].is_closed, "line with ID 1 should be closed...")
+		self.assertEqual(len(lines[1].points), 4,
+		                 "Number of points of the line with ID 2 should be {}, but is {}".format(4, len(lines[1].points)))
+		self.assertTrue(lines[1].is_closed, "line with ID 2 should be closed...")
+		self.assertEqual(len(lines[2].points), 5,
+		                 "Number of points of the line with ID 3 should be {}, but is {}".format(5, len(lines[2].points)))
+		self.assertFalse(lines[2].is_closed, "line with ID 3 should not be closed...")
+		self.assertEqual(len(lines[3].points), 5,
+		                 "Number of points of the line with ID 4 should be {}, but is {}".format(5, len(lines[3].points)))
+		self.assertTrue(lines[3].is_closed, "line with ID 4 should be closed...")
 
 	def test_insert_one(self):
 		# type: () -> None
@@ -140,11 +156,11 @@ class TestLineClass(unittest.TestCase):
 		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
 		line = line_query.one()
-		# 21 Point initially, new point is Nr 22 -> id=22
+		# 20 Point initially, 2 removed, new point is Nr 19 -> id=19
 		# !!!ATTENTION!!! counting starts with 1 not 0 in sqlite-DB!
 		# line-pos and get_point_index should be 1
-		self.assertEqual(line.points[1].id, 22, "Wrong id ({}) for new point (should be {})". \
-		                 format(line.points[1].id, 22))
+		self.assertEqual(line.points[1].id, 19, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[1].id, 19))
 		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
 		                 format(line.points[1].line_pos, 1))
 		self.assertEqual(line.get_point_index(insert_point), 1,
@@ -192,22 +208,22 @@ class TestLineClass(unittest.TestCase):
 		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
 		line = line_query.one()
-		# 21 Point initially, new point are Nr 22-24 -> id=22 to 24
+		# 20 Point initially, 2 removed, new point are Nr 19-21 -> id=19 to 21
 		# !!!ATTENTION!!! counting starts with 1 not 0 in sqlite-DB!
 		# line-pos should be 1, 2 and 3
-		self.assertEqual(line.points[1].id, 22, "Wrong id ({}) for new point (should be {})". \
-		                 format(line.points[1].id, 22))
-		self.assertEqual(line.points[2].id, 23, "Wrong id ({}) for new point (should be {})". \
-		                 format(line.points[2].id, 23))
-		self.assertEqual(line.points[3].id, 24, "Wrong id ({}) for new point (should be {})". \
-		                 format(line.points[3].id, 24))
+		self.assertEqual(line.points[1].id, 19, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[1].id, 19))
+		self.assertEqual(line.points[2].id, 20, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[2].id, 20))
+		self.assertEqual(line.points[3].id, 21, "Wrong id ({}) for new point (should be {})". \
+		                 format(line.points[3].id, 21))
 		self.assertEqual(line.points[4].id, 2, "Wrong id ({}) for point after insert (should be {})". \
 		                 format(line.points[4].id, 2))
 		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
 		                 format(line.points[1].line_pos, 1))
-		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
+		self.assertEqual(line.points[2].line_pos, 2, "Wrong position of the new point ({}) in the line (should be {})". \
 		                 format(line.points[2].line_pos, 2))
-		self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
+		self.assertEqual(line.points[3].line_pos, 3, "Wrong position of the new point ({}) in the line (should be {})". \
 		                 format(line.points[3].line_pos, 3))
 		self.assertEqual(line.points[1].easting, 1204200, "Wrong easting ({} / should be {})". \
 		                 format(line.points[1].easting, 1204200))
@@ -218,12 +234,13 @@ class TestLineClass(unittest.TestCase):
 		self.assertEqual(line.points[1].has_z, False, "Wrong has_z ({} / should be {})". \
 		                 format(line.points[1].has_z, False))
 
-		print(str(line))
-
 	def test_delete_point(self):
 		# type: () -> None
 		"""
-		Test the deletion of a point
+		Test the deletion of a point.
+		Part 1: the point itself
+		Part 2: delete by coordinates
+		Part 3: test auto-removal of doubled points after deletion
 
 		:return: None
 		:rtype: None
@@ -235,9 +252,50 @@ class TestLineClass(unittest.TestCase):
 		line = line_query.one()
 		line.session = self.session
 		line.delete_point(line.points[2])
-		self.assertEqual(len(line.points), 4, "Wrong Nr of points ({}), should be {}".format(len(line.points), 4))
-		line.save_to_db()
 
+		# save deletion and reload line, test afterwards
+		line.save_to_db()
+		del count
+		del line
+		del line_query
+
+		line = self.session.query(Line).filter_by(id=2).one()
+		self.assertEqual(len(line.points), 3, "Wrong Nr of points ({}), should be {}".format(len(line.points), 3))
+		del line
+
+		# Part 2: test deletion by coordinates
+		line_query = self.session.query(Line).filter_by(id=3)
+		count = line_query.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		line = line_query.one()
+		line.session = self.session
+		line.delete_point_by_coordinates(1214704.933941905, 641092.8288590391, 0)
+
+		# save deletion and reload line, test afterwards
+		line.save_to_db()
+		del count
+		del line
+		del line_query
+
+		line = self.session.query(Line).filter_by(id=3).one()
+		self.assertEqual(len(line.points), 4, "Wrong Nr of points ({}), should be {}".format(len(line.points), 4))
+
+		# Part 3: test auto-removal of doubled points after deletion
+		line_query = self.session.query(Line).filter_by(id=4)
+		count = line_query.count()
+		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
+		line = line_query.one()
+		line.session = self.session
+		line.delete_point_by_coordinates(1191579.1097525698, 691044.6091080031, 0)
+
+		# save deletion and reload line, test afterwards
+		line.save_to_db()
+		del count
+		del line
+		del line_query
+
+		line = self.session.query(Line).filter_by(id=4).one()
+		self.assertEqual(len(line.points), 3, "Wrong Nr of points ({}), should be {}".format(len(line.points), 3))
 
 	def tearDown(self):
 		# type: () -> None
