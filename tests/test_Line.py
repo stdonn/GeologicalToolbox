@@ -116,21 +116,17 @@ class TestLineClass(unittest.TestCase):
 		                 format(count_lines, len(self.lines)))
 		self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
 		                      format(stored_horizons, horizons))
-		self.assertEqual(len(lines[0].points), 4,
-		                 "Number of points of the line with ID 1 should be {}, but is {}".format(4,
-		                                                                                         len(lines[0].points)))
+		self.assertEqual(len(lines[0].points), 4, "Number of points of the line with ID 1 should be {}, but is {}". \
+		                 format(4, len(lines[0].points)))
 		self.assertTrue(lines[0].is_closed, "line with ID 1 should be closed...")
-		self.assertEqual(len(lines[1].points), 4,
-		                 "Number of points of the line with ID 2 should be {}, but is {}".format(4,
-		                                                                                         len(lines[1].points)))
+		self.assertEqual(len(lines[1].points), 4, "Number of points of the line with ID 2 should be {}, but is {}". \
+		                 format(4, len(lines[1].points)))
 		self.assertTrue(lines[1].is_closed, "line with ID 2 should be closed...")
-		self.assertEqual(len(lines[2].points), 5,
-		                 "Number of points of the line with ID 3 should be {}, but is {}".format(5,
-		                                                                                         len(lines[2].points)))
+		self.assertEqual(len(lines[2].points), 5, "Number of points of the line with ID 3 should be {}, but is {}". \
+		                 format(5, len(lines[2].points)))
 		self.assertFalse(lines[2].is_closed, "line with ID 3 should not be closed...")
-		self.assertEqual(len(lines[3].points), 5,
-		                 "Number of points of the line with ID 4 should be {}, but is {}".format(5,
-		                                                                                         len(lines[3].points)))
+		self.assertEqual(len(lines[3].points), 5, "Number of points of the line with ID 4 should be {}, but is {}". \
+		                 format(5, len(lines[3].points)))
 		self.assertTrue(lines[3].is_closed, "line with ID 4 should be closed...")
 
 	def test_insert_one(self):
@@ -200,6 +196,11 @@ class TestLineClass(unittest.TestCase):
 		line.session = self.session
 		line.insert_points(points, 1)
 		line.save_to_db()
+
+		# test Exception handling
+		self.assertRaises(TypeError, line.insert_points, points, "abc")
+		points.append('cde')
+		self.assertRaises(TypeError, line.insert_points, points, 2)
 
 		# point is inserted, now delete insert details
 		del count
@@ -379,6 +380,7 @@ class TestLineClass(unittest.TestCase):
 		:rtype: None
 		"""
 		pass
+
 
 if __name__ == '__main__':
 	unittest.main()
