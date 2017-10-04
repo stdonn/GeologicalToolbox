@@ -11,7 +11,7 @@ test_GeoPoint:
 - create unittest for GeoPoint
 
 test_Line:
-- test loading functionality
+- implement Exception-tests!
 
 COMMENTS:
 
