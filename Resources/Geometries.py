@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
+from typing import List
 
 from Exceptions import DatabaseException
 from Resources.DBHandler import Base
@@ -250,6 +251,21 @@ class Line(Base):
 		self.__remove_doubled_points()
 
 	def insert_points(self, points, position):
+		# type: (List[GeoPoint], int) -> None
+		"""
+		Returns the index of the given point in the line
+
+		:param points: List of points to be inserted in the line
+		:type points: List[GeoPoint]
+
+		:param position: Index, where points should be inserted in the line
+		:type position: int
+
+		:return: Nothing
+		:rtype: None
+
+		:raises TypeError: Raises TypeError if position is not of type int of one of the points is not of type GeoPoint
+		"""
 		if type(position) is not int:
 			raise TypeError('Position is not of type int (is {})!'.format(type(position)))
 
@@ -258,18 +274,42 @@ class Line(Base):
 				raise TypeError('At least on point in points is not of type GeoPoint!')
 
 		# use slicing for points insert
-		self.points[position:position] = points
+		if len(self.points) <= position:
+			self.points[-1:-1] = points
+		else:
+			self.points[position:position] = points
 
 		# check doubled values in a line
 		self.__remove_doubled_points()
 
 	def get_point_index(self, point):
+		# type: (GeoPoint) -> int
+		"""
+		Returns the index of the given point in the line
+
+		:param point: point which has to be looked up
+		:type point: GeoPoint
+
+		:return: Index of the ppint in the line
+		:rtype: int
+
+		:raises ValueError: Raises ValueError if committed point is not part of the line
+		"""
 		return self.points.index(point)
 
-	#
-	# !!! TO BE CHECKED AND UPDATED !!!
-	#
 	def delete_point(self, point):
+		# type: (GeoPoint) -> None
+		"""
+		Deletes the point from the line
+
+		:param point: GeoPoint object which should be deleted
+		:type point: GeoPoint
+
+		:return: Nothing
+		:rtype: None
+
+		:raises ValueError: Raises ValueError the point is not part of the line
+		"""
 		try:
 			self.points.remove(point)
 		except ValueError as e:
@@ -279,6 +319,24 @@ class Line(Base):
 		self.__remove_doubled_points()
 
 	def delete_point_by_coordinates(self, easting, northing, altitude=0):
+		# type: (float, float, float) -> None
+		"""
+		Deletes a point with the given coordinates from the line
+
+		:param easting: easting value of the point to be deleted
+		:type easting: float
+
+		:param northing: northing value of the point to be deleted
+		:type northing: float
+
+		:param altitude: altitude value of the point to be deleted (only necessary if point has z-values!)
+		:type altitude: float
+
+		:return: Nothing
+		:rtype: None
+
+		:raises ValueError: Raises ValueError if on parameter is not compatible to type float or no point can be found
+		"""
 		try:
 			easting = float(easting)
 			northing = float(northing)
@@ -327,6 +385,15 @@ class Line(Base):
 			self.closed = True
 
 	def save_to_db(self):
+		# type: () -> None
+		"""
+		Saves all changes of the line or the line itself to the connected database
+
+		:return: Nothing
+		:rtype: None
+
+		:raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
+		"""
 		self.__session.add(self)
 
 		try:
@@ -339,19 +406,85 @@ class Line(Base):
 			# Failure during database processing? -> rollback changes and raise error again
 			self.__session.rollback()
 			raise IntegrityError(
-					'Cannot commit changes in lines table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
-							e.statement), e.params, e.orig, e.connection_invalidated)
+					'Cannot commit changes in lines table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'. \
+						format(e.statement), e.params, e.orig, e.connection_invalidated)
 
 	@classmethod
 	def load_all_from_db(cls, session):
+		# type: (str, Session) -> List[Line]
+		"""
+		Returns all lines in the database connected to the SQLAlchemy Session session
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: a list of lines representing the result of the database query
+		:rtype: List[Line]
+		"""
 		return session.query(cls).all()
 
 	@classmethod
 	def load_by_id_from_db(cls, line_id, session):
+		# type: (int, Session) -> Line
+		"""
+		Returns the line with the given id in the database connected to the SQLAlchemy Session session
+
+		:param line_id: Only the line with this id will be returned (has to be 1, unique value)
+		:type line_id: int
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: a single line representing the result of the database query
+		:rtype: Line
+
+		:raises NoResultFound: Raises NoResultFound if no line was found with this id
+		:raises IntegrityError: Raises IntegrityError if more than one line is found (more than one unique value)
+		"""
 		return session.query(cls).filter(cls.id == line_id).one()
 
 	@classmethod
+	def load_by_name_from_db(cls, name, session):
+		# type: (str, Session) -> List[Line]
+		"""
+		Returns all lines with the given name in the database connected to the SQLAlchemy Session session
+
+		:param name: Only lines with this name will be returned
+		:type name: str
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: a list of lines representing the result of the database query
+		:rtype: List[Line]
+		"""
+		return session.query(cls).filter(cls.name == name).all()
+
+	@classmethod
 	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
+		# type: (Session, float, float, float, float) -> List[Line]
+		"""
+		Returns all lines with at least on point inside the given extent in the database connected to the SQLAlchemy Session session
+
+		:param min_easting: minimal easting of extent
+		:type min_easting: float
+
+		:param max_easting: maximal easting of extent
+		:type max_easting: float
+
+		:param min_northing: minimal northing of extent
+		:type min_northing: float
+
+		:param max_northing: maximal northing of extent
+		:type max_northing: float
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: a list of lines representing the result of the database query
+		:rtype: List[Line]
+		"""
+
 		# select the points with a line_id that are located inside the extent
 		# -> result will be a list of tuples with only a single line-id value
 		# -> convert this list to a set in order to remove doubled values
@@ -364,4 +497,5 @@ class Line(Base):
 				 ])
 
 		# return line with points in extend
-		return session.query(Line).filter(Line.id.in_(points)).all()
+		# to speed up the process, test first if points (len > 0) exist in extent
+		return [] if (len(points) == 0) else session.query(Line).filter(Line.id.in_(points)).all()
