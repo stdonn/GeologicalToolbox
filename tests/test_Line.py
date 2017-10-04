@@ -68,8 +68,8 @@ class TestLineClass(unittest.TestCase):
 				'points' : ((1149490.1097279799, 691044.6091080031),
 				            (1149490.1097279799, 648030.5761158396),
 				            (1191579.1097525698, 648030.5761158396),
+				            (1149490.1097279799, 648030.5761158396),
 				            (1191579.1097525698, 691044.6091080031),
-				            (1191579.1097525698, 648030.5761158396),
 				            (1149490.1097279799, 691044.6091080031)),
 				'name'   : 'Line_2'
 			}
@@ -117,16 +117,20 @@ class TestLineClass(unittest.TestCase):
 		self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
 		                      format(stored_horizons, horizons))
 		self.assertEqual(len(lines[0].points), 4,
-		                 "Number of points of the line with ID 1 should be {}, but is {}".format(4, len(lines[0].points)))
+		                 "Number of points of the line with ID 1 should be {}, but is {}".format(4,
+		                                                                                         len(lines[0].points)))
 		self.assertTrue(lines[0].is_closed, "line with ID 1 should be closed...")
 		self.assertEqual(len(lines[1].points), 4,
-		                 "Number of points of the line with ID 2 should be {}, but is {}".format(4, len(lines[1].points)))
+		                 "Number of points of the line with ID 2 should be {}, but is {}".format(4,
+		                                                                                         len(lines[1].points)))
 		self.assertTrue(lines[1].is_closed, "line with ID 2 should be closed...")
 		self.assertEqual(len(lines[2].points), 5,
-		                 "Number of points of the line with ID 3 should be {}, but is {}".format(5, len(lines[2].points)))
+		                 "Number of points of the line with ID 3 should be {}, but is {}".format(5,
+		                                                                                         len(lines[2].points)))
 		self.assertFalse(lines[2].is_closed, "line with ID 3 should not be closed...")
 		self.assertEqual(len(lines[3].points), 5,
-		                 "Number of points of the line with ID 4 should be {}, but is {}".format(5, len(lines[3].points)))
+		                 "Number of points of the line with ID 4 should be {}, but is {}".format(5,
+		                                                                                         len(lines[3].points)))
 		self.assertTrue(lines[3].is_closed, "line with ID 4 should be closed...")
 
 	def test_insert_one(self):
@@ -279,6 +283,10 @@ class TestLineClass(unittest.TestCase):
 
 		line = self.session.query(Line).filter_by(id=3).one()
 		self.assertEqual(len(line.points), 4, "Wrong Nr of points ({}), should be {}".format(len(line.points), 4))
+		self.assertEqual(line.points[1].id, 10,
+		                 "First point before deleted point should have id {} but has {}".format(10, line.points[1].id))
+		self.assertEqual(line.points[2].id, 12,
+		                 "First point after deleted point should have id {} but has {}".format(12, line.points[2].id))
 
 		# Part 3: test auto-removal of doubled points after deletion
 		line_query = self.session.query(Line).filter_by(id=4)
@@ -286,7 +294,7 @@ class TestLineClass(unittest.TestCase):
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
 		line = line_query.one()
 		line.session = self.session
-		line.delete_point_by_coordinates(1191579.1097525698, 691044.6091080031, 0)
+		line.delete_point_by_coordinates(1191579.1097525698, 648030.5761158396, 0)
 
 		# save deletion and reload line, test afterwards
 		line.save_to_db()
@@ -296,17 +304,81 @@ class TestLineClass(unittest.TestCase):
 
 		line = self.session.query(Line).filter_by(id=4).one()
 		self.assertEqual(len(line.points), 3, "Wrong Nr of points ({}), should be {}".format(len(line.points), 3))
+		self.assertEqual(line.points[1].id, 15,
+		                 "First point before deleted point should have id {} but has {}".format(15, line.points[1].id))
+		self.assertEqual(line.points[2].id, 18,
+		                 "First point after deleted point should have id {} but has {}".format(18, line.points[2].id))
+
+	def test_loading(self):
+		# type: () -> None
+		"""
+		Test the different types of loading of lines from the db.
+		Part 1: load all lines from the database
+		Part 2: load line by id
+		Part 3: load lines by name
+		Part 4: load lines with minimal one point in given extent
+
+		:return: None
+		:rtype: None
+		"""
+
+		# Part 1: load all lines from the database
+		lines = Line.load_all_from_db(self.session)
+		self.assertEqual(len(lines), 4, "Wrong number of lines ({}), should be {}".format(len(lines), 4))
+		self.assertEqual(lines[0].id, 1, "First line has wrong id ({}), should be {}".format(lines[0].id, 1))
+		self.assertEqual(len(lines[0].points), 4, "Number of points ({}) of the first line is wrong. Should be {}". \
+		                 format(len(lines[0].points), 4))
+		self.assertEqual(lines[3].id, 4, "First line has wrong id ({}), should be {}".format(lines[3].id, 4))
+		self.assertEqual(len(lines[3].points), 5, "Number of points ({}) of the first line is wrong. Should be {}". \
+		                 format(len(lines[3].points), 5))
+
+		del lines
+
+		# Part 2: load line by id
+		line = Line.load_by_id_from_db(2, self.session)
+		self.assertEqual(line.id, 2, "line id is wrong ({}), should be {}".format(line.id, 2))
+		self.assertEqual(len(line.points), 4, "Number of points ({}) of the line with id=2 is wrong. Should be {}". \
+		                 format(len(line.points), 4))
+		self.assertEqual(line.points[0].id, 5, "first point in line with id=2 should have id {}, is {}". \
+		                 format(5, line.points[0].id))
+		self.assertEqual(line.points[-1].id, 8, "last point in line with id=2 should have id {}, is {}". \
+		                 format(8, line.points[-1].id))
+		del line
+
+		# Part 3: load lines by name
+		lines = Line.load_by_name_from_db("Line_3", self.session)
+		self.assertEqual(len(lines), 1, "Wrong number of lines ({}), should be {}".format(len(lines), 1))
+		self.assertEqual(lines[0].id, 3, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 3))
+
+		del lines
+
+		lines = Line.load_by_name_from_db("Line_2", self.session)
+		self.assertEqual(len(lines), 2, "Wrong number of lines ({}), should be {}".format(len(lines), 2))
+		self.assertEqual(lines[0].id, 2, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 2))
+		self.assertEqual(lines[1].id, 4, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 4))
+
+		del lines
+
+		# Part 4: load lines with minimal one point in given extent
+		# x -> 1174000 - 1200000
+		# y ->  613500 -  651000
+		# should return 2 lines with id 2 and 4 ("Line_2")
+		lines = Line.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000)
+		self.assertEqual(len(lines), 2, "Wrong number of lines ({}), should be {}".format(len(lines), 2))
+		self.assertEqual(lines[0].id, 2, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 2))
+		self.assertEqual(lines[1].id, 4, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 4))
+
+		del lines
 
 	def tearDown(self):
 		# type: () -> None
 		"""
-		Empty function, nothing to shut down after the testing process
+		Empty function, nothing to shutdown after the testing process
 
 		:return: None
 		:rtype: None
 		"""
 		pass
-
 
 if __name__ == '__main__':
 	unittest.main()
