@@ -105,21 +105,53 @@ class GeoPoint(Base):
 
 	@property
 	def point_name(self):
+		# type: () -> str
+		"""
+		Returns the name of the point
+
+		:return: Returns the name of the point
+		:rtype: str
+		"""
 		return self.name
 
 	@point_name.setter
 	def point_name(self, value):
-		if len(value) > 100:
-			value = value[:100]
-		self.name = value
+		# type: (str) -> None
+		"""
+		Sets a new name for the point with a maximum of 100 characters
+
+		:param value: point name
+		:type value: str
+
+		:return: Nothing
+		"""
+
+		string = str(value)
+		if len(string) > 100:
+			string = string[:100]
+		self.name = string
 
 	# delete z-dimension and information from point
 	def del_z(self):
+		# type: () -> None
+		"""
+		removes the z-value from the point
+
+		:return: Nothing
+		"""
 		self.alt = 0
 		self.has_z = False
 
 	# save point to db / update point
 	def save_to_db(self):
+		# type: () -> None
+		"""
+		Saves all changes of the point or the point itself to the connected database
+
+		:return: Nothing
+
+		:raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
+		"""
 		self.__session.add(self)
 		try:
 			self.__session.commit()
@@ -133,12 +165,72 @@ class GeoPoint(Base):
 	# load points from db
 	@classmethod
 	def load_all_from_db(cls, session, get_lines=False):
+		# type: (str, Session) -> List[GeoPoint]
+		"""
+		Returns all points in the database connected to the SQLAlchemy Session session
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:param get_lines: If True, also line nodes are returned
+		:type get_lines: bool
+
+		:return: a list of lines representing the result of the database query
+		:rtype: List[GeoPoint]
+		"""
 		if get_lines:
 			return session.query(cls).all()
 		return session.query(cls).filter(GeoPoint.line_id == -1).all()
 
 	@classmethod
+	def load_by_name_from_db(cls, name, session, get_lines=False):
+		# type: (str, Session) -> List[GeoPoint]
+		"""
+		Returns all points with the given name in the database connected to the SQLAlchemy Session session
+
+		:param name: Only points with this name will be returned
+		:type name: str
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:param get_lines: If True, also line nodes are returned
+		:type get_lines: bool
+
+		:return: a list of points representing the result of the database query
+		:rtype: List[GeoPoint]
+		"""
+		if get_lines:
+			return session.query(cls).filter(cls.name == name).all()
+		return session.query(cls).filter(cls.name == name).filter(GeoPoint.line_id == -1).all()
+
+	@classmethod
 	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
+		# type: (Session, float, float, float, float) -> List[Line]
+		"""
+		Returns all points inside the given extent in the database connected to the SQLAlchemy Session session
+
+		:param min_easting: minimal easting of extent
+		:type min_easting: float
+
+		:param max_easting: maximal easting of extent
+		:type max_easting: float
+
+		:param min_northing: minimal northing of extent
+		:type min_northing: float
+
+		:param max_northing: maximal northing of extent
+		:type max_northing: float
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:param get_lines: If True, also line nodes are returned
+		:type get_lines: bool
+
+		:return: a list of lines representing the result of the database query
+		:rtype: List[GeoPoint]
+		"""
 		result = session.query(GeoPoint)
 		if not get_lines:
 			result.filter(GeoPoint.line_id == -1)
