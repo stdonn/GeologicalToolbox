@@ -310,8 +310,12 @@ class Line(Base):
 		:return: Nothing
 		:rtype: None
 
+		:raises TypeError: Raises TypeError if point is not of type GeoPoint
 		:raises ValueError: Raises ValueError the point is not part of the line
 		"""
+		if type(point) is not GeoPoint:
+			raise TypeError('point {} is not of type GeoPoint!'.format(str(point)))
+
 		try:
 			self.points.remove(point)
 		except ValueError as e:
