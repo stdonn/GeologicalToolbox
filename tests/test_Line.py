@@ -91,8 +91,7 @@ class TestLineClass(unittest.TestCase):
 		"""
 		Test the initialisation of the database
 
-		:return: None
-		:rtype: None
+		:return: Nothing
 		"""
 
 		pnts = 0
@@ -136,8 +135,7 @@ class TestLineClass(unittest.TestCase):
 		"""
 		Test the insertion of one point. Additionally test get_point_index(point) function
 
-		:return: None
-		:rtype: None
+		:return: Nothing
 		"""
 		insert_point = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
 		line_query = self.session.query(Line).filter_by(id=1)
@@ -186,8 +184,7 @@ class TestLineClass(unittest.TestCase):
 		"""
 		Test the insertion of multiple points. Although test remove of doubled values in a line.
 
-		:return: None
-		:rtype: None
+		:return: Nothing
 		"""
 		insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
 		insert_point_2 = GeoPoint(1204500, 621200, None, Stratigraphy(self.session, "mu"), self.session)
@@ -254,8 +251,7 @@ class TestLineClass(unittest.TestCase):
 		Part 2: delete by coordinates
 		Part 3: test auto-removal of doubled points after deletion
 
-		:return: None
-		:rtype: None
+		:return: Nothing
 		"""
 
 		line_query = self.session.query(Line).filter_by(id=2)
@@ -335,8 +331,7 @@ class TestLineClass(unittest.TestCase):
 		Part 3: load lines by name
 		Part 4: load lines with minimal one point in given extent
 
-		:return: None
-		:rtype: None
+		:return: Nothing
 		"""
 
 		# Part 1: load all lines from the database
@@ -409,8 +404,7 @@ class TestLineClass(unittest.TestCase):
 		"""
 		Empty function, nothing to shutdown after the testing process
 
-		:return: None
-		:rtype: None
+		:return: Nothing
 		"""
 		pass
 
