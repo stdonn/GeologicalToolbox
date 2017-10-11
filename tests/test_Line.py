@@ -5,6 +5,8 @@ This is a test module for the Resources.Geometries.Line class using unittest
 
 import unittest
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from Resources.DBHandler import DBHandler
 from Resources.Geometries import GeoPoint, Line
 from Resources.Stratigraphy import Stratigraphy
@@ -175,6 +177,10 @@ class TestLineClass(unittest.TestCase):
 		self.assertEqual(line.points[1].has_z, False, "Wrong has_z ({} / should be {})". \
 		                 format(line.points[1].has_z, False))
 
+		# test Exception handling
+		self.assertRaises(TypeError, line.insert_point, "string", 1)
+		self.assertRaises(TypeError, line.insert_points, insert_point, "abc")
+
 	def test_insert_multiple(self):
 		# type: () -> None
 		"""
@@ -197,14 +203,9 @@ class TestLineClass(unittest.TestCase):
 		line.insert_points(points, 1)
 		line.save_to_db()
 
-		# test Exception handling
-		self.assertRaises(TypeError, line.insert_points, points, "abc")
-		points.append('cde')
-		self.assertRaises(TypeError, line.insert_points, points, 2)
-
 		# point is inserted, now delete insert details
 		del count
-		del insert_point_1, insert_point_2, insert_point_3, points
+		del insert_point_1, insert_point_2, insert_point_3
 		del line
 		del line_query
 
@@ -213,6 +214,7 @@ class TestLineClass(unittest.TestCase):
 		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
 		line = line_query.one()
+
 		# 20 Point initially, 2 removed, new point are Nr 19-21 -> id=19 to 21
 		# !!!ATTENTION!!! counting starts with 1 not 0 in sqlite-DB!
 		# line-pos should be 1, 2 and 3
@@ -238,6 +240,11 @@ class TestLineClass(unittest.TestCase):
 		                 format(line.points[1].altitude, 0))
 		self.assertEqual(line.points[1].has_z, False, "Wrong has_z ({} / should be {})". \
 		                 format(line.points[1].has_z, False))
+
+		# test Exception handling
+		self.assertRaises(TypeError, line.insert_points, points, "abc")
+		points.append('cde')
+		self.assertRaises(TypeError, line.insert_points, points, 2)
 
 	def test_delete_point(self):
 		# type: () -> None
@@ -266,6 +273,11 @@ class TestLineClass(unittest.TestCase):
 
 		line = self.session.query(Line).filter_by(id=2).one()
 		self.assertEqual(len(line.points), 3, "Wrong Nr of points ({}), should be {}".format(len(line.points), 3))
+
+		# test exception handling
+		self.assertRaises(TypeError, line.delete_point, "string")
+		self.assertRaises(ValueError, line.delete_point, GeoPoint(1, 2, None, None, self.session))
+
 		del line
 
 		# Part 2: test deletion by coordinates
@@ -288,6 +300,10 @@ class TestLineClass(unittest.TestCase):
 		                 "First point before deleted point should have id {} but has {}".format(10, line.points[1].id))
 		self.assertEqual(line.points[2].id, 12,
 		                 "First point after deleted point should have id {} but has {}".format(12, line.points[2].id))
+
+		# test exception handling
+		self.assertRaises(ValueError, line.delete_point_by_coordinates, 123, 456, "test")
+		self.assertRaises(ValueError, line.delete_point_by_coordinates, 123, 456, 789)
 
 		# Part 3: test auto-removal of doubled points after deletion
 		line_query = self.session.query(Line).filter_by(id=4)
@@ -333,6 +349,9 @@ class TestLineClass(unittest.TestCase):
 		self.assertEqual(len(lines[3].points), 5, "Number of points ({}) of the first line is wrong. Should be {}". \
 		                 format(len(lines[3].points), 5))
 
+		# test exception handling
+		self.assertRaises(AttributeError, Line.load_all_from_db, "test")
+
 		del lines
 
 		# Part 2: load line by id
@@ -344,6 +363,10 @@ class TestLineClass(unittest.TestCase):
 		                 format(5, line.points[0].id))
 		self.assertEqual(line.points[-1].id, 8, "last point in line with id=2 should have id {}, is {}". \
 		                 format(8, line.points[-1].id))
+
+		# test exception handling
+		self.assertRaises(NoResultFound, Line.load_by_id_from_db, 25, self.session)
+
 		del line
 
 		# Part 3: load lines by name
@@ -360,6 +383,11 @@ class TestLineClass(unittest.TestCase):
 
 		del lines
 
+		lines = Line.load_by_name_from_db("Test", self.session)
+		self.assertEqual(len(lines), 0, "Wrong number of lines ({}), should be {}".format(len(lines), 0))
+
+		del lines
+
 		# Part 4: load lines with minimal one point in given extent
 		# x -> 1174000 - 1200000
 		# y ->  613500 -  651000
@@ -368,6 +396,11 @@ class TestLineClass(unittest.TestCase):
 		self.assertEqual(len(lines), 2, "Wrong number of lines ({}), should be {}".format(len(lines), 2))
 		self.assertEqual(lines[0].id, 2, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 2))
 		self.assertEqual(lines[1].id, 4, "Returned line has wrong id ({}), should be {}".format(lines[0].id, 4))
+
+		del lines
+
+		lines = Line.load_in_extent_from_db(self.session, 0, 1, 0, 1)
+		self.assertEqual(len(lines), 0, "Wrong number of lines ({}), should be {}".format(len(lines), 9))
 
 		del lines
 
