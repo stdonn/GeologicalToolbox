@@ -148,6 +148,11 @@ class GeoPoint(Base):
 
 
 class Line(Base):
+	"""
+	Class Line
+
+	Represents a geological line feature, e.g. for storing faults or horizon surface expressions.
+	"""
 	# define db table name and columns
 	__tablename__ = 'lines'
 
@@ -166,6 +171,27 @@ class Line(Base):
 	                      cascade="all, delete, delete-orphan")
 
 	def __init__(self, closed, session, horizon, points, name=""):
+		# type: (bool, Session, Stratigraphy, List[GeoPoint], str) -> None
+		"""
+		Create a new line.
+
+		:param closed: True if the line should be closed, else False
+		:type closed: bool
+
+		:param session: SQLAlchemy session, which includes the database connection
+		:type session: Session
+
+		:param horizon: Stratigraphy to which the line belongs
+		:type horizon: Stratigraphy
+
+		:param points: list of points which represents the lines nodes
+		:type points: List[GeoPoint]
+
+		:param name: name of the line with the aim to have the possibility to group more lines to a line-set
+		:type name: str
+
+		:return: Nothing
+		"""
 		self.is_closed = closed
 		self.__session = session
 		self.horizon = horizon
@@ -176,10 +202,25 @@ class Line(Base):
 		self.__remove_doubled_points()
 
 	def __repr__(self):
+		# type: () -> str
+		"""
+		Returns a text-representation of the line
+
+		:return: Returns a text-representation of the line
+		:rtype: str
+		"""
+
 		return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
 			.format(self.id, self.closed, str(self.horizon), str(self.points))
 
 	def __str__(self):
+		# type: () -> str
+		"""
+		Returns a text-representation of the line
+
+		:return: Returns a text-representation of the line
+		:rtype: str
+		"""
 		# return "[{}] {} - {}\n{}".format(self.id, self.closed, str(self.horizon), str(self.points))
 		text = "Line: id='{}', closed='{}', horizon='{}', points:" \
 			.format(self.id, self.closed, str(self.horizon))
@@ -191,57 +232,143 @@ class Line(Base):
 
 	@property
 	def is_closed(self):
+		# type: () -> bool
+		"""
+		Returns True if the line is close else False
+
+		:return: Returns True if the line is close else False
+		:rtype: bool
+		"""
 		return self.closed
 
 	@is_closed.setter
 	def is_closed(self, value):
+		# type: (bool) -> None
+		"""
+		Sets closed value
+
+		:param value: new close value
+		:type value: bool
+
+		:return: Nothing
+
+		:raises TypeError: Raises TypeError if value is no
+		"""
 		if type(value) != bool:
 			raise TypeError('Value must be of type bool, but is {}'.format(str(type(value))))
 		self.closed = bool(value)
 
 	@property
 	def horizon(self):
+		# type: () -> Stratigraphy
+		"""
+		Returns the horizon of the line
+
+		:return: Returns the horizon of the line
+		:rtype: Stratigraphy
+		"""
 		return self.hor
 
 	@horizon.setter
 	def horizon(self, value):
+		# type: (Stratigraphy) -> None
+		"""
+		sets a new horizon
+
+		:param value: new horizon
+		:type value: Stratigraphy or None
+
+		:return: Nothing
+
+		:raises DatabaseException: raises DatabaseException if more than one horizon with the value.name exists in the database (name column should beﬂ unique)
+		"""
 		if value is None:
 			self.hor = None
 			self.horizon_id = -1
-			return
 
-		# check if horizon exists (unique name)
-		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
-		if result.count() == 0:
-			self.hor = value
-		elif result.count() == 1:
-			self.hor = result.one()
-			self.hor.session = self.__session
-		else:  # more than one result? => heavy failure, name should be unique => DatabaseException
-			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
-			                        .format(result.count(), value.name))
+		else:
+			# check if horizon exists (unique name)
+			result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
+			if result.count() == 0:
+				self.hor = value
+			elif result.count() == 1:
+				self.hor = result.one()
+				self.hor.session = self.__session
+			else:  # more than one result? => heavy failure, name should be unique => DatabaseException
+				raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
+				                        .format(result.count(), value.name))
 
 	@property
 	def line_name(self):
+		# type: () -> str
+		"""
+		Return the line name
+
+		:return: returns the line name
+		:rtype: str
+		"""
 		return self.name
 
 	@line_name.setter
 	def line_name(self, value):
-		if len(value) > 100:
-			value = value[:100]
-		self.name = value
+		# type: (str) -> None
+		"""
+		Sets a new name for the line with a maximum of 100 characters
+
+		:param value: line name
+		:type value: str
+
+		:return: Nothing
+		"""
+		string = str(value)
+		if len(string) > 100:
+			string = string[:100]
+		self.name = string
 
 	@property
 	def session(self):
+		# type: () -> Session
+		"""
+		Return the current Session object
+
+		:return: returns the current Session object, which represents the connection to a database
+		:rtype: Session
+		"""
 		return self.__session
 
 	@session.setter
 	def session(self, value):
+		# type: (Session) -> None
+		"""
+		Sets a new session, which represents the connection to a database
+
+		:param value: session object create by SQLAlchemy sessionmaker
+		:type value: Session
+
+		:return: Nothing
+
+		:raises TypeError: Raises TypeError if value is not of an instance of Session
+		"""
+
 		if not isinstance(value, Session):
 			raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
 		self.__session = value
 
 	def insert_point(self, point, position):
+		# type: (GeoPoint, int) -> None
+		"""
+		Returns the index of the given point in the line
+
+		:param point: point to be inserted in the line
+		:type point: GeoPoint
+
+		:param position: Index, where points should be inserted in the line
+		:type position: int
+
+		:return: Nothing
+
+		:raises TypeError: Raises TypeError if position is not of type int or point is not of type GeoPoint
+		"""
 		if type(position) is not int:
 			raise TypeError('Position is not of type int (is {})!'.format(type(position)))
 		elif type(point) is not GeoPoint:
@@ -264,9 +391,8 @@ class Line(Base):
 		:type position: int
 
 		:return: Nothing
-		:rtype: None
 
-		:raises TypeError: Raises TypeError if position is not of type int of one of the points is not of type GeoPoint
+		:raises TypeError: Raises TypeError if position is not of type int or one of the points is not of type GeoPoint
 		"""
 		if type(position) is not int:
 			raise TypeError('Position is not of type int (is {})!'.format(type(position)))
@@ -308,7 +434,6 @@ class Line(Base):
 		:type point: GeoPoint
 
 		:return: Nothing
-		:rtype: None
 
 		:raises TypeError: Raises TypeError if point is not of type GeoPoint
 		:raises ValueError: Raises ValueError the point is not part of the line
@@ -339,7 +464,6 @@ class Line(Base):
 		:type altitude: float
 
 		:return: Nothing
-		:rtype: None
 
 		:raises ValueError: Raises ValueError if on parameter is not compatible to type float or no point can be found
 		"""
@@ -368,7 +492,6 @@ class Line(Base):
 		remove points with the same coordinates, if they follow up each other in the points list.
 
 		:return: None
-		:rtype: None
 		"""
 
 		# create a full copy of the point-list
@@ -396,7 +519,6 @@ class Line(Base):
 		Saves all changes of the line or the line itself to the connected database
 
 		:return: Nothing
-		:rtype: None
 
 		:raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
 		"""
