@@ -242,10 +242,12 @@ class Line(Base):
 		self.__session = value
 
 	def insert_point(self, point, position):
-		if type(point) is GeoPoint:
-			self.points.insert(position, point)
+		if type(position) is not int:
+			raise TypeError('Position is not of type int (is {})!'.format(type(position)))
+		elif type(point) is not GeoPoint:
+			raise TypeError('point {} is not of type GeoPoint!'.format(str(point)))
 		else:
-			raise TypeError('point is not of type GeoPoint!')
+			self.points.insert(position, point)
 
 		# check doubled values in a line
 		self.__remove_doubled_points()
