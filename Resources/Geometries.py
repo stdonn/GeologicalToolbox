@@ -1,4 +1,7 @@
 # -*- coding: UTF-8 -*-
+"""
+This module provides basic geometries (points and lines) for storing geological data in database.
+"""
 
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +17,11 @@ from Resources.constants import float_precision
 
 
 class GeoPoint(Base):
+	"""
+	Class GeoPoint
+
+	Represents a geological point feature, e.g. for storing line nodes or geological outcrops in a database.
+	"""
 	# define db table name and columns
 	__tablename__ = 'geopoints'
 
@@ -35,6 +43,30 @@ class GeoPoint(Base):
 	sq.UniqueConstraint(east, north, alt, horizon_id, line_id, line_pos, name='u_point_constraint')
 
 	def __init__(self, easting, northing, altitude, horizon, session, name=""):
+		# type: (float, float, float, Stratigraphy, Session, str) -> None
+		"""
+		Creates a new GeoPoint
+
+		:param easting: easting coordinate of the point
+		:type easting: float
+
+		:param northing: northing coordinate of the point
+		:type northing: float
+
+		:param altitude: height above sea level of the point or None
+		:type altitude: float or None
+
+		:param horizon: stratigraphy of the point
+		:type horizon: Stratigraphy
+
+		:param session: SQLAlchemy session, which includes the database connection
+		:type session: Session
+
+		:param name: name of the line with the aim to have the possibility to group more lines to a line-set
+		:type name: str
+
+		:return: Nothing
+		"""
 		self.easting = easting
 		self.northing = northing
 		if altitude is None:
@@ -48,45 +80,128 @@ class GeoPoint(Base):
 		self.point_name = name
 
 	def __repr__(self):
+		# type: () -> str
+		"""
+		Returns a text-representation of the line
+
+		:return: Returns a text-representation of the line
+		:rtype: str
+		"""
 		return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}', line={}, line-position={})>" \
 			.format(self.id, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id, self.line_pos)
 
 	def __str__(self):
+		# type: () -> str
+		"""
+		Returns a text-representation of the line
+
+		:return: Returns a text-representation of the line
+		:rtype: str
+		"""
 		return "[{}] {} - {} - {} : {} - {} - {}" \
 			.format(self.id, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id, self.line_pos)
 
 	# define setter and getter for columns and local data
 	@property
 	def easting(self):
+		# type: () -> float
+		"""
+		Returns the easting value of the point.
+
+		:return: Returns the easting value of the point.
+		:rtype: float
+		"""
 		return self.east
 
 	@easting.setter
 	def easting(self, value):
-		self.east = value
+		# type: (float) -> None
+		"""
+		Sets a new easting value
+
+		:param value: new easting value
+		:type value: float
+
+		:return: Nothing
+		:raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
+		"""
+		self.east = float(value)
 
 	@property
 	def northing(self):
+		# type: () -> float
+		"""
+		Returns the northing value of the point.
+
+		:return: Returns the northing value of the point.
+		:rtype: float
+		"""
 		return self.north
 
 	@northing.setter
 	def northing(self, value):
-		self.north = value
+		# type: (float) -> None
+		"""
+		Sets a new northing value
+
+		:param value: new northing value
+		:type value: float
+
+		:return: Nothing
+		:raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
+		"""
+		self.north = float(value)
 
 	@property
 	def altitude(self):
+		# type: () -> float
+		"""
+		Returns the height above sea level of the point. If the point has no z-value (check with GeoPoint.has_z()), 0 will be returned.
+
+		:return: Returns the height above sea level of the point.
+		:rtype: float
+		"""
 		return self.alt
 
 	@altitude.setter
 	def altitude(self, value):
-		self.alt = value
+		# type: (float) -> None
+		"""
+		Sets a new height above sea level
+
+		:param value: New height above sea level
+		:type value: float
+
+		:return: Nothing
+		:raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
+		"""
+		self.alt = float(value)
 		self.has_z = True
 
 	@property
 	def horizon(self):
+		# type: () -> Stratigraphy
+		"""
+		Returns the stratigraphy of the point
+
+		:return: Returns the current Stratigraphy
+		:rtype: Stratigraphy
+		"""
 		return self.hor
 
 	@horizon.setter
 	def horizon(self, value):
+		# type: (Stratigraphy) -> None
+		"""
+		sets a new stratigraphy
+
+		:param value: new stratigraphy
+		:type value: Stratigraphy or None
+
+		:return: Nothing
+
+		:raises DatabaseException: raises DatabaseException if more than one horizon with the value.name exists in the database (name column should beﬂ unique)
+		"""
 		# check if horizon exists in db -> if true take the db version, don't create a new one
 		if value is None:
 			self.hor = None
@@ -354,7 +469,7 @@ class Line(Base):
 	def horizon(self):
 		# type: () -> Stratigraphy
 		"""
-		Returns the horizon of the line
+		Returns the stratigraphy of the line
 
 		:return: Returns the horizon of the line
 		:rtype: Stratigraphy
@@ -365,9 +480,9 @@ class Line(Base):
 	def horizon(self, value):
 		# type: (Stratigraphy) -> None
 		"""
-		sets a new horizon
+		sets a new stratigraphy
 
-		:param value: new horizon
+		:param value: new stratigraphy
 		:type value: Stratigraphy or None
 
 		:return: Nothing

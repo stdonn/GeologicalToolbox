@@ -1,17 +1,10 @@
 TODO:
 
 Line:
-- integrate docstrings
 - possibly: integrate has_z
-
-GeoPoints:
-- integrate docstrings
 
 test_GeoPoint:
 - create unittest for GeoPoint
-
-test_Line:
-- implement Exception-tests!
 
 COMMENTS:
 
