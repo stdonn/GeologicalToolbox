@@ -17,6 +17,7 @@ class TestLineClass(unittest.TestCase):
 		# type: () -> None
 		"""
 		Initialise a temporary database connection for all test cases and fill the database with test data
+
 		:return: None
 		"""
 		# initialise a in-memory sqlite database
