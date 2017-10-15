@@ -459,7 +459,7 @@ class Line(Base):
 
 		:return: Nothing
 
-		:raises TypeError: Raises TypeError if value is no
+		:raises TypeError: Raises TypeError if value is not of type bool
 		"""
 		if type(value) != bool:
 			raise TypeError('Value must be of type bool, but is {}'.format(str(type(value))))
@@ -487,7 +487,7 @@ class Line(Base):
 
 		:return: Nothing
 
-		:raises DatabaseException: raises DatabaseException if more than one horizon with the value.name exists in the database (name column should beﬂ unique)
+		:raises DatabaseException: raises DatabaseException if more than one horizon with the value.name exists in the database (name column should be unique)
 		"""
 		if value is None:
 			self.hor = None
@@ -672,7 +672,7 @@ class Line(Base):
 
 		:return: Nothing
 
-		:raises ValueError: Raises ValueError if on parameter is not compatible to type float or no point can be found
+		:raises ValueError: Raises ValueError if one parameter is not compatible to type float or no point can be found
 		"""
 		try:
 			easting = float(easting)
