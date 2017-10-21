@@ -25,28 +25,32 @@ class TestGeoPointClass(unittest.TestCase):
 		# add test data to the database
 		self.points = [
 			{
-				"coords" : (1234134, 5465462, 123),
-				"horizon": "mu",
-				"age"    : 26,
-				"name"   : ""
+				'coords' : (1234134, 5465462, 123),
+				'horizon': 'mu',
+				'age'    : 3,
+				'name'   : '',
+				'update' : False
 			},
 			{
-				"coords" : (1254367, 5443636, 156),
-				"horizon": "so",
-				"age"    : 26,
-				"name"   : ""
+				'coords' : (1254367, 5443636, 156),
+				'horizon': 'so',
+				'age'    : 23,
+				'name'   : '',
+				'update' : False
 			},
 			{
-				"coords" : (1265469, 5467929, None),
-				"horizon": "mu",
-				"age"    : 26,
-				"name"   : "point set"
+				'coords' : (1265469, 5467929, None),
+				'horizon': 'sm',
+				'age'    : 5,
+				'name'   : 'point set',
+				'update' : False
 			},
 			{
-				"coords" : (1273456, 5449672, 101),
-				"horizon": "mu",
-				"age"    : 26,
-				"name"   : "point set"
+				'coords' : (1273456, 5449672, 101),
+				'horizon': 'mu',
+				'age'    : 26,
+				'name'   : 'point set',
+				'update' : True
 			}
 		]
 
@@ -99,15 +103,15 @@ class TestGeoPointClass(unittest.TestCase):
 		]
 
 		for point in self.points:
-			new_point = GeoPoint(point["coords"][0], point["coords"][1], point["coords"][2],
-			                     Stratigraphy(self.session, point["horizon"], point["age"], False), self.session,
-			                     point["name"])
+			new_point = GeoPoint(point['coords'][0], point['coords'][1], point['coords'][2],
+			                     Stratigraphy(self.session, point['horizon'], point['age'], point['update']),
+			                     self.session, point['name'])
 			new_point.save_to_db()
 
 		for line in self.lines:
 			points = list()
 			for point in line['points']:
-				points.append(GeoPoint(point[0], point[1], None, None, self.session, ""))
+				points.append(GeoPoint(point[0], point[1], None, None, self.session, ''))
 			new_line = Line(line['closed'], self.session,
 			                Stratigraphy(self.session, line['horizon'], line['age'], line['update']), points,
 			                line['name'])
@@ -128,34 +132,36 @@ class TestGeoPointClass(unittest.TestCase):
 		# 2 points will be automatically deleted and the lines will be closed
 		pnts -= 2
 
-		count_points = self.session.query(GeoPoint).count()
-		lines = self.session.query(Line)
-		count_lines = lines.count()
-		lines = lines.all()
-		stored_horizons = [x.name for x in self.session.query(Stratigraphy.name).all()]
+		points = self.session.query(GeoPoint)
+		count_points = points.count()
+		points = points.all()
+		stored_horizons = self.session.query(Stratigraphy).all()
+		for horizon in stored_horizons:
+			print(str(horizon))
+
+		print()
+
+		stored_horizons = [x.name for x in stored_horizons]
 		# expected number of horizons
-		horizons = set([x['horizon'] for x in self.lines])
+		horizons = set([x['horizon'] for x in self.lines] + [x['horizon'] for x in self.points])
+
+		for point in points:
+			print(str(point))
 
 		self.assertEqual(count_points, pnts,
 		                 "Number of points {} doesn't match the number of stored database points {}!". \
 		                 format(count_points, pnts))
-		self.assertEqual(count_lines, len(self.lines),
-		                 "Number of lines {} doesn't match the number of stored database lines {}!". \
-		                 format(count_lines, len(self.lines)))
+
 		self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
 		                      format(stored_horizons, horizons))
-		self.assertEqual(len(lines[0].points), 4, "Number of points of the line with ID 1 should be {}, but is {}". \
-		                 format(4, len(lines[0].points)))
-		self.assertTrue(lines[0].is_closed, "line with ID 1 should be closed...")
-		self.assertEqual(len(lines[1].points), 4, "Number of points of the line with ID 2 should be {}, but is {}". \
-		                 format(4, len(lines[1].points)))
-		self.assertTrue(lines[1].is_closed, "line with ID 2 should be closed...")
-		self.assertEqual(len(lines[2].points), 5, "Number of points of the line with ID 3 should be {}, but is {}". \
-		                 format(5, len(lines[2].points)))
-		self.assertFalse(lines[2].is_closed, "line with ID 3 should not be closed...")
-		self.assertEqual(len(lines[3].points), 5, "Number of points of the line with ID 4 should be {}, but is {}". \
-		                 format(5, len(lines[3].points)))
-		self.assertTrue(lines[3].is_closed, "line with ID 4 should be closed...")
+		self.assertEqual(points[0].id, 1, "Wrong ID {} for first point. Should be {}". \
+		                 format(points[0].id, 1))
+		self.assertEqual(points[0].horizon.name, 'mu',
+		                 "Wrong name of stratigraphic unit ({}) of first point. Should be ". \
+		                 format(points[0].horizon.name, 'mu'))
+		self.assertEqual(points[0].horizon.age, 26,
+		                 "Wrong age for stratigraphic unit ({}) of first point. Should be {}". \
+		                 format(points[0].horizon.age, 26))
 
 	def tearDown(self):
 		# type: () -> None
