@@ -22,8 +22,8 @@ class Stratigraphy(Base):
 	name = sq.Column(sq.TEXT(50), unique=True)
 	age = sq.Column(sq.INTEGER(), default=-1)
 
-	def __init__(self, session, name, age=-1, update=False):
-		# type: (Session, str, int, bool) -> None
+	def __init__(self, session, name, age=-1):
+		# type: (Session, str, int) -> None
 		"""
 		Initialize a stratigraphic unit
 		:param session: SQLAlchemy session, which includes the database connection
@@ -35,13 +35,17 @@ class Stratigraphy(Base):
 		:param age: age of the stratigraphic unit (-1 if none)
 		:type age: int
 
-		:param update: update age if stratigraphic unit exists
-		:type update: bool
+		:return: nothing
 		"""
+
+		try:
+			age = int(age)
+		except ValueError as e:
+			raise ValueError("Cannot convert age to int:\n{}".format(str(e)))
+
 		self.__session = session
-		self.unit = name
-		if update or (self.age is None):
-			self.age = age if (age > -1) else -1
+		self.name = name
+		self.age = age if (age > -1) else -1
 
 	def __repr__(self):
 		# type: () -> str
@@ -109,33 +113,6 @@ class Stratigraphy(Base):
 		"""
 		return self.name
 
-	@unit.setter
-	def unit(self, value):
-		# type: (str) -> None
-		"""
-		Set a new name for the stratigraphic unit.
-		Update from the database if the unit exist, else create a new one.
-
-		:param value: New name of the stratigraphic unit
-		:type value: str
-
-		:return: Nothing
-		"""
-		# check if horizon exists (unique name)
-		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value)
-		if result.count() == 0:
-			self.name = value
-			self.age = None
-		elif result.count() == 1:
-			self.name = result.one().unit
-			self.age = result.one().age
-			self.id = result.one().id
-		else:  # more than one result? => heavy failure, name should be unique => DatabaseException
-			for res in result.all():
-				print(res)
-			raise DatabaseException(
-				'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), value.name))
-
 	@property
 	def session(self):
 		# type: () -> Session
@@ -182,3 +159,48 @@ class Stratigraphy(Base):
 			raise IntegrityError(
 					'Cannot commit changes in stratigraphy table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
 							e.statement), e.params, e.orig, e.connection_invalidated)
+
+	@classmethod
+	def init_stratigraphy(cls, session, name, age=-1, update=False):
+		# type: (Session, str, int, bool) -> cls
+		"""
+		Initialize a stratigraphic unit. Create a new one if unit doesn't exists in the database, else use the existing.
+
+		:param session: SQLAlchemy session, which includes the database connection
+		:type session: Session
+
+		:param name: Name of the stratigraphic unit
+		:type name: str
+
+		:param age: age of the stratigraphic unit (-1 if none)
+		:type age: int
+
+		:param update: update age if stratigraphic unit exists
+		:type update: bool
+		"""
+
+		try:
+			age = int(age)
+		except ValueError as e:
+			raise ValueError("Cannot convert age to int:\n{}".format(str(e)))
+
+		if age < -1:
+			age = -1
+
+		# check if horizon exists (unique name)
+		result = session.query(Stratigraphy).filter(Stratigraphy.name == name)
+		if result.count() == 0:  # no result found -> create new stratigraphic unit
+			return cls(session, name, age)
+		elif result.count() == 1:  # one result found -> stratigraphic unit exists in database -> return and possibly update
+			if update:  # change age value
+				result = result.one()
+				result.horizon_age = age
+				return result
+
+			# return result
+			return result.one()
+		else:  # more than one result? => heavy failure, name should be unique => DatabaseException
+			for res in result.all():
+				print(res)
+			raise DatabaseException(
+					'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
