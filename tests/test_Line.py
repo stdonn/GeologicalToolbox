@@ -83,8 +83,8 @@ class TestLineClass(unittest.TestCase):
 			for point in line['points']:
 				points.append(GeoPoint(point[0], point[1], None, None, self.session, ""))
 			new_line = Line(line['closed'], self.session,
-			                Stratigraphy(self.session, line['horizon'], line['age'], line['update']), points,
-			                line['name'])
+			                Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
+			                points, line['name'])
 			new_line.save_to_db()
 
 	def test_init(self):
