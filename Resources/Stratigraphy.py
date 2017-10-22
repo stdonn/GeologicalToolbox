@@ -20,7 +20,7 @@ class Stratigraphy(Base):
 	__tablename__ = 'stratigraphy'
 
 	id = sq.Column(sq.INTEGER, sq.Sequence('strat_id_seq'), primary_key=True)
-	name = sq.Column(sq.TEXT(50), unique=True)
+	unit_name = sq.Column(sq.TEXT(50), unique=True)
 	age = sq.Column(sq.INTEGER(), default=-1)
 
 	def __init__(self, session, name, age=-1):
@@ -44,7 +44,7 @@ class Stratigraphy(Base):
 			raise ValueError("Cannot convert age to int:\n{}".format(str(e)))
 
 		self.__session = session
-		self.name = name
+		self.unit_name = name
 		self.age = age if (age > -1) else -1
 
 	def __repr__(self):
@@ -55,7 +55,7 @@ class Stratigraphy(Base):
 		:return: Returns a text-representation of the line
 		:rtype: str
 		"""
-		return "<StratigraphicHorizon(id='{}', name='{}', age='{}')>".format(self.id, self.name, self.age)
+		return "<StratigraphicHorizon(id='{}', name='{}', age='{}')>".format(self.id, self.unit_name, self.age)
 
 	def __str__(self):
 		# type: () -> str
@@ -65,7 +65,7 @@ class Stratigraphy(Base):
 		:return: Returns a text-representation of the line
 		:rtype: str
 		"""
-		return "horizon [{}]: name='{}', age='{}'".format(self.id, self.name, self.age)
+		return "horizon [{}]: name='{}', age='{}'".format(self.id, self.unit_name, self.age)
 
 	# define setter and getter for columns and local data
 	@property
@@ -103,7 +103,7 @@ class Stratigraphy(Base):
 			self.age = value
 
 	@property
-	def unit(self):
+	def name(self):
 		# type: () -> str
 		"""
 		Returns the name of the stratigraphic unit
@@ -111,7 +111,20 @@ class Stratigraphy(Base):
 		:return: Returns the name of the stratigraphic unit
 		:rtype: str
 		"""
-		return self.name
+		return self.unit_name
+
+	@name.setter
+	def name(self, value):
+		# type: (str) -> None
+		"""
+		Sets a new name to the stratigraphic unit
+
+		:param value: New name of the stratigraphic unit
+		:type value: str
+
+		:return: Nothing
+		"""
+		self.unit_name = str(value)
 
 	@property
 	def session(self):
@@ -188,7 +201,7 @@ class Stratigraphy(Base):
 			age = -1
 
 		# check if horizon exists (unique name)
-		result = session.query(Stratigraphy).filter(Stratigraphy.name == name)
+		result = session.query(Stratigraphy).filter(Stratigraphy.unit_name == name)
 		if result.count() == 0:  # no result found -> create new stratigraphic unit
 			return cls(session, name, age)
 		if result.count() == 1:  # one result found -> stratigraphic unit exists in database -> return and possibly update
@@ -240,7 +253,7 @@ class Stratigraphy(Base):
 
 		:raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
 		"""
-		result = session.query(cls).filter(cls.name == name)
+		result = session.query(cls).filter(cls.unit_name == name)
 		if result.count() == 0:
 			return None
 		if result.count() == 1:
