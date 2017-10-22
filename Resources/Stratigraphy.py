@@ -217,7 +217,11 @@ class Stratigraphy(Base):
 		:return: a list of stratigraphic units representing the result of the database query
 		:rtype: List[Stratigraphy]
 		"""
-		return session.query(cls).all()
+		result = session.query(cls).all()
+		for horizon in result:  # set session value
+			horizon.session = session
+		return result
+
 
 	@classmethod
 	def load_by_name_from_db(cls, name, session):
@@ -240,7 +244,9 @@ class Stratigraphy(Base):
 		if result.count() == 0:
 			return None
 		if result.count() == 1:
-			return result.one()
+			result = result.one()
+			result.session = session
+			return result
 
 		raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'. \
 		                        format(result.count(), name))
@@ -264,4 +270,7 @@ class Stratigraphy(Base):
 		:return: Returns a list of stratigraphic units with an age between min_age and max_age.
 		:rtype: List[Stratigraphy]
 		"""
-		return session.query(cls).filter(sq.between(cls.age, min_age, max_age)).all()
+		result = session.query(cls).filter(sq.between(cls.age, min_age, max_age)).all()
+		for horizon in result:
+			horizon.session = session
+		return result
