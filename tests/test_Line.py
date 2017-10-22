@@ -106,7 +106,7 @@ class TestLineClass(unittest.TestCase):
 		lines = self.session.query(Line)
 		count_lines = lines.count()
 		lines = lines.all()
-		stored_horizons = [x.name for x in self.session.query(Stratigraphy.name).all()]
+		stored_horizons = [x.unit_name for x in self.session.query(Stratigraphy.unit_name).all()]
 		# expected number of horizons
 		horizons = set([x['horizon'] for x in self.lines])
 
@@ -138,7 +138,7 @@ class TestLineClass(unittest.TestCase):
 
 		:return: Nothing
 		"""
-		insert_point = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
+		insert_point = GeoPoint(1204200, 620800, None, Stratigraphy.init_stratigraphy(self.session, 'mu'), self.session)
 		line_query = self.session.query(Line).filter_by(id=1)
 		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
@@ -187,10 +187,14 @@ class TestLineClass(unittest.TestCase):
 
 		:return: Nothing
 		"""
-		insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy(self.session, "mu"), self.session)
-		insert_point_2 = GeoPoint(1204500, 621200, None, Stratigraphy(self.session, "mu"), self.session)
-		insert_point_3 = GeoPoint(1204700, 621000, None, Stratigraphy(self.session, "mu"), self.session)
-		insert_point_4 = GeoPoint(1204700, 621000, None, Stratigraphy(self.session, "mu"), self.session)
+		insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+		                          self.session)
+		insert_point_2 = GeoPoint(1204500, 621200, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+		                          self.session)
+		insert_point_3 = GeoPoint(1204700, 621000, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+		                          self.session)
+		insert_point_4 = GeoPoint(1204700, 621000, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+		                          self.session)
 
 		points = [insert_point_1, insert_point_2, insert_point_3, insert_point_4]
 		line_query = self.session.query(Line).filter_by(id=1)
