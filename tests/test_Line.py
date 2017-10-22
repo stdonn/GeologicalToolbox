@@ -248,9 +248,9 @@ class TestLineClass(unittest.TestCase):
 		# type: () -> None
 		"""
 		Test the deletion of a point.
-		Part 1: the point itself
-		Part 2: delete by coordinates
-		Part 3: test auto-removal of doubled points after deletion
+		/1/ the point itself
+		/2/ delete by coordinates
+		/3/ test auto-removal of doubled points after deletion
 
 		:return: Nothing
 		"""
@@ -277,7 +277,7 @@ class TestLineClass(unittest.TestCase):
 
 		del line
 
-		# Part 2: test deletion by coordinates
+		# /2/ test deletion by coordinates
 		line_query = self.session.query(Line).filter_by(id=3)
 		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
@@ -302,7 +302,7 @@ class TestLineClass(unittest.TestCase):
 		self.assertRaises(ValueError, line.delete_point_by_coordinates, 123, 456, "test")
 		self.assertRaises(ValueError, line.delete_point_by_coordinates, 123, 456, 789)
 
-		# Part 3: test auto-removal of doubled points after deletion
+		# /3/ test auto-removal of doubled points after deletion
 		line_query = self.session.query(Line).filter_by(id=4)
 		count = line_query.count()
 		self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))

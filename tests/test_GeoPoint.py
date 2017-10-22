@@ -136,17 +136,17 @@ class TestGeoPointClass(unittest.TestCase):
 		count_points = points.count()
 		points = points.all()
 		stored_horizons = self.session.query(Stratigraphy).all()
-		for horizon in stored_horizons:
-			print(str(horizon))
+		# for horizon in stored_horizons:
+		#	print(str(horizon))
 
-		print()
+		# print()
 
 		stored_horizons = [x.name for x in stored_horizons]
 		# expected number of horizons
 		horizons = set([x['horizon'] for x in self.lines] + [x['horizon'] for x in self.points])
 
-		for point in points:
-			print(str(point))
+		# for point in points:
+		#	print(str(point))
 
 		self.assertEqual(count_points, pnts,
 		                 "Number of points {} doesn't match the number of stored database points {}!". \
