@@ -59,7 +59,86 @@ class TestStratigraphyClass(unittest.TestCase):
 			new_unit.save_to_db()
 
 	def test_init(self):
-		pass
+		# type: () -> None
+		"""
+		Test the initialisation
+		:return: Nothing
+		"""
+		result = self.session.query(Stratigraphy).all()
+		self.assertEqual(len(result), 4, "Wrong number of entries ({}). Should be {}.".format(len(result), 4))
+
+	def test_loading(self):
+		# type: () -> None
+		"""
+		Test the loading functions of the stratigraphy class
+
+		/1/ load all from database
+		/2/ load by name from database
+		/3/ load in age range from database
+
+		:return: Nothing
+		"""
+
+		# /1/ load all from database
+		# additionally update value is tested for mu / so unit
+		result = {unit.name: unit for unit in Stratigraphy.load_all_from_db(self.session)}
+		self.assertEqual(len(result), 4, "Wrong number of entries ({}). Should be {}.".format(len(result), 4))
+		self.assertEqual(result['mu'].age, 3, "Wrong age for mu ({}). Should be {}".format(result['mu'].age, 3))
+		self.assertEqual(result['so'].age, 4, "Wrong age for so ({}). Should be {}".format(result['so'].age, 4))
+
+		del result
+
+		# /2/ load by name from database
+		result = Stratigraphy.load_by_name_from_db('mo', self.session)
+		self.assertEqual(result.age, 1, "Wrong age for mo ({}). Should be {}".format(result.age, 3))
+		del result
+
+		result = Stratigraphy.load_by_name_from_db('sm', self.session)
+		self.assertIsNone(result, 'Result for sm is not None, but should be: {}'.format(str(result)))
+		del result
+
+		# /3/ load in age range from database
+		result = Stratigraphy.load_by_age_from_db(2, 3, self.session)
+		self.assertEqual(len(result), 2, "Wrong number of query results ({}). Should be {}.".format(len(result), 2))
+		self.assertEqual(result[0].name, 'mm',
+		                 "Wrong name of first horizon ({}). Should be {}.".format(result[0], 'mm'))
+		self.assertEqual(result[1].name, 'mu',
+		                 "Wrong name of second horizon ({}). Should be {}.".format(result[1], 'mu'))
+		self.assertEqual(result[1].age, 3, "Wrong age for second horizon ({}). Should be {}.".format(result[1].age, 3))
+		del result
+
+		result = Stratigraphy.load_by_age_from_db(4, 4, self.session)
+		self.assertEqual(len(result), 1, "Wrong number of query results ({}). Should be {}.".format(len(result), 1))
+		self.assertEqual(result[0].name, 'so',
+		                 "Wrong name of first horizon ({}). Should be {}.".format(result[0], 'so'))
+		del result
+
+		result = Stratigraphy.load_by_age_from_db(5, 10, self.session)
+		self.assertEqual(len(result), 0, "Wrong number of query results ({}). Should be {}.".format(len(result), 0))
+
+	def test_setter_and_getter(self):
+		# type: () -> None
+		"""
+		Test setter and getters of class Stratigraphy
+
+		:return: Nothing
+		"""
+		result = Stratigraphy.load_by_name_from_db('mo', self.session)
+		result.age = 10
+		result.save_to_db()
+		del result
+
+		result = Stratigraphy.load_by_name_from_db('mo', self.session)
+		self.assertEqual(result.age, 10, "Wrong age for horizon 'mo' ({}). Should be {}.".format(result.age, 10))
+
+		result.name = 'Blubb'
+		result.save_to_db()
+		del result
+
+		result = Stratigraphy.load_by_age_from_db(10, 10, self.session)
+		self.assertEqual(len(result), 1, "Wrong number of query results ({}). Should be {}.".format(len(result), 1))
+		self.assertEqual(result[0].name, 'Blubb',
+		                 "Wrong name of stratigraphic unit ({}). Should be {}".format(result[0].name, 'Blubb'))
 
 	def tearDown(self):
 		# type: () -> None
