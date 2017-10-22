@@ -6,6 +6,7 @@ This module provides a class for storing stratigraphical information in database
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import Session
+from typing import List
 
 from Exceptions import DatabaseException
 from Resources.DBHandler import Base
@@ -157,8 +158,8 @@ class Stratigraphy(Base):
 		except IntegrityError as e:
 			# Failure during database processing? -> rollback changes and raise error again
 			raise IntegrityError(
-					'Cannot commit changes in stratigraphy table, Integrity Error (double unique values?) -- {} -- Rolling back changes...'.format(
-							e.statement), e.params, e.orig, e.connection_invalidated)
+					'Cannot commit changes in stratigraphy table, Integrity Error (double unique values?) -- {} -- ' +
+					'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
 	@classmethod
 	def init_stratigraphy(cls, session, name, age=-1, update=False):
@@ -191,16 +192,86 @@ class Stratigraphy(Base):
 		result = session.query(Stratigraphy).filter(Stratigraphy.name == name)
 		if result.count() == 0:  # no result found -> create new stratigraphic unit
 			return cls(session, name, age)
-		elif result.count() == 1:  # one result found -> stratigraphic unit exists in database -> return and possibly update
+		if result.count() == 1:  # one result found -> stratigraphic unit exists in database -> return and possibly update
+			result = result.one()
+			result.session = session
 			if update:  # change age value
-				result = result.one()
 				result.horizon_age = age
-				return result
+			return result
 
-			# return result
+		# more than one result? => heavy failure, name should be unique => DatabaseException
+		for res in result.all():
+			print(res)
+		raise DatabaseException(
+				'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
+
+	# load units from db
+	@classmethod
+	def load_all_from_db(cls, session):
+		# type: (str, Session) -> List[Stratigraphy]
+		"""
+		Returns all stratigraphic units stored in the database connected to the SQLAlchemy Session session
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: a list of stratigraphic units representing the result of the database query
+		:rtype: List[Stratigraphy]
+		"""
+		return session.query(cls).all()
+
+	@classmethod
+	def load_by_name_from_db(cls, name, session):
+		# type: (str, Session) -> Stratigraphy
+		"""
+		Returns the stratigraphic unit with the given name in the database connected to the SQLAlchemy Session session
+
+		:param name: The name of the requested stratigraphic unit
+		:type name: str
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: As the name is a unique value, only one result can be returned or None
+		:rtype: Stratigraphy or None
+
+		:raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
+		"""
+		result = session.query(cls).filter(cls.name == name)
+		if result.count() == 0:
+			return None
+		if result.count() == 1:
 			return result.one()
-		else:  # more than one result? => heavy failure, name should be unique => DatabaseException
-			for res in result.all():
-				print(res)
-			raise DatabaseException(
-					'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
+
+		raise DatabaseException(
+				'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
+
+	@classmethod
+	def load_by_age_from_db(cls, min_age, max_age, session):
+		# type: (str, int, int, Session) -> List[Stratigraphy]
+		"""
+		Returns a list of stratigraphic units with an age between min_age and max_age from the database connected to
+		the SQLAlchemy Session session. If no result was found, this function returns an empty list.
+
+		:param min_age: Minimal age of the stratigraphic units
+		:type min_age: int
+
+		:param max_age: Maximal age of the stratigraphic units
+		:type max_age: int
+
+		:param session: represents the database connection as SQLAlchemy Session
+		:type session: Session
+
+		:return: Returns a list of stratigraphic units with an age between min_age and max_age.
+		:rtype: List[Stratigraphy]
+
+		:raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
+		"""
+		result = session.query(cls).filter(cls.name == name)
+		if result.count() == 0:
+			return None
+		if result.count() == 1:
+			return result.one()
+
+		raise DatabaseException(
+				'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
