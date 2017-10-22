@@ -38,7 +38,6 @@ class Stratigraphy(Base):
 
 		:return: nothing
 		"""
-
 		try:
 			age = int(age)
 		except ValueError as e:
@@ -208,7 +207,7 @@ class Stratigraphy(Base):
 	# load units from db
 	@classmethod
 	def load_all_from_db(cls, session):
-		# type: (str, Session) -> List[Stratigraphy]
+		# type: (Session) -> List[Stratigraphy]
 		"""
 		Returns all stratigraphic units stored in the database connected to the SQLAlchemy Session session
 
@@ -243,12 +242,12 @@ class Stratigraphy(Base):
 		if result.count() == 1:
 			return result.one()
 
-		raise DatabaseException(
-				'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
+		raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'. \
+		                        format(result.count(), name))
 
 	@classmethod
 	def load_by_age_from_db(cls, min_age, max_age, session):
-		# type: (str, int, int, Session) -> List[Stratigraphy]
+		# type: (str, int, Session) -> List[Stratigraphy]
 		"""
 		Returns a list of stratigraphic units with an age between min_age and max_age from the database connected to
 		the SQLAlchemy Session session. If no result was found, this function returns an empty list.
@@ -264,14 +263,5 @@ class Stratigraphy(Base):
 
 		:return: Returns a list of stratigraphic units with an age between min_age and max_age.
 		:rtype: List[Stratigraphy]
-
-		:raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
 		"""
-		result = session.query(cls).filter(cls.name == name)
-		if result.count() == 0:
-			return None
-		if result.count() == 1:
-			return result.one()
-
-		raise DatabaseException(
-				'More than one ({}) horizon with the same name: {}! Database error!'.format(result.count(), name))
+		return session.query(cls).filter(sq.between(cls.age, min_age, max_age)).all()
