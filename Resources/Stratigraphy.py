@@ -247,7 +247,7 @@ class Stratigraphy(Base):
 
 	@classmethod
 	def load_by_age_from_db(cls, min_age, max_age, session):
-		# type: (str, int, Session) -> List[Stratigraphy]
+		# type: (int, int, Session) -> List[Stratigraphy]
 		"""
 		Returns a list of stratigraphic units with an age between min_age and max_age from the database connected to
 		the SQLAlchemy Session session. If no result was found, this function returns an empty list.
