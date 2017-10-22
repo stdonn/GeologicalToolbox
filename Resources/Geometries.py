@@ -10,7 +10,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from Exceptions import DatabaseException
 from Resources.DBHandler import Base
 from Resources.Stratigraphy import Stratigraphy
 from Resources.constants import float_precision
@@ -208,15 +207,7 @@ class GeoPoint(Base):
 			self.horizon_id = -1
 			return
 
-		result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
-		if result.count() == 0:  # horizon doesn't exist -> use the committed value
-			self.hor = value
-		elif result.count() == 1:  # horizon exists in the db -> use the db value
-			self.hor = result.one()
-			self.hor.session = self.__session
-		else:  # more than one horizon with this name in the db => heavy failure, name should be unique => DatabaseException
-			raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
-			                        .format(result.count(), value.name))
+		self.hor = value
 
 	@property
 	def point_name(self):
@@ -494,16 +485,7 @@ class Line(Base):
 			self.horizon_id = -1
 
 		else:
-			# check if horizon exists (unique name)
-			result = self.__session.query(Stratigraphy).filter(Stratigraphy.name == value.name)
-			if result.count() == 0:
-				self.hor = value
-			elif result.count() == 1:
-				self.hor = result.one()
-				self.hor.session = self.__session
-			else:  # more than one result? => heavy failure, name should be unique => DatabaseException
-				raise DatabaseException('More than one ({}) horizon with the same name: {}! Database error!'
-				                        .format(result.count(), value.name))
+			self.hor = value
 
 	@property
 	def line_name(self):
