@@ -271,7 +271,7 @@ class GeoPoint(Base):
 	# load points from db
 	@classmethod
 	def load_all_from_db(cls, session, get_lines=False):
-		# type: (str, Session) -> List[GeoPoint]
+		# type: (Session, bool) -> List[GeoPoint]
 		"""
 		Returns all points in the database connected to the SQLAlchemy Session session
 
@@ -285,8 +285,8 @@ class GeoPoint(Base):
 		:rtype: List[GeoPoint]
 		"""
 		if get_lines:
-			return session.query(cls).all()
-		return session.query(cls).filter(GeoPoint.line_id == -1).all()
+			return session.query(cls).order_by(cls.id).all()
+		return session.query(cls).filter(GeoPoint.line_id == -1).order_by(cls.id).all()
 
 	@classmethod
 	def load_by_name_from_db(cls, name, session, get_lines=False):
@@ -307,11 +307,11 @@ class GeoPoint(Base):
 		:rtype: List[GeoPoint]
 		"""
 		if get_lines:
-			return session.query(cls).filter(cls.name == name).all()
-		return session.query(cls).filter(cls.name == name).filter(GeoPoint.line_id == -1).all()
+			return session.query(cls).filter(cls.name == name).order_by(cls.id).all()
+		return session.query(cls).filter(cls.name == name).filter(GeoPoint.line_id == -1).order_by(cls.id).all()
 
 	@classmethod
-	def load_in_extend_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
+	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
 		# type: (Session, float, float, float, float) -> List[Line]
 		"""
 		Returns all points inside the given extent in the database connected to the SQLAlchemy Session session
@@ -342,7 +342,7 @@ class GeoPoint(Base):
 			result.filter(GeoPoint.line_id == -1)
 
 		return result.filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
-			filter(sq.between(GeoPoint.north, min_northing, max_northing)).all()
+			filter(sq.between(GeoPoint.north, min_northing, max_northing)).order_by(cls.id).all()
 
 
 class Line(Base):
@@ -738,7 +738,7 @@ class Line(Base):
 		:return: a list of lines representing the result of the database query
 		:rtype: List[Line]
 		"""
-		return session.query(cls).all()
+		return session.query(cls).order_by(cls.id).all()
 
 	@classmethod
 	def load_by_id_from_db(cls, line_id, session):
@@ -775,7 +775,7 @@ class Line(Base):
 		:return: a list of lines representing the result of the database query
 		:rtype: List[Line]
 		"""
-		return session.query(cls).filter(cls.name == name).all()
+		return session.query(cls).filter(cls.name == name).order_by(cls.id).all()
 
 	@classmethod
 	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
@@ -815,4 +815,4 @@ class Line(Base):
 
 		# return line with points in extend
 		# to speed up the process, test first if points (len > 0) exist in extent
-		return [] if (len(points) == 0) else session.query(Line).filter(Line.id.in_(points)).all()
+		return [] if (len(points) == 0) else session.query(Line).filter(Line.id.in_(points)).order_by(cls.id).all()
