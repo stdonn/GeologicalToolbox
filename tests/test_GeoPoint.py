@@ -3,11 +3,13 @@
 This is a test module for the Resources.Geometries.GeoPoint class using unittest
 """
 
+import math
 import unittest
 
 from Resources.DBHandler import DBHandler
 from Resources.Geometries import GeoPoint, Line
 from Resources.Stratigraphy import Stratigraphy
+from Resources.constants import float_precision
 
 
 class TestGeoPointClass(unittest.TestCase):
@@ -104,7 +106,8 @@ class TestGeoPointClass(unittest.TestCase):
 
 		for point in self.points:
 			new_point = GeoPoint(point['coords'][0], point['coords'][1], point['coords'][2],
-			                     Stratigraphy.init_stratigraphy(self.session, point['horizon'], point['age'], point['update']),
+			                     Stratigraphy.init_stratigraphy(self.session, point['horizon'], point['age'],
+			                                                    point['update']),
 			                     self.session, point['name'])
 			new_point.save_to_db()
 
@@ -113,7 +116,8 @@ class TestGeoPointClass(unittest.TestCase):
 			for point in line['points']:
 				points.append(GeoPoint(point[0], point[1], None, None, self.session, ''))
 			new_line = Line(line['closed'], self.session,
-			                Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']), points,
+			                Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
+			                points,
 			                line['name'])
 			new_line.save_to_db()
 
@@ -123,6 +127,8 @@ class TestGeoPointClass(unittest.TestCase):
 		Test the initialisation of the database
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
 		pnts = len(self.points)
@@ -159,9 +165,131 @@ class TestGeoPointClass(unittest.TestCase):
 		self.assertEqual(points[0].horizon.name, 'mu',
 		                 "Wrong name of stratigraphic unit ({}) of first point. Should be ". \
 		                 format(points[0].horizon.name, 'mu'))
-		#self.assertEqual(points[0].horizon.age, 26,
-		#                 "Wrong age for stratigraphic unit ({}) of first point. Should be {}". \
-		#                 format(points[0].horizon.age, 26))
+		self.assertEqual(points[0].horizon.age, 26,
+		                 "Wrong age for stratigraphic unit ({}) of first point. Should be {}". \
+		                 format(points[0].horizon.age, 26))
+
+	def test_loading(self):
+		# type: () -> None
+		"""
+		Test the loading functions of the GeoPoint class
+		/1/ load all from database
+		/2/ load by name
+		/3/ load in extent
+
+		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
+		"""
+
+		# /1/ load all from database
+		points = GeoPoint.load_all_from_db(self.session, True)
+		pnts_count = len(self.points)
+		for line in self.lines:
+			pnts_count += len(line['points'])
+
+		# 2 points have been automatically deleted and the lines will be closed
+		pnts_count -= 2
+		self.assertEqual(len(points), pnts_count,
+		                 "Wrong point count ({}). Should be {}.".format(len(points), pnts_count))
+		self.assertEqual(points[0].id, 1, "First point should have id {}, but has {}.".format(1, points[0].id))
+		self.assertTrue(math.fabs(float(points[-1].easting) - 1191579.1097525698) < float_precision,
+		                "Wrong easting difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].easting), 1191579.1097525698,
+		                       math.fabs(float(points[-1].easting) - 1191579.1097525698), float_precision))
+		self.assertTrue(math.fabs(float(points[-1].northing) - 691044.6091080031) < float_precision,
+		                "Wrong northing difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].northing), 691044.6091080031,
+		                       math.fabs(float(points[-1].northing) - 691044.6091080031), float_precision))
+		del points
+
+		points = GeoPoint.load_all_from_db(self.session)
+		pnts_count = len(self.points)  # only points which doesn't belong to a line are loaded
+		self.assertEqual(len(points), pnts_count,
+		                 "Wrong point count ({}). Should be {}.".format(len(points), pnts_count))
+		self.assertEqual(points[0].id, 1, "First point should have id {}, but has {}.".format(1, points[0].id))
+		self.assertTrue(math.fabs(float(points[-1].easting) - 1273456) < float_precision,
+		                "Wrong easting difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].easting), 1273456,
+		                       math.fabs(float(points[-1].easting) - 1273456), float_precision))
+		self.assertTrue(math.fabs(float(points[-1].northing) - 5449672) < float_precision,
+		                "Wrong northing difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].northing), 5449672,
+		                       math.fabs(float(points[-1].northing) - 5449672), float_precision))
+		self.assertEqual(points[-1].horizon.name, 'mu',
+		                 "Wrong horizon ({}). Should be {}.".format(points[-1].horizon.name, 'mu'))
+		del points
+
+		# /2/ load by name
+		points = GeoPoint.load_by_name_from_db('', self.session, True)
+
+		pnts_count = len(self.points)
+		for line in self.lines:
+			pnts_count += len(line['points'])
+
+		# 2 points will be automatically deleted and the lines will be closed
+		pnts_count -= 2
+		# 2 points have another name (obviously they have a name)
+		pnts_count -= 2
+
+		self.assertEqual(len(points), pnts_count,
+		                 "Wrong point count ({}). Should be {}.".format(len(points), pnts_count))
+		self.assertEqual(points[0].id, 1, "First point should have id {}, but has {}.".format(1, points[0].id))
+		self.assertTrue(math.fabs(float(points[-1].easting) - 1191579.1097525698) < float_precision,
+		                "Wrong easting difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].easting), 1191579.1097525698,
+		                       math.fabs(float(points[-1].easting) - 1191579.1097525698), float_precision))
+		self.assertTrue(math.fabs(float(points[-1].northing) - 691044.6091080031) < float_precision,
+		                "Wrong northing difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].northing), 691044.6091080031,
+		                       math.fabs(float(points[-1].northing) - 691044.6091080031), float_precision))
+		del points
+
+		points = GeoPoint.load_by_name_from_db('', self.session)
+
+		pnts_count = len(self.points)
+		# 2 points have another name (obviously they have a name)
+		pnts_count -= 2
+
+		self.assertEqual(len(points), pnts_count,
+		                 "Wrong point count ({}). Should be {}.".format(len(points), pnts_count))
+		self.assertEqual(points[0].id, 1, "First point should have id {}, but has {}.".format(1, points[0].id))
+		self.assertTrue(math.fabs(float(points[-1].easting) - 1254367) < float_precision,
+		                "Wrong easting difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].easting), 1254367,
+		                       math.fabs(float(points[-1].easting) - 1254367), float_precision))
+		self.assertTrue(math.fabs(float(points[-1].northing) - 5443636) < float_precision,
+		                "Wrong northing difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[-1].northing), 5443636,
+		                       math.fabs(float(points[-1].northing) - 5443636), float_precision))
+		self.assertEqual(points[-1].horizon.name, 'so',
+		                 "Wrong horizon ({}). Should be {}.".format(points[-1].horizon.name, 'so'))
+		del points
+
+		# /3/ load points in given extent
+		# x -> 1174000 - 1200000
+		# y ->  613500 -  651000
+		# should return points of 2 lines with line-ids 2 (all points) and 4 (1 point)
+		points = GeoPoint.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000)
+		self.assertEqual(len(points), 5, "Wrong number of points ({}), should be {}".format(len(points), 5))
+
+		self.assertTrue(math.fabs(float(points[0].easting) - 1179553.6811741155) < float_precision,
+		                "Wrong easting difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[0].easting), 1179553.6811741155,
+		                       math.fabs(float(points[0].easting) - 1179553.6811741155), float_precision))
+		self.assertTrue(math.fabs(float(points[0].northing) - 647105.5431482664) < float_precision,
+		                "Wrong northing difference to large ( |{} - {}| = {} > {}).". \
+		                format(float(points[0].northing), 647105.5431482664,
+		                       math.fabs(float(points[0].northing) - 647105.5431482664), float_precision))
+		self.assertEqual(points[0].horizon.name, 'so',
+		                 "Wrong horizon ({}). Should be {}.".format(points[-1].horizon.name, 'so'))
+
+		del points
+
+		points = GeoPoint.load_in_extent_from_db(self.session, 0, 1, 0, 1)
+		self.assertEqual(len(points), 0, "Wrong number of points ({}), should be {}".format(len(points), 0))
+
+		del points
 
 	def tearDown(self):
 		# type: () -> None
