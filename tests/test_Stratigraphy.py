@@ -62,7 +62,10 @@ class TestStratigraphyClass(unittest.TestCase):
 		# type: () -> None
 		"""
 		Test the initialisation
+
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 		result = self.session.query(Stratigraphy).all()
 		self.assertEqual(len(result), 4, "Wrong number of entries ({}). Should be {}.".format(len(result), 4))
@@ -77,6 +80,8 @@ class TestStratigraphyClass(unittest.TestCase):
 		/3/ load in age range from database
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
 		# /1/ load all from database
@@ -122,6 +127,8 @@ class TestStratigraphyClass(unittest.TestCase):
 		Test setter and getters of class Stratigraphy
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 		result = Stratigraphy.load_by_name_from_db('mo', self.session)
 		result.age = 10
