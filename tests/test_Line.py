@@ -93,6 +93,8 @@ class TestLineClass(unittest.TestCase):
 		Test the initialisation of the database
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
 		pnts = 0
@@ -137,6 +139,8 @@ class TestLineClass(unittest.TestCase):
 		Test the insertion of one point. Additionally test get_point_index(point) function
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 		insert_point = GeoPoint(1204200, 620800, None, Stratigraphy.init_stratigraphy(self.session, 'mu'), self.session)
 		line_query = self.session.query(Line).filter_by(id=1)
@@ -186,6 +190,8 @@ class TestLineClass(unittest.TestCase):
 		Test the insertion of multiple points. Although test remove of doubled values in a line.
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 		insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
 		                          self.session)
@@ -257,6 +263,8 @@ class TestLineClass(unittest.TestCase):
 		/3/ test auto-removal of doubled points after deletion
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
 		line_query = self.session.query(Line).filter_by(id=2)
@@ -337,6 +345,8 @@ class TestLineClass(unittest.TestCase):
 		Part 4: load lines with minimal one point in given extent
 
 		:return: Nothing
+
+		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
 		# Part 1: load all lines from the database
