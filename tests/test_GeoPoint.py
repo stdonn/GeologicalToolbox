@@ -127,7 +127,6 @@ class TestGeoPointClass(unittest.TestCase):
 		Test the initialisation of the database
 
 		:return: Nothing
-
 		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
@@ -178,7 +177,6 @@ class TestGeoPointClass(unittest.TestCase):
 		/3/ load in extent
 
 		:return: Nothing
-
 		:raises AssertionError: Raises AssertionError if a test fails
 		"""
 
@@ -270,7 +268,7 @@ class TestGeoPointClass(unittest.TestCase):
 		# x -> 1174000 - 1200000
 		# y ->  613500 -  651000
 		# should return points of 2 lines with line-ids 2 (all points) and 4 (1 point)
-		points = GeoPoint.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000)
+		points = GeoPoint.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000, True)
 		self.assertEqual(len(points), 5, "Wrong number of points ({}), should be {}".format(len(points), 5))
 
 		self.assertTrue(math.fabs(float(points[0].easting) - 1179553.6811741155) < float_precision,
@@ -290,6 +288,45 @@ class TestGeoPointClass(unittest.TestCase):
 		self.assertEqual(len(points), 0, "Wrong number of points ({}), should be {}".format(len(points), 0))
 
 		del points
+
+	def test_setter_and_getter(self):
+		# type: () -> None
+		"""
+		Test the setter and getter functions of class GeoPoint
+
+		:return: Nothing
+		:raises AssertionError: Raises AssertionError if a test fails
+		"""
+		points = GeoPoint.load_all_from_db(self.session)
+		self.assertEqual(len(points), len(self.points),
+		                 "Wrong point length ({}). Should be {}.".format(len(points), len(self.points)))
+		points[0].easting = 1
+		points[1].northing = 2
+		points[2].altitude = 3
+		points[3].horizon = Stratigraphy.init_stratigraphy(self.session, 'so', 10, False)
+		points[0].point_name = 'point set name'
+		points[1].del_z()
+
+		for point in points:
+			point.save_to_db()
+
+		del points
+		points = GeoPoint.load_all_from_db(self.session)
+		self.assertEqual(len(points), len(self.points),
+		                 "Wrong point length ({}). Should be {}.".format(len(points), len(self.points)))
+		self.assertEqual(points[0].easting, 1, "Wrong easting value ({}). Should be {}.".format(points[0].easting, 1))
+		self.assertEqual(points[1].northing, 2,
+		                 "Wrong northing value ({}). Should be {}.".format(points[1].northing, 2))
+		self.assertEqual(points[2].altitude, 3,
+		                 "Wrong altitude value ({}). Should be {}.".format(points[2].altitude, 3))
+		self.assertTrue(points[2].has_z, "Third point has no z-value...")  # Third point got z-value
+		self.assertEqual(points[3].horizon.name, 'so',
+		                 "Wrong horizon ({}). Should be {}.".format(points[3].horizon.name, 'so'))
+		self.assertEqual(points[0].point_name, 'point set name',
+		                 "Wrong point name ({}). Should be {}.".format(points[0].point_name, 'point set name'))
+		self.assertFalse(points[1].has_z, "Second point has a z-value...")
+		self.assertEqual(points[1].altitude, 0,
+		                 "Wrong altitude value ({}). Should be {}.".format(points[1].altitude, 0))
 
 	def tearDown(self):
 		# type: () -> None
