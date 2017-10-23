@@ -237,6 +237,35 @@ class GeoPoint(Base):
 			string = string[:100]
 		self.name = string
 
+	@property
+	def session(self):
+		# type: () -> Session
+		"""
+		Return the current Session object
+
+		:return: returns the current Session object, which represents the connection to a database
+		:rtype: Session
+		"""
+		return self.__session
+
+	@session.setter
+	def session(self, value):
+		# type: (Session) -> None
+		"""
+		Sets a new session, which represents the connection to a database
+
+		:param value: session object create by SQLAlchemy sessionmaker
+		:type value: Session
+
+		:return: Nothing
+
+		:raises TypeError: Raises TypeError if value is not of an instance of Session
+		"""
+
+		if not isinstance(value, Session):
+			raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
+		self.__session = value
+
 	# delete z-dimension and information from point
 	def del_z(self):
 		# type: () -> None
@@ -284,9 +313,13 @@ class GeoPoint(Base):
 		:return: a list of lines representing the result of the database query
 		:rtype: List[GeoPoint]
 		"""
-		if get_lines:
-			return session.query(cls).order_by(cls.id).all()
-		return session.query(cls).filter(GeoPoint.line_id == -1).order_by(cls.id).all()
+		result = session.query(cls)
+		if not get_lines:
+			result = result.filter(GeoPoint.line_id == -1)
+		result = result.order_by(cls.id).all()
+		for point in result:
+			point.session = session
+		return result
 
 	@classmethod
 	def load_by_name_from_db(cls, name, session, get_lines=False):
@@ -306,9 +339,13 @@ class GeoPoint(Base):
 		:return: a list of points representing the result of the database query
 		:rtype: List[GeoPoint]
 		"""
-		if get_lines:
-			return session.query(cls).filter(cls.name == name).order_by(cls.id).all()
-		return session.query(cls).filter(cls.name == name).filter(GeoPoint.line_id == -1).order_by(cls.id).all()
+		result = session.query(cls).filter(cls.name == name)
+		if not get_lines:
+			result = result.filter(GeoPoint.line_id == -1)
+		result = result.order_by(cls.id).all()
+		for point in result:
+			point.session = session
+		return result
 
 	@classmethod
 	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
@@ -337,12 +374,14 @@ class GeoPoint(Base):
 		:return: a list of lines representing the result of the database query
 		:rtype: List[GeoPoint]
 		"""
-		result = session.query(GeoPoint)
+		result = session.query(GeoPoint).filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
+			filter(sq.between(GeoPoint.north, min_northing, max_northing))
 		if not get_lines:
-			result.filter(GeoPoint.line_id == -1)
-
-		return result.filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
-			filter(sq.between(GeoPoint.north, min_northing, max_northing)).order_by(cls.id).all()
+			result = result.filter(GeoPoint.line_id == -1)
+		result = result.order_by(cls.id).all()
+		for point in result:
+			point.session = session
+		return result
 
 
 class Line(Base):
