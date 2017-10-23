@@ -2,9 +2,10 @@ TODO:
 
 Line:
 - possibly: integrate has_z
+- add session to return objects of loading functions similar to class GeoPoint
 
-test_GeoPoint:
-- create unittest for GeoPoint
+test_Line:
+- add test_setter_and_getter_function
 
 COMMENTS:
 
