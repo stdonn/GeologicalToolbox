@@ -777,7 +777,10 @@ class Line(Base):
 		:return: a list of lines representing the result of the database query
 		:rtype: List[Line]
 		"""
-		return session.query(cls).order_by(cls.id).all()
+		result = session.query(cls).order_by(cls.id).all()
+		for line in result:
+			line.session = session
+		return result
 
 	@classmethod
 	def load_by_id_from_db(cls, line_id, session):
@@ -797,7 +800,9 @@ class Line(Base):
 		:raises NoResultFound: Raises NoResultFound if no line was found with this id
 		:raises IntegrityError: Raises IntegrityError if more than one line is found (more than one unique value)
 		"""
-		return session.query(cls).filter(cls.id == line_id).one()
+		result = session.query(cls).filter(cls.id == line_id).one()
+		result.session = session
+		return result
 
 	@classmethod
 	def load_by_name_from_db(cls, name, session):
@@ -814,7 +819,10 @@ class Line(Base):
 		:return: a list of lines representing the result of the database query
 		:rtype: List[Line]
 		"""
-		return session.query(cls).filter(cls.name == name).order_by(cls.id).all()
+		result = session.query(cls).filter(cls.name == name).order_by(cls.id).all()
+		for line in result:
+			line.session = session
+		return result
 
 	@classmethod
 	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
@@ -853,5 +861,10 @@ class Line(Base):
 				 ])
 
 		# return line with points in extend
-		# to speed up the process, test first if points (len > 0) exist in extent
-		return [] if (len(points) == 0) else session.query(Line).filter(Line.id.in_(points)).order_by(cls.id).all()
+		# to speed up the process, test if points (len > 0) exist in extent first
+		if len(points) == 0:
+			return []
+		result = session.query(Line).filter(Line.id.in_(points)).order_by(cls.id).all()
+		for line in result:
+			line.session = session
+		return result
