@@ -65,18 +65,24 @@ class GeoPoint(Base):
 		:type name: str
 
 		:return: Nothing
+		:raises ValueError: Raises ValueError if one of the types cannot be converted
 		"""
-		self.easting = easting
-		self.northing = northing
+		if type(session) is not Session:
+			raise ValueError("'session' value is not of type SQLAlchemy Session!")
+		if type(horizon) is not Stratigraphy:
+			raise ValueError("'horizon' value is not of type Stratigraphy!")
+
+		self.easting = float(easting)
+		self.northing = float(northing)
 		if altitude is None:
 			self.altitude = 0
 			self.has_z = False
 		else:
-			self.altitude = altitude
+			self.altitude = float(altitude)
 			self.has_z = True
 		self.__session = session
 		self.horizon = horizon
-		self.point_name = name
+		self.point_name = str(name)
 
 	def __repr__(self):
 		# type: () -> str
@@ -323,7 +329,7 @@ class GeoPoint(Base):
 
 	@classmethod
 	def load_by_name_from_db(cls, name, session, get_lines=False):
-		# type: (str, Session) -> List[GeoPoint]
+		# type: (str, Session, bool) -> List[GeoPoint]
 		"""
 		Returns all points with the given name in the database connected to the SQLAlchemy Session session
 
@@ -349,7 +355,7 @@ class GeoPoint(Base):
 
 	@classmethod
 	def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
-		# type: (Session, float, float, float, float) -> List[Line]
+		# type: (Session, float, float, float, float, bool) -> List[Line]
 		"""
 		Returns all points inside the given extent in the database connected to the SQLAlchemy Session session
 
@@ -371,7 +377,7 @@ class GeoPoint(Base):
 		:param get_lines: If True, also line nodes are returned
 		:type get_lines: bool
 
-		:return: a list of lines representing the result of the database query
+		:return: a list of points representing the result of the database query
 		:rtype: List[GeoPoint]
 		"""
 		result = session.query(GeoPoint).filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
@@ -428,12 +434,22 @@ class Line(Base):
 		:type name: str
 
 		:return: Nothing
+		:raises ValueError: Raises ValueError if one of the types cannot be converted
 		"""
-		self.is_closed = closed
+		if type(session) is not Session:
+			raise ValueError("'session' value is not of type SQLAlchemy Session!")
+		if type(horizon) is not Stratigraphy:
+			raise ValueError("'horizon' value is not of type Stratigraphy!")
+
+		for pnt in points:
+			if type(pnt) is not GeoPoint:
+				raise ValueError('At least on point in points is not of type GeoPoint!')
+
+		self.is_closed = bool(closed)
 		self.__session = session
 		self.horizon = horizon
 		self.points = points
-		self.line_name = name
+		self.line_name = str(name)
 
 		# check doubled values in a line
 		self.__remove_doubled_points()
@@ -767,7 +783,7 @@ class Line(Base):
 
 	@classmethod
 	def load_all_from_db(cls, session):
-		# type: (str, Session) -> List[Line]
+		# type: (Session) -> List[Line]
 		"""
 		Returns all lines in the database connected to the SQLAlchemy Session session
 
