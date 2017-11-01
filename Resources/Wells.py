@@ -15,6 +15,26 @@ from Resources.DBHandler import Base
 from Resources.constants import float_precision
 
 
+class WellMarker(Base):
+	"""
+	Class WellMarer
+
+	Represents single markers in a drilled well
+	"""
+	# define db table name and columns
+	__tablename__ = 'well_marker'
+
+	id = sq.Column(sq.INTEGER, sq.Sequence('well_id_seq'), primary_key=True)
+	drill_depth = sq.Column(sq.FLOAT(10, 4))
+	comment = sq.Column(sq.TEXT(100), default="")
+
+	# define relationship to stratigraphic table
+	horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
+	hor = relationship("Stratigraphy")
+
+	well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
+
+
 class Well(Base):
 	"""
 	Class Well
@@ -31,6 +51,11 @@ class Well(Base):
 	drill_depth = sq.Column(sq.FLOAT(10, 4))
 	well_name = sq.Column(sq.TEXT(100), unique=True)
 	short_well_name = sq.Column(sq.TEXT(100), default="")
+
+	# define markers relationship
+	marker = relationship("WellMarker", order_by=WellMarker.depth, collection_class=ordering_list('depth'),
+	                      backref="well", primaryjoin='Well.id==WellMarker.well_id',
+	                      cascade="all, delete, delete-orphan")
 
 	def __init__(self, session, easting, northing, altitude, depth, name, short_name=""):
 		# type: (Session, float, float, float, float, str, str) -> None
