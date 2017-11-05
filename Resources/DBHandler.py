@@ -11,31 +11,32 @@ Base = declarative_base()
 
 
 class DBHandler:
-	"""
-	A class for database access through an SQLAlchemy session.
-	"""
-	def __init__(self, connection='sqlite:///:memory:', debug=False):
-		# type: (str, bool) -> None
-		"""
-		Initialize a new database connection via SQLAlchemy
+    """
+    A class for database access through an SQLAlchemy session.
+    """
 
-		:param connection: Connection uri to a database, format defined by SQLAlchemy
-		:type connection: str
+    def __init__(self, connection='sqlite:///:memory:', debug=False):
+        # type: (str, bool) -> None
+        """
+        Initialize a new database connection via SQLAlchemy
 
-		:param debug: enable debug output for database access (default False)
-		:type debug: bool
+        :param connection: Connection uri to a database, format defined by SQLAlchemy
+        :type connection: str
 
-		:return: Nothing
-		"""
-		engine = sq.create_engine(connection, echo=debug)
-		Base.metadata.create_all(engine)
-		self.__Session = sessionmaker(bind=engine)
+        :param debug: enable debug output for database access (default False)
+        :type debug: bool
 
-	def get_session(self):
-		# type: () -> sessionmaker
-		"""
-		Returns the a session for the current database connection
+        :return: Nothing
+        """
+        engine = sq.create_engine(connection, echo=debug)
+        Base.metadata.create_all(engine)
+        self.__Session = sessionmaker(bind=engine)
 
-		:return: Returns the a session for the current database connection
-		"""
-		return self.__Session()
+    def get_session(self):
+        # type: () -> sessionmaker
+        """
+        Returns the a session for the current database connection
+
+        :return: Returns the a session for the current database connection
+        """
+        return self.__Session()
