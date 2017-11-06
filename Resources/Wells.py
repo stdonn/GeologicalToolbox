@@ -238,7 +238,7 @@ class Well(Base):
     comment_col = sq.Column(sq.TEXT(100), default="")
 
     # define markers relationship
-    marker = relationship("WellMarker", order_by=WellMarker.depth, collection_class=ordering_list('depth'),
+    marker = relationship("WellMarker", order_by=WellMarker.drill_depth, collection_class=ordering_list('drill_depth'),
                           backref="well", primaryjoin='Well.id==WellMarker.well_id',
                           cascade="all, delete, delete-orphan")
 
@@ -525,6 +525,77 @@ class Well(Base):
         if not isinstance(value, Session):
             raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
         self.__session = value
+
+    def insert_marker(self, marker):
+        # type: (WellMarker) -> None
+        """
+        Insert a new WellMarker in the well
+
+        :param marker: WellMarker to be inserted
+        :type marker: WellMarker
+
+        :return: Nothing
+
+        :raises TypeError: Raises TypeError if marker is not of type WellMarker
+        """
+        if type(marker) is not WellMarker:
+            raise TypeError('marker {} is not of type WellMarker!'.format(str(marker)))
+        self.marker.append(marker)
+
+    def insert_multiple_marker(self, marker):
+        # type: (List[WellMarker]) -> None
+        """
+        Insert the multiple marker in the well
+
+        :param marker: List of marker to be inserted
+        :type marker: List[WellMarker]
+
+        :return: Nothing
+
+        :raises TypeError: Raises TypeError if one of the marker is not of type WellMarker
+        """
+        for mark in marker:
+            if type(mark) is not WellMarker:
+                raise TypeError(
+                    'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
+
+        self.marker += marker
+
+    def get_marker_index(self, marker):
+        # type: (WellMarker) -> int
+        """
+        Returns the index of the given marker in the well
+
+        :param marker: marker which has to be looked up
+        :type marker: WellMarker
+
+        :return: Index of the marker in the line
+        :rtype: int
+
+        :raises ValueError: Raises ValueError if committed marker is not part of the well
+        """
+        return self.marker.index(marker)
+
+    def delete_marker(self, marker):
+        # type: (WellMarker) -> None
+        """
+        Deletes the marker from the well
+
+        :param marker: WellMarker object which should be deleted
+        :type marker: WellMarker
+
+        :return: Nothing
+
+        :raises TypeError: Raises TypeError if marker is not of type WellMarker
+        :raises ValueError: Raises ValueError the marker is not part of the well
+        """
+        if type(marker) is not WellMarker:
+            raise TypeError('marker {} is not of type WellMarker!'.format(str(marker)))
+
+        try:
+            self.marker.remove(marker)
+        except ValueError as e:
+            raise ValueError(str(e) + '\nWellMarker with ID ' + str(marker.id) + ' not found in list!')
 
     # save point to db / update point
     def save_to_db(self):
