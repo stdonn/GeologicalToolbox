@@ -604,7 +604,7 @@ class Line(Base):
     def insert_point(self, point, position):
         # type: (GeoPoint, int) -> None
         """
-        Returns the index of the given point in the line
+        Insert a point in the line at the committed index.
 
         :param point: point to be inserted in the line
         :type point: GeoPoint
@@ -614,11 +614,11 @@ class Line(Base):
 
         :return: Nothing
 
-        :raises TypeError: Raises TypeError if position is not of type int or point is not of type GeoPoint
+        :raises TypeError: Raises TypeError if point is not of type GeoPoint
+        :raises ValueError: Raises ValueError if position is not of type int or cannot be converted to int
         """
-        if type(position) is not int:
-            raise TypeError('Position is not of type int (is {})!'.format(type(position)))
-        elif type(point) is not GeoPoint:
+        position = int(position)
+        if type(point) is not GeoPoint:
             raise TypeError('point {} is not of type GeoPoint!'.format(str(point)))
         else:
             self.points.insert(position, point)
@@ -629,7 +629,7 @@ class Line(Base):
     def insert_points(self, points, position):
         # type: (List[GeoPoint], int) -> None
         """
-        Returns the index of the given point in the line
+        Insert a points in the line at the committed index.
 
         :param points: List of points to be inserted in the line
         :type points: List[GeoPoint]
@@ -639,10 +639,10 @@ class Line(Base):
 
         :return: Nothing
 
-        :raises TypeError: Raises TypeError if position is not of type int or one of the points is not of type GeoPoint
+        :raises TypeError: Raises TypeError if one of the points is not of type GeoPoint
+        :raises ValueError: Raises ValueError if position is not of type int or cannot be converted to int
         """
-        if type(position) is not int:
-            raise TypeError('Position is not of type int (is {})!'.format(type(position)))
+        position = int(position)
 
         for pnt in points:
             if type(pnt) is not GeoPoint:
@@ -665,7 +665,7 @@ class Line(Base):
         :param point: point which has to be looked up
         :type point: GeoPoint
 
-        :return: Index of the ppint in the line
+        :return: Index of the point in the line
         :rtype: int
 
         :raises ValueError: Raises ValueError if committed point is not part of the line

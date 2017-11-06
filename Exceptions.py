@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+
 class DatabaseException(Exception):
     def __init__(self, msg):
         self.__msg = msg
