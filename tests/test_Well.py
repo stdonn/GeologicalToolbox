@@ -3,16 +3,13 @@
 This is a test module for the Resources.Geometries.Well and WellMarker classes using unittest
 """
 
-import math
 import unittest
 
 from Resources.DBHandler import DBHandler
 from Resources.Wells import WellMarker, Well
 from Resources.Stratigraphy import Stratigraphy
-from Resources.constants import float_precision
 
-
-class TestWellClasses(unittest.TestCase):
+class TestWellClass(unittest.TestCase):
     def setUp(self):
         # type: () -> None
         """
@@ -74,5 +71,10 @@ class TestWellClasses(unittest.TestCase):
                 new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
                                                                                           mark[2], False),
                                                   self.session, mark[3]))
+                new_well.save_to_db()
 
-            new_well.save_to_db()
+    def test_initialization(self):
+        self.assertEqual(1, 1, "One is not one!")
+
+    def tearDown(self):
+        pass
