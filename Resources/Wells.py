@@ -607,6 +607,14 @@ class Well(Base):
 
         :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
         """
+        # first: check that marker with the same stratigraphic name the same object (no doubled unique names)
+        marker_strat = dict()
+        for marker in self.marker:
+            if marker.horizon.name in marker_strat:
+                marker.horizon = marker_strat[marker.horizon.name]
+            else:
+                marker_strat[marker.horizon.name] = marker.horizon
+
         self.__session.add(self)
         try:
             self.__session.commit()
@@ -614,7 +622,7 @@ class Well(Base):
             # Failure during database processing? -> rollback changes and raise error again
             self.__session.rollback()
             raise IntegrityError(
-                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
+                    'Cannot commit changes in wells table, Integrity Error (double unique values?) -- {} -- ' +
                     'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
     # load points from db
