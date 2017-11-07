@@ -180,7 +180,7 @@ class TestLineClass(unittest.TestCase):
 
         # test Exception handling
         self.assertRaises(TypeError, line.insert_point, "string", 1)
-        self.assertRaises(TypeError, line.insert_points, insert_point, "abc")
+        self.assertRaises(ValueError, line.insert_points, insert_point, "abc")
 
     def test_insert_multiple(self):
         # type: () -> None
@@ -247,7 +247,7 @@ class TestLineClass(unittest.TestCase):
                          format(line.points[1].has_z, False))
 
         # test Exception handling
-        self.assertRaises(TypeError, line.insert_points, points, "abc")
+        self.assertRaises(ValueError, line.insert_points, points, "abc")
         points.append('cde')
         self.assertRaises(TypeError, line.insert_points, points, 2)
 
