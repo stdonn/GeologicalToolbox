@@ -3,11 +3,14 @@
 This is a test module for the Resources.Geometries.Well and WellMarker classes using unittest
 """
 
+import math
 import unittest
 
 from Resources.DBHandler import DBHandler
 from Resources.Wells import WellMarker, Well
 from Resources.Stratigraphy import Stratigraphy
+from Resources.constants import float_precision
+
 
 class TestWellClass(unittest.TestCase):
     def setUp(self):
@@ -71,10 +74,19 @@ class TestWellClass(unittest.TestCase):
                 new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
                                                                                           mark[2], False),
                                                   self.session, mark[3]))
-                new_well.save_to_db()
+            new_well.save_to_db()
 
     def test_initialization(self):
-        self.assertEqual(1, 1, "One is not one!")
+        result = self.session.query(Well).all()
+        self.assertEqual(len(result), 3, "Wrong number of drill holes ({}). Should be {}".
+                         format(len(result), len(self.wells)))
+        self.assertEqual(result[1].name, 'Well_2')
+        self.assertEqual(result[2].comment, 'A third well')
+        self.assertTrue(math.fabs(float(result[0].easting) - 1234.56) < float_precision)
+        self.assertTrue(math.fabs(float(result[1].northing) - 2300.34) < float_precision)
+        self.assertTrue(math.fabs(float(result[0].altitude) - 10.5) < float_precision)
+        self.assertTrue(math.fabs(float(result[2].depth) - 645.21) < float_precision)
+        self.assertEqual(len(result[1].marker), 4)
 
     def tearDown(self):
         pass
