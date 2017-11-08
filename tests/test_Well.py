@@ -7,8 +7,8 @@ import math
 import unittest
 
 from Resources.DBHandler import DBHandler
-from Resources.Wells import WellMarker, Well
 from Resources.Stratigraphy import Stratigraphy
+from Resources.Wells import WellMarker, Well
 from Resources.constants import float_precision
 
 
@@ -35,10 +35,10 @@ class TestWellClass(unittest.TestCase):
                 'altitude'  : 10.5,
                 'depth'     : 555,
                 'marker'    : ((10, 'mu', 4, ''),
-                               (15, 'so', 3, ''),
+                               (15, 'so', 3, 'Comment 1'),
                                (16, 'sm', 2, ''),
-                               (17, 'su', 1, ''),
-                               (5, 'mm', 5, ''))
+                               (17, 'su', 1, 'Comment 2'),
+                               (5, 'mm', 5, 'Comment 3'))
             }, {
                 'name'      : 'Well_2',
                 'short_name': 'W2',
@@ -48,8 +48,8 @@ class TestWellClass(unittest.TestCase):
                 'altitude'  : 342.23,
                 'depth'     : 341,
                 'marker'    : ((12, 'mo', 6, ''),
-                               (120, 'mm', 5, ''),
-                               (300, 'Fault', 0, ''),
+                               (120, 'mm', 5, 'Comment 1'),
+                               (300, 'Fault', 0, 'Comment 2'),
                                (320, 'mo', 6, ''))
             }, {
                 'name'      : 'Well_3',
@@ -60,9 +60,9 @@ class TestWellClass(unittest.TestCase):
                 'altitude'  : 342.20,
                 'depth'     : 645.21,
                 'marker'    : ((34, 'mu', 4, ''),
-                               (234, 'so', 3, ''),
-                               (345, 'Fault', 0, ''),
-                               (635, 'mu', 4, ''))
+                               (234, 'so', 3, 'Comment 1'),
+                               (345, 'Fault', 0, 'Comment 2'),
+                               (635, 'mu', 4, 'Comment 3'))
             }
         ]
 
@@ -76,7 +76,14 @@ class TestWellClass(unittest.TestCase):
                                                   self.session, mark[3]))
             new_well.save_to_db()
 
-    def test_initialization(self):
+    def test_init(self):
+        # type: () -> None
+        """
+        Test the initialisation of the database
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
         result = self.session.query(Well).all()
         self.assertEqual(len(result), 3, "Wrong number of drill holes ({}). Should be {}".
                          format(len(result), len(self.wells)))
@@ -87,6 +94,21 @@ class TestWellClass(unittest.TestCase):
         self.assertTrue(math.fabs(float(result[0].altitude) - 10.5) < float_precision)
         self.assertTrue(math.fabs(float(result[2].depth) - 645.21) < float_precision)
         self.assertEqual(len(result[1].marker), 4)
+        self.assertEqual(result[0].marker[2].horizon.name, 'so')
+        self.assertEqual(result[2].marker[2].horizon.name, 'Fault')
+        self.assertEqual(result[2].marker[2].horizon.age, 0)
+        self.assertEqual(result[2].marker[2].comment, 'Comment 2')
+
 
     def tearDown(self):
+        # type: () -> None
+        """
+        Empty function, nothing to shutdown after the testing process
+
+        :return: Nothing
+        """
         pass
+
+
+if __name__ == '__main__':
+    unittest.main()
