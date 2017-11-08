@@ -73,8 +73,8 @@ class WellMarker(Base):
         :return: Returns a text-representation of the well marker
         :rtype: str
         """
-        return "<Well(id='{}', depth='{}', horizon='{}', comment='{}')>".format(self.id, self.depth, self.horizon,
-                                                                                self.comment)
+        return "<WellMarker(id='{}', depth='{}', horizon='{}', comment='{}')>".format(self.id, self.depth, self.horizon,
+                                                                                      self.comment)
 
     def __str__(self):
         # type: () -> str
@@ -537,10 +537,15 @@ class Well(Base):
         :return: Nothing
 
         :raises TypeError: Raises TypeError if marker is not of type WellMarker
+        :raises ValueError: Raises ValueError if the depth of the marker is larger than the drilled depth of the well
         """
         if type(marker) is not WellMarker:
             raise TypeError('marker {} is not of type WellMarker!'.format(str(marker)))
+        if marker.depth > self.depth:
+            raise ValueError('Marker depth ({}) is larger than final well depth ({})!'.format(marker.depth, self.depth))
         self.marker.append(marker)
+        # new sorting to ensure correct order without storage and reloading from the database
+        self.marker.sort(cmp=lambda x, y: float(x.depth) < float(y.depth))
 
     def insert_multiple_marker(self, marker):
         # type: (List[WellMarker]) -> None
@@ -553,13 +558,19 @@ class Well(Base):
         :return: Nothing
 
         :raises TypeError: Raises TypeError if one of the marker is not of type WellMarker
+        :raises ValueError: Raises ValueError if the depth of a marker is larger than the drilled depth of the well
         """
         for mark in marker:
             if type(mark) is not WellMarker:
                 raise TypeError(
-                    'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
+                        'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
+            if mark.depth > self.depth:
+                raise ValueError('Marker depth ({}) is larger than final well depth ({})!'.
+                                 format(mark.depth, self.depth))
 
         self.marker += marker
+        # new sorting to ensure correct order without storage and reloading from the database
+        self.marker.sort(cmp=lambda x, y: float(x.depth) < float(y.depth))
 
     def get_marker_index(self, marker):
         # type: (WellMarker) -> int
@@ -698,6 +709,29 @@ class Well(Base):
         """
         result = session.query(cls).filter(sq.between(cls.east, min_easting, max_easting)). \
             filter(sq.between(cls.north, min_northing, max_northing))
+        result = result.order_by(cls.id).all()
+        for well in result:
+            well.session = session
+        return result
+
+    @classmethod
+    def load_deeper_than_value_from_db(cls, session, min_depth):
+        # type: (Session, float) -> List[Well]
+        """
+        Returns all wells with a drilled depth below the min_depth in the database connected to the SQLAlchemy Session
+        session
+
+
+        :param min_depth: minimal drilled depth
+        :type min_depth: float
+
+        :param session: represents the database connection as SQLAlchemy Session
+        :type session: Session
+
+        :return: a list of wells representing the result of the database query
+        :rtype: List[Well]
+        """
+        result = session.query(cls).filter(cls.drill_depth >= min_depth)
         result = result.order_by(cls.id).all()
         for well in result:
             well.session = session
