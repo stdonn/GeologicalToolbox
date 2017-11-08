@@ -88,6 +88,7 @@ class TestWellClass(unittest.TestCase):
         self.assertEqual(len(result), 3, "Wrong number of drill holes ({}). Should be {}".
                          format(len(result), len(self.wells)))
         self.assertEqual(result[1].name, 'Well_2')
+        self.assertEqual(result[1].short_name, 'W2')
         self.assertEqual(result[2].comment, 'A third well')
         self.assertTrue(math.fabs(float(result[0].easting) - 1234.56) < float_precision)
         self.assertTrue(math.fabs(float(result[1].northing) - 2300.34) < float_precision)
@@ -98,7 +99,102 @@ class TestWellClass(unittest.TestCase):
         self.assertEqual(result[2].marker[2].horizon.name, 'Fault')
         self.assertEqual(result[2].marker[2].horizon.age, 0)
         self.assertEqual(result[2].marker[2].comment, 'Comment 2')
+        self.assertEqual(result[0].marker[0].horizon.name, 'mm')
+        self.assertEqual(result[0].marker[1].horizon.name, 'mu')
+        self.assertEqual(result[0].marker[2].horizon.name, 'so')
+        self.assertEqual(result[0].marker[3].horizon.name, 'sm')
+        self.assertEqual(result[0].marker[4].horizon.name, 'su')
 
+    def test_loading(self):
+        # type: () -> None
+        """
+        Test the different types of loading of lines from the db.
+        Part 1: load all wells from the database
+        Part 2: load well by name
+        Part 3: load wells in given extent
+        Part 4: load wells with minimal depth
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        # Part 1: load all wells from the database
+        wells = Well.load_all_from_db(self.session)
+        self.assertEqual(len(wells), 3)
+        self.assertEqual(wells[0].name, 'Well_1')
+        self.assertEqual(wells[1].name, 'Well_2')
+        self.assertEqual(wells[2].name, 'Well_3')
+        self.assertEqual(len(wells[1].marker), 4)
+        self.assertTrue(wells[1].marker[0].horizon == wells[1].marker[3].horizon)
+        del wells
+
+        # Part 2: load well by name
+        well = Well.load_by_name_from_db('Well_2', self.session)
+        self.assertEqual(well.name, 'Well_2')
+        self.assertEqual(well.short_name, 'W2')
+        self.assertEqual(well.depth, 341)
+        self.assertEqual(len(well.marker), 4)
+        self.assertEqual(well.marker[1].horizon.name, 'mm')
+        self.assertEqual(well.marker[1].depth, 120)
+        del well
+
+        # Part 3: load wells in given extent
+        # extent x: 500 - 1,300
+        # extent y: 0 - 2,400
+        # result: 'Well_1' and 'Well_2'
+        wells = Well.load_in_extent_from_db(self.session, 500, 1300, 0, 2400)
+        self.assertEqual(len(wells), 2)
+        self.assertEqual(wells[0].name, 'Well_1')
+        self.assertEqual(wells[1].name, 'Well_2')
+        self.assertEqual(len(wells[0].marker), 5)
+        self.assertEqual(len(wells[1].marker), 4)
+        del wells
+
+        # Part 4: load wells with minimal depth
+        wells = Well.load_deeper_than_value_from_db(self.session, 395.23)
+        self.assertEqual(len(wells), 2)
+        self.assertEqual(wells[0].name, 'Well_1')
+        self.assertEqual(wells[1].name, 'Well_3')
+        self.assertTrue(wells[0].depth >= 395.23)
+        self.assertTrue(wells[1].depth >= 395.23)
+        del wells
+
+    def test_insertion(self):
+        # type: () -> None
+        """
+        Test the insert functions of class Well
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        wells = Well.load_all_from_db(self.session)
+        marker_1 = WellMarker(301.43, Stratigraphy.init_stratigraphy(self.session, "ku"), self.session, 'Comment 1')
+        marker_2 = WellMarker(351.65, Stratigraphy.init_stratigraphy(self.session, "mo"), self.session)
+        marker_3 = WellMarker(934.23, Stratigraphy.init_stratigraphy(self.session, "mm"), self.session, 'Comment 3')
+
+        wells[0].insert_marker(marker_1)
+        self.assertEqual(len(wells[0].marker), 6)
+        self.assertEqual(wells[0].marker[5], marker_1)
+        self.assertRaises(ValueError, wells[1].insert_marker, marker_3)
+
+        wells[2].insert_multiple_marker([marker_1, marker_2])
+        self.assertEqual(len(wells[2].marker), 6)
+        print("")
+        print(wells[2])
+        print("")
+        for well in wells:
+            well.save_to_db()
+
+        del wells
+
+        wells = Well.load_all_from_db(self.session)
+        print("")
+        for marker in wells[2].marker:
+            print(str(marker))
+        print("")
+        # self.assertEqual(wells[2].marker[2], marker_1)
+        # self.assertEqual(wells[2].marker[4], marker_2)
+
+        # -> TODO: order list after insertion!
 
     def tearDown(self):
         # type: () -> None
