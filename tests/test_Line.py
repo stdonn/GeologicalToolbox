@@ -147,7 +147,8 @@ class TestLineClass(unittest.TestCase):
         line = line_query.one()
         line.session = self.session
         line.insert_point(insert_point, 1)
-        line.save_to_db()
+
+        self.assertEqual(line.points[1].line_pos, 1)
 
         # point is inserted, now delete insert details
         del count
@@ -162,6 +163,7 @@ class TestLineClass(unittest.TestCase):
         # 20 Point initially, 2 removed, new point is Nr 19 -> id=19
         # !!!ATTENTION!!! counting starts with 1 not 0 in sqlite-DB!
         # line-pos and get_point_index should be 1
+
         self.assertEqual(line.points[1].id, 19, "Wrong id ({}) for new point (should be {})". \
                          format(line.points[1].id, 19))
         self.assertEqual(line.points[1].line_pos, 1, "Wrong position of the new point ({}) in the line (should be {})". \
