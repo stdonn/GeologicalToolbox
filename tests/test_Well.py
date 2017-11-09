@@ -178,23 +178,17 @@ class TestWellClass(unittest.TestCase):
 
         wells[2].insert_multiple_marker([marker_1, marker_2])
         self.assertEqual(len(wells[2].marker), 6)
-        print("")
-        print(wells[2])
-        print("")
-        for well in wells:
-            well.save_to_db()
-
+        self.assertEqual(wells[2].marker[2], marker_1)
+        self.assertEqual(wells[2].marker[4], marker_2)
         del wells
 
         wells = Well.load_all_from_db(self.session)
-        print("")
-        for marker in wells[2].marker:
-            print(str(marker))
-        print("")
-        # self.assertEqual(wells[2].marker[2], marker_1)
-        # self.assertEqual(wells[2].marker[4], marker_2)
+        self.assertEqual(wells[2].marker[2], marker_1)
+        self.assertEqual(wells[2].marker[4], marker_2)
+        del wells
 
-        # -> TODO: order list after insertion!
+        wells = Well.load_all_from_db(self.session)
+        self.assertRaises(ValueError, wells[1].insert_multiple_marker, [marker_1, marker_2, marker_3])
 
     def tearDown(self):
         # type: () -> None
