@@ -760,6 +760,9 @@ class Line(Base):
             del self.points[-1]
             self.closed = True
 
+        # reorder to ensure right position value without reloading from database
+        self.points.reorder()
+
     def save_to_db(self):
         # type: () -> None
         """
