@@ -5,7 +5,6 @@ This module provides classes for storing drilling data in a database.
 
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
@@ -238,7 +237,7 @@ class Well(Base):
     comment_col = sq.Column(sq.TEXT(100), default="")
 
     # define markers relationship
-    marker = relationship("WellMarker", order_by=WellMarker.drill_depth, collection_class=ordering_list('drill_depth'),
+    marker = relationship("WellMarker", order_by=WellMarker.drill_depth,
                           backref="well", primaryjoin='Well.id==WellMarker.well_id',
                           cascade="all, delete, delete-orphan")
 
@@ -530,6 +529,7 @@ class Well(Base):
         # type: (WellMarker) -> None
         """
         Insert a new WellMarker in the well
+        ATTENTION: If you insert a marker, the well will be automatically stored in the database!
 
         :param marker: WellMarker to be inserted
         :type marker: WellMarker
@@ -544,13 +544,15 @@ class Well(Base):
         if marker.depth > self.depth:
             raise ValueError('Marker depth ({}) is larger than final well depth ({})!'.format(marker.depth, self.depth))
         self.marker.append(marker)
+
         # new sorting to ensure correct order without storage and reloading from the database
-        self.marker.sort(cmp=lambda x, y: float(x.depth) < float(y.depth))
+        self.marker.sort(key=lambda x: x.depth)
 
     def insert_multiple_marker(self, marker):
         # type: (List[WellMarker]) -> None
         """
         Insert the multiple marker in the well
+        ATTENTION: If you insert marker, the well will be automatically stored in the database!
 
         :param marker: List of marker to be inserted
         :type marker: List[WellMarker]
@@ -569,8 +571,9 @@ class Well(Base):
                                  format(mark.depth, self.depth))
 
         self.marker += marker
+
         # new sorting to ensure correct order without storage and reloading from the database
-        self.marker.sort(cmp=lambda x, y: float(x.depth) < float(y.depth))
+        self.marker.sort(key=lambda x: x.depth)
 
     def get_marker_index(self, marker):
         # type: (WellMarker) -> int
