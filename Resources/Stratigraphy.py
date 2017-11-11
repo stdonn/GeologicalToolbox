@@ -24,7 +24,7 @@ class Stratigraphy(Base):
     age = sq.Column(sq.INTEGER(), default=-1)
 
     def __init__(self, session, name, age=-1):
-        # type: (Session, str, int) -> None
+        # type: (Session, str, float) -> None
         """
         Initialize a stratigraphic unit
         :param session: SQLAlchemy session, which includes the database connection
@@ -34,7 +34,7 @@ class Stratigraphy(Base):
         :type name: str
 
         :param age: age of the stratigraphic unit (-1 if none)
-        :type age: int
+        :type age: float
 
         :return: nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
@@ -49,7 +49,7 @@ class Stratigraphy(Base):
 
         self.__session = session
         self.unit_name = str(name)
-        self.age = age if (age > -1) else -1
+        self.age = -1 if (age < 0) else age
 
     def __repr__(self):
         # type: () -> str
@@ -81,27 +81,27 @@ class Stratigraphy(Base):
         :return: age of the stratigraphic unit
         :rtype: int
         """
-        return self.age
+        return float(self.age)
 
     @horizon_age.setter
     def horizon_age(self, value):
-        # type: (int) -> None
+        # type: (float) -> None
         """
         Set a new age of the stratigraphic unit
 
         :param value: new age of the stratigraphic unit
-        :type value: int
+        :type value: float
 
         :return: Nothing
 
         :raises ValueError: Raises ValueError if value is convertible to type int
         """
         try:
-            value = int(value)
+            value = float(value)
         except ValueError:
             raise ValueError("Cannot convert value ({}) to type int.".format(str(value)))
 
-        if value <= -1:
+        if value <= 0:
             self.age = -1
         else:
             self.age = value
@@ -179,7 +179,7 @@ class Stratigraphy(Base):
 
     @classmethod
     def init_stratigraphy(cls, session, name, age=-1, update=False):
-        # type: (Session, str, int, bool) -> cls
+        # type: (Session, str, float, bool) -> cls
         """
         Initialize a stratigraphic unit. Create a new one if unit doesn't exists in the database, else use the existing.
 
@@ -190,18 +190,18 @@ class Stratigraphy(Base):
         :type name: str
 
         :param age: age of the stratigraphic unit (-1 if none)
-        :type age: int
+        :type age: float
 
         :param update: update age if stratigraphic unit exists
         :type update: bool
         """
 
         try:
-            age = int(age)
+            age = float(age)
         except ValueError as e:
             raise ValueError("Cannot convert age to int:\n{}".format(str(e)))
 
-        if age < -1:
+        if age < 0:
             age = -1
 
         # check if horizon exists (unique name)
