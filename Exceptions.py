@@ -7,3 +7,11 @@ class DatabaseException(Exception):
 
     def __str__(self):
         return self.__msg
+
+
+class WellMarkerException(Exception):
+    def __init__(self, msg):
+        self.__msg = msg
+
+    def __str__(self):
+        return self.__msg
