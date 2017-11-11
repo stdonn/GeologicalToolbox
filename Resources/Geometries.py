@@ -116,7 +116,7 @@ class GeoPoint(Base):
         :return: Returns the easting value of the point.
         :rtype: float
         """
-        return self.east
+        return float(self.east)
 
     @easting.setter
     def easting(self, value):
@@ -141,7 +141,7 @@ class GeoPoint(Base):
         :return: Returns the northing value of the point.
         :rtype: float
         """
-        return self.north
+        return float(self.north)
 
     @northing.setter
     def northing(self, value):
@@ -167,7 +167,7 @@ class GeoPoint(Base):
         :return: Returns the height above sea level of the point.
         :rtype: float
         """
-        return self.alt
+        return float(self.alt)
 
     @altitude.setter
     def altitude(self, value):
