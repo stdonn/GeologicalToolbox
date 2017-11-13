@@ -7,6 +7,9 @@ Well:
 Line:
 - possibly: integrate has_z
 
+Stratigraphy:
+- doubled age test!!!
+
 COMMENTS:
 
 - Doubled lines can exists in the DB.
