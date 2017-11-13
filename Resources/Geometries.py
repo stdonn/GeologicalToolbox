@@ -36,10 +36,11 @@ class GeoPoint(Base):
 
     line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=-1)
     line_pos = sq.Column(sq.INTEGER, default=-1)
-    name = sq.Column(sq.TEXT(100), default="")
+    name = sq.Column(sq.VARCHAR(100), default="")
 
     # make the points unique -> coordinates + horizon + belongs to one line?
     sq.UniqueConstraint(east, north, alt, horizon_id, line_id, line_pos, name='u_point_constraint')
+    sq.Index('geopoint_coordinate_index', east, north)
 
     def __init__(self, easting, northing, altitude, horizon, session, name=""):
         # type: (float, float, float, Stratigraphy, Session, str) -> None
@@ -206,16 +207,16 @@ class GeoPoint(Base):
 
         :return: Nothing
 
-        :raises DatabaseException: raises DatabaseException if more than one horizon with the value.name exists in the
-        database (name column should be unique)
+        :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
-        # check if horizon exists in db -> if true take the db version, don't create a new one
+        if (value is not None) and (type(value) is not Stratigraphy):
+            raise TypeError('type of commited value ({}) is not Stratigraphy!'.format(type(value)))
+
         if value is None:
             self.hor = None
             self.horizon_id = -1
-            return
-
-        self.hor = value
+        else:
+            self.hor = value
 
     @property
     def point_name(self):
@@ -403,7 +404,7 @@ class Line(Base):
 
     id = sq.Column(sq.INTEGER, sq.Sequence('line_id_seq'), primary_key=True)
     closed = sq.Column(sq.BOOLEAN)
-    name = sq.Column(sq.TEXT(100), default="")
+    name = sq.Column(sq.VARCHAR(100), default="")
 
     # set stratigraphy of the line
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
@@ -535,13 +536,14 @@ class Line(Base):
 
         :return: Nothing
 
-        :raises DatabaseException: raises DatabaseException if more than one horizon with the value.name exists in the
-                database (name column should be unique)
+        :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
+        if (value is not None) and (type(value) is not Stratigraphy):
+            raise TypeError('type of commited value ({}) is not Stratigraphy!'.format(type(value)))
+
         if value is None:
             self.hor = None
             self.horizon_id = -1
-
         else:
             self.hor = value
 
