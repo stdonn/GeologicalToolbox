@@ -32,42 +32,42 @@ class TestWellClass(unittest.TestCase):
         # add test data to the database
         self.wells = [
             {
-                'name': 'Well_1',
+                'name'      : 'Well_1',
                 'short_name': 'W1',
-                'comment': 'A drilled well',
-                'east': 1234.56,
-                'north': 123.45,
-                'altitude': 10.5,
-                'depth': 555,
-                'marker': ((10, 'mu', 4, ''),
-                           (15, 'so', 3, 'Comment 1'),
-                           (16, 'sm', 2, ''),
-                           (17, 'su', 1, 'Comment 2'),
-                           (5, 'mm', 5, 'Comment 3'))
+                'comment'   : 'A drilled well',
+                'east'      : 1234.56,
+                'north'     : 123.45,
+                'altitude'  : 10.5,
+                'depth'     : 555,
+                'marker'    : ((10, 'mu', 4, ''),
+                               (15, 'so', 3, 'Comment 1'),
+                               (16, 'sm', 2, ''),
+                               (17, 'su', 1, 'Comment 2'),
+                               (5, 'mm', 5, 'Comment 3'))
             }, {
-                'name': 'Well_2',
+                'name'      : 'Well_2',
                 'short_name': 'W2',
-                'comment': '',
-                'east': 1000.23,
-                'north': 2300.34,
-                'altitude': 342.23,
-                'depth': 341,
-                'marker': ((12, 'mo', 6, ''),
-                           (120, 'mm', 5, 'Comment 1'),
-                           (300, 'Fault', 0, 'Comment 2'),
-                           (320, 'mo', 6, ''))
+                'comment'   : '',
+                'east'      : 1000.23,
+                'north'     : 2300.34,
+                'altitude'  : 342.23,
+                'depth'     : 341,
+                'marker'    : ((12, 'mo', 6, ''),
+                               (120, 'mm', 5, 'Comment 1'),
+                               (300, 'Fault', 0, 'Comment 2'),
+                               (320, 'mo', 6, ''))
             }, {
-                'name': 'Well_3',
+                'name'      : 'Well_3',
                 'short_name': 'W3',
-                'comment': 'A third well',
-                'east': 3454.34,
-                'north': 2340.22,
-                'altitude': 342.20,
-                'depth': 645.21,
-                'marker': ((34, 'mu', 4, ''),
-                           (234, 'so', 3, 'Comment 1'),
-                           (345, 'Fault', 0, 'Comment 2'),
-                           (635, 'mu', 4, 'Comment 3'))
+                'comment'   : 'A third well',
+                'east'      : 3454.34,
+                'north'     : 2340.22,
+                'altitude'  : 342.20,
+                'depth'     : 645.21,
+                'marker'    : ((34, 'mu', 4, ''),
+                               (234, 'so', 3, 'Comment 1'),
+                               (345, 'Fault', 0, 'Comment 2'),
+                               (635, 'mu', 4, 'Comment 3'))
             }
         ]
 
@@ -246,7 +246,8 @@ class TestWellClass(unittest.TestCase):
         wells[1].comment = 4 * test_string
         wells[0].easting = '-344.3'
         wells[1].easting = -1234.34
-        # self.assertRaises(ValueError, setattr, wells[2], 'easting', 'test')  # python >= 2.7 => not included in all ArcGIS versions...
+        # self.assertRaises(ValueError, setattr, wells[2], 'easting', 'test')
+        # python >= 2.7 => not included in all ArcGIS versions...
         with(self.assertRaises(ValueError)):  # python <= 2.6
             wells[2].easting = 'test'
         wells[0].northing = -234.56
@@ -298,6 +299,85 @@ class TestWellClass(unittest.TestCase):
         # setter and getter for session
         wells[2].session = wells[1].session
 
+    def tearDown(self):
+        # type: () -> None
+        """
+        Empty function, nothing to shutdown after the testing process
+
+        :return: Nothing
+        """
+        pass
+
+
+class TestWellMarkerClass(unittest.TestCase):
+    """
+    a unittest for WellMarker class
+    """
+
+    def setUp(self):
+        # type: () -> None
+        """
+        Initialise a temporary database connection for all test cases and fill the database with test data
+
+        :return: None
+        """
+        # initialise a in-memory sqlite database
+        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.session = self.handler.get_session()
+
+        # add test data to the database
+        self.wells = [
+            {
+                'name'      : 'Well_1',
+                'short_name': 'W1',
+                'comment'   : 'A drilled well',
+                'east'      : 1234.56,
+                'north'     : 123.45,
+                'altitude'  : 10.5,
+                'depth'     : 555,
+                'marker'    : ((10, 'mu', 4, ''),
+                               (15, 'so', 3, 'Comment 1'),
+                               (16, 'sm', 2, ''),
+                               (17, 'su', 1, 'Comment 2'),
+                               (5, 'mm', 5, 'Comment 3'))
+            }, {
+                'name'      : 'Well_2',
+                'short_name': 'W2',
+                'comment'   : '',
+                'east'      : 1000.23,
+                'north'     : 2300.34,
+                'altitude'  : 342.23,
+                'depth'     : 341,
+                'marker'    : ((12, 'mo', 6, ''),
+                               (120, 'mm', 5, 'Comment 1'),
+                               (300, 'Fault', 0, 'Comment 2'),
+                               (320, 'mo', 6, ''))
+            }, {
+                'name'      : 'Well_3',
+                'short_name': 'W3',
+                'comment'   : 'A third well',
+                'east'      : 3454.34,
+                'north'     : 2340.22,
+                'altitude'  : 342.20,
+                'depth'     : 645.21,
+                'marker'    : ((34, 'mu', 4, ''),
+                               (234, 'so', 3, 'Comment 1'),
+                               (345, 'Fault', 0, 'Comment 2'),
+                               (635, 'mu', 4, 'Comment 3'))
+            }
+        ]
+
+        for well in self.wells:
+            new_well = Well(self.session, well['name'], well['east'], well['north'], well['altitude'],
+                            well['depth'],
+                            well['short_name'], well['comment'])
+
+            for mark in well['marker']:
+                new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
+                                                                                          mark[2], False),
+                                                  self.session, mark[3]))
+            new_well.save_to_db()
+
     def test_WellMarker_init(self):
         # type: () -> None
         """
@@ -343,6 +423,39 @@ class TestWellClass(unittest.TestCase):
         self.assertEqual(marker[1].depth, 15)
         self.assertEqual(marker[4].horizon.name, 'z')
         self.assertEqual(marker[5].horizon.name, 'mo')
+
+    def test_WellMarker_to_GeoPoint(self):
+        # type: () -> None
+        """
+        Test WellMarker.to_GeoPoint functionality
+
+        :return: Nothing
+        :raises AssertionError: Raises Assertion Error if a test fails
+        """
+        marker = WellMarker.load_all_from_db(self.session)[0]
+        point = marker.to_geopoint()
+        self.assertEqual(point.easting, 1234.56)
+        self.assertEqual(point.northing, 123.45)
+        self.assertEqual(point.altitude, 0.5)
+        self.assertEqual(point.name, 'Well_1')
+        self.assertEqual(point.horizon.name, 'mu')
+
+    def test_loading_functionality(self):
+        # type: () -> None
+        """
+        Test the loading functionality of the WellMarker class
+
+        Part 1: load_all_from_db
+        Part 2: load_in_extent_from_db
+        Part 3: load_all_by_stratigraphy_from_db
+        Part 4: load_in_extent_by_stratigraphy_from_db
+
+        :return: Nothing
+        :raises AssertionError: Raises Assertion Error if a test fails
+        """
+        pass
+
+        # TODO!!!!!
 
     def tearDown(self):
         # type: () -> None
