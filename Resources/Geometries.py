@@ -93,8 +93,9 @@ class GeoPoint(Base):
         :return: Returns a text-representation of the line
         :rtype: str
         """
-        return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}', line={}, line-position={})>" \
-            .format(self.id, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id, self.line_pos)
+        return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', name='{}' horizon='{}', line={}," + \
+               " line-position={})>".format(self.id, self.easting, self.northing, self.altitude, self.name,
+                                            str(self.horizon), self.line_id, self.line_pos)
 
     def __str__(self):
         # type: () -> str
@@ -104,8 +105,9 @@ class GeoPoint(Base):
         :return: Returns a text-representation of the line
         :rtype: str
         """
-        return "[{}] {} - {} - {} : {} - {} - {}" \
-            .format(self.id, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id, self.line_pos)
+        return "[{} - {}] {} - {} - {}: {} - {} - {}" \
+            .format(self.id, self.name, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id,
+                    self.line_pos)
 
     # define setter and getter for columns and local data
     @property
