@@ -217,10 +217,10 @@ class WellMarker(Base):
             # Failure during database processing? -> rollback changes and raise error again
             self.__session.rollback()
             raise IntegrityError(
-                'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
-                'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
+                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
+                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
-    def to_GeoPoint(self):
+    def to_geopoint(self):
         # type: () -> GeoPoint
         """
         Returns the current well marker as GeoPoint
@@ -231,7 +231,7 @@ class WellMarker(Base):
         easting = self.well.easting
         northing = self.well.northing
         altitude = self.well.altitude - self.depth
-        return GeoPoint(easting, northing, altitude, self.well.horizon, self.session, self.well.name)
+        return GeoPoint(easting, northing, altitude, self.horizon, self.session, self.well.name)
 
     # load points from db
     @classmethod
@@ -253,10 +253,11 @@ class WellMarker(Base):
         return result
 
     @classmethod
-    def load_in_extent_from_db(cls, session, horizon, min_easting, max_easting, min_northing, max_northing):
+    def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
         # type: (Session, Stratigraphy, float, float, float, float) -> List[WellMarker]
         """
-        Returns all well marker with committed horizon inside the given extent in the database connected to the SQLAlchemy Session session
+        Returns all well marker with committed horizon inside the given extent in the database connected to the
+        SQLAlchemy Session session
 
         :param horizon: Stratigraphy of the well marker
         :type horizon: Stratigraphy
@@ -280,6 +281,60 @@ class WellMarker(Base):
         :rtype: List[WellMarker]
         """
         result = session.query(cls, Well). \
+            filter(Well.id == cls.well_id). \
+            filter(sq.between(Well.east, min_easting, max_easting)). \
+            filter(sq.between(Well.north, min_northing, max_northing)). \
+            order_by(cls.id).all()
+        for marker in result:
+            marker.session = session
+        return result
+
+    @classmethod
+    def load_all_by_stratigraphy_from_db(cls, horizon, session):
+        # type: (Stratigraphy) -> List[WellMarker]
+        """
+        Returns all WellMarker in the database which are connected to the horizon 'horizon'
+
+        :param horizon: stratigraphy for the database query
+        :type horizon: Stratigraphy
+
+        :param session: represents the database connection as SQLAlchemy Session
+        :type session: Session
+
+        :return: a list of WellMarker
+        :rtype: List[WellMarker]
+        """
+        return session.query(cls).filter(WellMarker.horizon_id == horizon.id)
+
+    @classmethod
+    def load_all_by_stratigraphy_in_extent_from_db(cls, horizon, min_easting, max_easting, min_northing, max_northing,
+                                                   session):
+        # type: (Stratigraphy) -> List[WellMarker]
+        """
+        Returns all WellMarker in the database which are connected to the horizon 'horizon'
+
+        :param horizon: stratigraphy for the database query
+        :type horizon: Stratigraphy
+
+        :param min_easting: minimal easting of extent
+        :type min_easting: float
+
+        :param max_easting: maximal easting of extent
+        :type max_easting: float
+
+        :param min_northing: minimal northing of extent
+        :type min_northing: float
+
+        :param max_northing: maximal northing of extent
+        :type max_northing: float
+
+        :param session: represents the database connection as SQLAlchemy Session
+        :type session: Session
+
+        :return: a list of WellMarker
+        :rtype: List[WellMarker]
+        """
+        result = session.query(cls, Well). \
             filter(cls.horizon_id == horizon.id). \
             filter(Well.id == cls.well_id). \
             filter(sq.between(Well.east, min_easting, max_easting)). \
@@ -288,6 +343,7 @@ class WellMarker(Base):
         for marker in result:
             marker.session = session
         return result
+
 
 class Well(Base):
     """
@@ -646,7 +702,7 @@ class Well(Base):
         for mark in marker:
             if type(mark) is not WellMarker:
                 raise TypeError(
-                    'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
+                        'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
             if mark.depth > self.depth:
                 raise ValueError('Marker depth ({}) is larger than final well depth ({})!'.
                                  format(mark.depth, self.depth))
@@ -667,7 +723,8 @@ class Well(Base):
         :return: Returns the marker at depth 'depth'
         :rtype: WellMarker
 
-        :raises ValueError: Raises ValueError if no marker was found for the committed depth or depth is not compatible to float
+        :raises ValueError: Raises ValueError if no marker was found for the committed depth or depth is
+                            not compatible to float
         """
         depth = float(depth)
         for marker in self.marker:
@@ -721,8 +778,8 @@ class Well(Base):
             # Failure during database processing? -> rollback changes and raise error again
             self.__session.rollback()
             raise IntegrityError(
-                'Cannot commit changes in wells table, Integrity Error (double unique values?) -- {} -- ' +
-                'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
+                    'Cannot commit changes in wells table, Integrity Error (double unique values?) -- {} -- ' +
+                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
     # load wells from db
     @classmethod
