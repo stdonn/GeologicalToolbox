@@ -6,6 +6,7 @@ This is a test module for the Resources.Geometries.Well and WellMarker classes u
 import math
 import unittest
 
+from Exceptions import WellMarkerException
 from Resources.DBHandler import DBHandler
 from Resources.Stratigraphy import Stratigraphy
 from Resources.Wells import WellMarker, Well
@@ -13,6 +14,10 @@ from Resources.constants import float_precision
 
 
 class TestWellClass(unittest.TestCase):
+    """
+    a unittest for Well class
+    """
+
     def setUp(self):
         # type: () -> None
         """
@@ -27,42 +32,42 @@ class TestWellClass(unittest.TestCase):
         # add test data to the database
         self.wells = [
             {
-                'name'      : 'Well_1',
+                'name': 'Well_1',
                 'short_name': 'W1',
-                'comment'   : 'A drilled well',
-                'east'      : 1234.56,
-                'north'     : 123.45,
-                'altitude'  : 10.5,
-                'depth'     : 555,
-                'marker'    : ((10, 'mu', 4, ''),
-                               (15, 'so', 3, 'Comment 1'),
-                               (16, 'sm', 2, ''),
-                               (17, 'su', 1, 'Comment 2'),
-                               (5, 'mm', 5, 'Comment 3'))
+                'comment': 'A drilled well',
+                'east': 1234.56,
+                'north': 123.45,
+                'altitude': 10.5,
+                'depth': 555,
+                'marker': ((10, 'mu', 4, ''),
+                           (15, 'so', 3, 'Comment 1'),
+                           (16, 'sm', 2, ''),
+                           (17, 'su', 1, 'Comment 2'),
+                           (5, 'mm', 5, 'Comment 3'))
             }, {
-                'name'      : 'Well_2',
+                'name': 'Well_2',
                 'short_name': 'W2',
-                'comment'   : '',
-                'east'      : 1000.23,
-                'north'     : 2300.34,
-                'altitude'  : 342.23,
-                'depth'     : 341,
-                'marker'    : ((12, 'mo', 6, ''),
-                               (120, 'mm', 5, 'Comment 1'),
-                               (300, 'Fault', 0, 'Comment 2'),
-                               (320, 'mo', 6, ''))
+                'comment': '',
+                'east': 1000.23,
+                'north': 2300.34,
+                'altitude': 342.23,
+                'depth': 341,
+                'marker': ((12, 'mo', 6, ''),
+                           (120, 'mm', 5, 'Comment 1'),
+                           (300, 'Fault', 0, 'Comment 2'),
+                           (320, 'mo', 6, ''))
             }, {
-                'name'      : 'Well_3',
+                'name': 'Well_3',
                 'short_name': 'W3',
-                'comment'   : 'A third well',
-                'east'      : 3454.34,
-                'north'     : 2340.22,
-                'altitude'  : 342.20,
-                'depth'     : 645.21,
-                'marker'    : ((34, 'mu', 4, ''),
-                               (234, 'so', 3, 'Comment 1'),
-                               (345, 'Fault', 0, 'Comment 2'),
-                               (635, 'mu', 4, 'Comment 3'))
+                'comment': 'A third well',
+                'east': 3454.34,
+                'north': 2340.22,
+                'altitude': 342.20,
+                'depth': 645.21,
+                'marker': ((34, 'mu', 4, ''),
+                           (234, 'so', 3, 'Comment 1'),
+                           (345, 'Fault', 0, 'Comment 2'),
+                           (635, 'mu', 4, 'Comment 3'))
             }
         ]
 
@@ -189,6 +194,155 @@ class TestWellClass(unittest.TestCase):
 
         wells = Well.load_all_from_db(self.session)
         self.assertRaises(ValueError, wells[1].insert_multiple_marker, [marker_1, marker_2, marker_3])
+
+    def test_get_marker_by_depth(self):
+        # type: () -> None
+        """
+        Test the Well.get_marker_by_depth function
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        well = Well.load_by_name_from_db('Well_1', self.session)
+        self.assertEqual(well.get_marker_by_depth(16).horizon.name, 'sm')
+        self.assertRaises(ValueError, well.get_marker_by_depth, 100)
+
+    def test_delete_marker(self):
+        # type: () -> None
+        """
+        Test the Well.get_marker_by_depth function
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        well = Well.load_by_name_from_db('Well_1', self.session)
+        marker = well.get_marker_by_depth(16)
+        self.assertEqual(marker.horizon.name, 'sm')
+        self.assertRaises(ValueError, well.get_marker_by_depth, 100)
+        well.delete_marker(marker)
+        self.assertEqual(len(well.marker), 4)
+        well.save_to_db()
+        del well
+
+        well = Well.load_by_name_from_db('Well_1', self.session)
+        self.assertEqual(len(well.marker), 4)
+
+        new_marker = WellMarker(23423, Stratigraphy.init_stratigraphy(self.session, 'so'), self.session, 'Nothing')
+        self.assertRaises(ValueError, well.delete_marker, new_marker)
+        self.assertRaises(TypeError, well.delete_marker, 'test')
+
+    def test_setter_and_getter(self):
+        # type: () -> None
+        """
+        Test setter and getter functionality
+
+        :return: Nothing
+        :raises AssertionError: Raises Assertion Error if a test fails
+        """
+        # first part: test setter
+        wells = Well.load_all_from_db(self.session)
+        test_string = "abcdefghijklmnopqrstuvwxyz1234567890"
+        wells[0].comment = "new comment set"
+        wells[1].comment = 4 * test_string
+        wells[0].easting = '-344.3'
+        wells[1].easting = -1234.34
+        # self.assertRaises(ValueError, setattr, wells[2], 'easting', 'test')  # python >= 2.7 => not included in all ArcGIS versions...
+        with(self.assertRaises(ValueError)):  # python <= 2.6
+            wells[2].easting = 'test'
+        wells[0].northing = -234.56
+        wells[1].northing = '-2345.356'
+        with(self.assertRaises(ValueError)):
+            wells[2].northing = 'test'
+        wells[0].altitude = -343.67
+        wells[1].altitude = '-235.34'
+        with(self.assertRaises(ValueError)):
+            wells[2].altitude = 'test'
+        wells[0].depth = 235.65
+        wells[1].depth = "3456.14"
+        with(self.assertRaises(ValueError)):
+            wells[2].depth = 'test'
+        with(self.assertRaises(ValueError)):
+            wells[2].depth = -123.43
+        with(self.assertRaises(WellMarkerException)):
+            wells[2].depth = 500
+        wells[0].name = "new Well Name"
+        wells[1].name = 4 * test_string
+        wells[0].short_name = "NWN"
+        wells[1].short_name = test_string
+
+        # changes are stored automatically to the database through SQLAlchemy
+
+        del wells
+
+        # second part: test getters
+        wells = Well.load_all_from_db(self.session)
+        self.assertEqual(wells[0].comment, "new comment set")
+        self.assertEqual(len(wells[1].comment), 100)
+        self.assertEqual(wells[0].easting, -344.3)
+        self.assertEqual(wells[1].easting, -1234.34)
+        self.assertEqual(wells[2].easting, 3454.34)
+        self.assertEqual(wells[0].northing, -234.56)
+        self.assertEqual(wells[1].northing, -2345.356)
+        self.assertEqual(wells[2].northing, 2340.22)
+        self.assertEqual(wells[0].altitude, -343.67)
+        self.assertEqual(wells[1].altitude, -235.34)
+        self.assertEqual(wells[2].altitude, 342.2)
+        self.assertEqual(wells[0].depth, 235.65)
+        self.assertEqual(wells[1].depth, 3456.14)
+        self.assertEqual(wells[2].depth, 645.21)
+        self.assertEqual(wells[0].name, 'new Well Name')
+        self.assertEqual(len(wells[1].name), 100)
+        self.assertEqual(wells[0].short_name, 'NWN')
+        self.assertEqual(len(wells[1].short_name), 20)
+
+        # setter and getter for session
+        wells[2].session = wells[1].session
+
+    def test_WellMarker_init(self):
+        # type: () -> None
+        """
+        Test the initialisation of the database
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        marker = self.session.query(WellMarker).all()
+        self.assertEqual(len(marker), 13)
+        self.assertEqual(marker[3].horizon.name, 'su')
+        self.assertEqual(marker[4].horizon.name, 'mm')
+
+    def test_WellMarker_setter_and_getter(self):
+        # type: () -> None
+        """
+        Test setter and getter functionality
+
+        :return: Nothing
+        :raises AssertionError: Raises Assertion Error if a test fails
+        """
+        marker = WellMarker.load_all_from_db(self.session)
+        self.assertEqual(len(marker), 13)
+        test_string = "abcdefghijklmnopqrstuvwxyz1234567890"
+
+        # first part: test setter functionality
+        marker[0].comment = 'This is a new comment'
+        marker[1].comment = 4 * test_string
+        marker[2].depth = 123.43
+        marker[3].depth = '2345.54'
+        with (self.assertRaises(ValueError)):
+            marker[4].depth = 'Test'
+        marker[4].horizon = Stratigraphy.init_stratigraphy(self.session, 'z', 50, False)
+        with (self.assertRaises(TypeError)):
+            marker[5].horizon = 'test'
+
+        # second part: getter functionality
+        marker = WellMarker.load_all_from_db(self.session)
+        self.assertEqual(marker[0].comment, 'This is a new comment')
+        self.assertEqual(len(marker[1].comment), 100)
+        self.assertEqual(marker[3].comment, 'Comment 2')
+        self.assertEqual(marker[2].depth, 123.43)
+        self.assertEqual(marker[1].depth, 15)
+        self.assertEqual(marker[4].horizon.name, 'z')
+        self.assertEqual(marker[5].horizon.name, 'mo')
 
     def tearDown(self):
         # type: () -> None
