@@ -20,7 +20,7 @@ class Stratigraphy(Base):
     __tablename__ = 'stratigraphy'
 
     id = sq.Column(sq.INTEGER, sq.Sequence('strat_id_seq'), primary_key=True)
-    unit_name = sq.Column(sq.TEXT(50), unique=True)
+    unit_name = sq.Column(sq.VARCHAR(50), unique=True)
     age = sq.Column(sq.INTEGER(), default=-1)
 
     def __init__(self, session, name, age=-1):
