@@ -254,13 +254,10 @@ class WellMarker(Base):
 
     @classmethod
     def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-        # type: (Session, Stratigraphy, float, float, float, float) -> List[WellMarker]
+        # type: (Session, float, float, float, float) -> List[WellMarker]
         """
         Returns all well marker with committed horizon inside the given extent in the database connected to the
         SQLAlchemy Session session
-
-        :param horizon: Stratigraphy of the well marker
-        :type horizon: Stratigraphy
 
         :param min_easting: minimal easting of extent
         :type min_easting: float
