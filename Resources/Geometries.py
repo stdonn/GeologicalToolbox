@@ -11,11 +11,12 @@ from sqlalchemy.orm.session import Session
 from typing import List
 
 from Resources.DBHandler import Base
+from Resources.GeoObject import GeoObject
 from Resources.Stratigraphy import Stratigraphy
 from Resources.constants import float_precision
 
 
-class GeoPoint(Base):
+class GeoPoint(Base, GeoObject):
     """
     Class GeoPoint
 
@@ -25,9 +26,6 @@ class GeoPoint(Base):
     __tablename__ = 'geopoints'
 
     id = sq.Column(sq.INTEGER, sq.Sequence('geopoints_id_seq'), primary_key=True)
-    east = sq.Column(sq.REAL(10, 4))
-    north = sq.Column(sq.REAL(10, 4))
-    alt = sq.Column(sq.REAL(10, 4))
     has_z = sq.Column(sq.BOOLEAN, default=False)
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'), default=-1)
 
@@ -39,11 +37,12 @@ class GeoPoint(Base):
     name = sq.Column(sq.VARCHAR(100), default="")
 
     # make the points unique -> coordinates + horizon + belongs to one line?
-    sq.UniqueConstraint(east, north, alt, horizon_id, line_id, line_pos, name='u_point_constraint')
-    sq.Index('geopoint_coordinate_index', east, north)
+    sq.UniqueConstraint(GeoObject.east, GeoObject.north, GeoObject.alt, horizon_id, line_id, line_pos,
+                        name='u_point_constraint')
+    sq.Index('geopoint_coordinate_index', GeoObject.east, GeoObject.north)
 
-    def __init__(self, easting, northing, altitude, horizon, session, name=""):
-        # type: (float, float, float, Stratigraphy, Session, str) -> None
+    def __init__(self, easting, northing, altitude, horizon, session, has_z=True, name=""):
+        # type: (float, float, float, Stratigraphy, Session, bool, str) -> None
         """
         Creates a new GeoPoint
 
@@ -62,6 +61,9 @@ class GeoPoint(Base):
         :param session: SQLAlchemy session, which includes the database connection
         :type session: Session
 
+        :param has_z: Is altitude stored as z value?
+        :type has_z: bool
+
         :param name: name of the line with the aim to have the possibility to group more lines to a line-set
         :type name: str
 
@@ -73,14 +75,14 @@ class GeoPoint(Base):
         if (type(horizon) is not Stratigraphy) and (horizon is not None):
             raise ValueError("'horizon' value is not of type Stratigraphy!")
 
-        self.easting = float(easting)
-        self.northing = float(northing)
         if altitude is None:
-            self.altitude = 0
             self.has_z = False
+            altitude = 0
         else:
-            self.altitude = float(altitude)
-            self.has_z = True
+            self.has_z = bool(has_z)
+
+        GeoObject.__init__(self, '', easting, northing, altitude)
+
         self.__session = session
         self.horizon = horizon
         self.point_name = str(name)
@@ -108,84 +110,6 @@ class GeoPoint(Base):
         return "[{} - {}] {} - {} - {}: {} - {} - {}" \
             .format(self.id, self.name, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id,
                     self.line_pos)
-
-    # define setter and getter for columns and local data
-    @property
-    def easting(self):
-        # type: () -> float
-        """
-        Returns the easting value of the point.
-
-        :return: Returns the easting value of the point.
-        :rtype: float
-        """
-        return float(self.east)
-
-    @easting.setter
-    def easting(self, value):
-        # type: (float) -> None
-        """
-        Sets a new easting value
-
-        :param value: new easting value
-        :type value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
-        """
-        self.east = float(value)
-
-    @property
-    def northing(self):
-        # type: () -> float
-        """
-        Returns the northing value of the point.
-
-        :return: Returns the northing value of the point.
-        :rtype: float
-        """
-        return float(self.north)
-
-    @northing.setter
-    def northing(self, value):
-        # type: (float) -> None
-        """
-        Sets a new northing value
-
-        :param value: new northing value
-        :type value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
-        """
-        self.north = float(value)
-
-    @property
-    def altitude(self):
-        # type: () -> float
-        """
-        Returns the height above sea level of the point.
-        If the point has no z-value (check with GeoPoint.has_z()), 0 will be returned.
-
-        :return: Returns the height above sea level of the point.
-        :rtype: float
-        """
-        return float(self.alt)
-
-    @altitude.setter
-    def altitude(self, value):
-        # type: (float) -> None
-        """
-        Sets a new height above sea level
-
-        :param value: New height above sea level
-        :type value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
-        """
-        self.alt = float(value)
-        self.has_z = True
 
     @property
     def horizon(self):
@@ -287,6 +211,15 @@ class GeoPoint(Base):
         """
         self.alt = 0
         self.has_z = False
+
+    def use_z(self):
+        # type: () -> None
+        """
+        uses the altitude value as z coordinate
+
+        :return: Nothing
+        """
+        self.has_z = True
 
     # save point to db / update point
     def save_to_db(self):
