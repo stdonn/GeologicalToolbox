@@ -107,7 +107,7 @@ class TestGeoPointClass(unittest.TestCase):
         for point in self.points:
             strat = Stratigraphy.init_stratigraphy(self.session, point['horizon'], point['age'], point['update'])
             new_point = GeoPoint(point['coords'][0], point['coords'][1], point['coords'][2], strat, self.session,
-                                 point['name'])
+                                 False if (point['coords'][2] is None) else True, point['name'])
             new_point.save_to_db()
 
         for line in self.lines:
@@ -302,6 +302,7 @@ class TestGeoPointClass(unittest.TestCase):
         points[0].easting = 1
         points[1].northing = 2
         points[2].altitude = 3
+        points[2].use_z()
         points[3].horizon = Stratigraphy.init_stratigraphy(self.session, 'so', 10, False)
         points[0].point_name = 'point set name'
         points[1].del_z()

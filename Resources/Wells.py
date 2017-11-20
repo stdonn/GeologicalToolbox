@@ -4,18 +4,17 @@ This module provides classes for storing drilling data in a database.
 """
 
 import sqlalchemy as sq
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
 from Exceptions import DatabaseException, WellMarkerException
 from Geometries import GeoPoint
-from Resources.DBHandler import Base
+from Resources.DBHandler import Base, DBObject
 from Resources.Stratigraphy import Stratigraphy
 
 
-class WellMarker(Base):
+class WellMarker(Base, DBObject):
     """
     Class WellMarker
 
@@ -26,7 +25,6 @@ class WellMarker(Base):
 
     id = sq.Column(sq.INTEGER, sq.Sequence('well_id_seq'), primary_key=True)
     drill_depth = sq.Column(sq.FLOAT(10, 4))
-    comment_col = sq.Column(sq.VARCHAR(100), default="")
 
     # define relationship to stratigraphic table
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
@@ -55,15 +53,12 @@ class WellMarker(Base):
         :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected
                             type
         """
-        if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!")
+        DBObject.__init__(self, session, comment)
         if (type(horizon) is not Stratigraphy) and (horizon is not None):
             raise ValueError("'horizon' value is not of type Stratigraphy!")
 
         self.depth = float(depth)
         self.horizon = horizon
-        self.__session = session
-        self.comment = comment
 
     def __repr__(self):
         # type: () -> str
@@ -85,33 +80,6 @@ class WellMarker(Base):
         :rtype: str
         """
         return "[{}] {}: {} - {}".format(self.id, self.depth, self.horizon, self.comment)
-
-    @property
-    def comment(self):
-        # type: () -> str
-        """
-        Returns the additional comments for the well marker.
-
-        :return: Returns the additional comments for the well marker.
-        :rtype: str
-        """
-        return self.comment_col
-
-    @comment.setter
-    def comment(self, comment):
-        # type: (str) -> None
-        """
-        Sets an additional comments for the well marker
-
-        :param comment: additional comment
-        :type comment: str
-
-        :return: Nothing
-        """
-        comment = str(comment)
-        if len(comment) > 100:
-            comment = comment[:100]
-        self.comment_col = comment
 
     @property
     def depth(self):
@@ -171,55 +139,6 @@ class WellMarker(Base):
         else:
             self.hor = value
 
-    @property
-    def session(self):
-        # type: () -> Session
-        """
-        Return the current Session object
-
-        :return: returns the current Session object, which represents the connection to a database
-        :rtype: Session
-        """
-        return self.__session
-
-    @session.setter
-    def session(self, session):
-        # type: (Session) -> None
-        """
-        Sets a new session, which represents the connection to a database
-
-        :param session: session object create by SQLAlchemy sessionmaker
-        :type session: Session
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if session is not of an instance of Session
-        """
-
-        if not isinstance(session, Session):
-            raise TypeError("Value is not of type {} (it is {})!".format(Session, type(session)))
-        self.__session = session
-
-    # save point to db / update point
-    def save_to_db(self):
-        # type: () -> None
-        """
-        Saves all changes of the well marker to the database
-
-        :return: Nothing
-
-        :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
-        """
-        self.__session.add(self)
-        try:
-            self.__session.commit()
-        except IntegrityError as e:
-            # Failure during database processing? -> rollback changes and raise error again
-            self.__session.rollback()
-            raise IntegrityError(
-                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
-                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
-
     def to_geopoint(self):
         # type: () -> GeoPoint
         """
@@ -231,27 +150,9 @@ class WellMarker(Base):
         easting = self.well.easting
         northing = self.well.northing
         altitude = self.well.altitude - self.depth
-        return GeoPoint(easting, northing, altitude, self.horizon, self.session, self.well.name)
+        return GeoPoint(easting, northing, altitude, self.horizon, self.session, True, self.well.name)
 
     # load points from db
-    @classmethod
-    def load_all_from_db(cls, session):
-        # type: (Session) -> List[WellMarker]
-        """
-        Returns all well marker in the database connected to the SQLAlchemy Session session
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :return: a list of well marker representing the result of the database query
-        :rtype: List[WellMarker]
-        """
-        result = session.query(cls)
-        result = result.order_by(cls.id).all()
-        for marker in result:
-            marker.session = session
-        return result
-
     @classmethod
     def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
         # type: (Session, float, float, float, float) -> List[WellMarker]
