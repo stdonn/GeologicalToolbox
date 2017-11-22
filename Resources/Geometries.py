@@ -91,9 +91,10 @@ class GeoPoint(Base, GeoObject):
         :return: Returns a text-representation of the line
         :rtype: str
         """
-        return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', name='{}' horizon='{}', line={}," + \
-               " line-position={})>".format(self.id, self.easting, self.northing, self.altitude, self.name,
-                                            str(self.horizon), self.line_id, self.line_pos)
+        return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}', line={}, line-position={}, " + \
+               "name='{}', comment='{}')>".format(self.id, self.easting, self.northing, self.altitude,
+                                                  str(self.horizon), self.line_id, self.line_pos, self.name,
+                                                  self.comment)
 
     def __str__(self):
         # type: () -> str
@@ -103,9 +104,9 @@ class GeoPoint(Base, GeoObject):
         :return: Returns a text-representation of the line
         :rtype: str
         """
-        return "[{} - {}] {} - {} - {}: {} - {} - {}" \
+        return "[{} - {}] {} - {} - {}: {} - {} - {} - {}" \
             .format(self.id, self.name, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id,
-                    self.line_pos)
+                    self.line_pos, self.comment)
 
     @property
     def horizon(self):
@@ -160,7 +161,6 @@ class GeoPoint(Base, GeoObject):
         """
         self.has_z = True
 
-
     # overwrite loading method
     @classmethod
     def load_all_without_lines_from_db(cls, session):
@@ -180,6 +180,27 @@ class GeoPoint(Base, GeoObject):
             order_by(cls.id).all()
         for point in result:
             point.session = session
+        return result
+
+    @classmethod
+    def load_by_name_without_lines_from_db(cls, name, session):
+        # type: (str, Session) -> List[GeoPoint]
+        """
+        Returns all GeoPoints with the given name in the database connected to the SQLAlchemy Session session, which
+        don't belong to a line
+
+        :param name: Only GeoPoints with this name will be returned
+        :type name: str
+
+        :param session: represents the database connection as SQLAlchemy Session
+        :type session: Session
+
+        :return: a list of GeoPoints representing the result of the database query
+        :rtype: List[GeoPoints]
+        """
+        result = session.query(cls).filter(cls.line_id == -1).filter(cls.name_col == name).order_by(cls.id).all()
+        for obj in result:
+            obj.session = session
         return result
 
     @classmethod
@@ -272,8 +293,9 @@ class Line(Base, DBObject):
         self.horizon = horizon
         self.points = points
 
-        # check doubled values in a line
+        # check doubled values and stratigraphy in the line
         self.__remove_doubled_points()
+        self.__check_line()
 
         # call base class constructor
         DBObject.__init__(self, session, name, comment)
@@ -287,8 +309,8 @@ class Line(Base, DBObject):
         :rtype: str
         """
 
-        return "<Line(id='{}', closed='{}', horizon='{}'\npoints='{}')>" \
-            .format(self.id, self.closed, str(self.horizon), str(self.points))
+        return "<Line(id='{}', closed='{}', horizon='{}', name='{}', comment='{}'\npoints='{}')>" \
+            .format(self.id, self.closed, str(self.horizon), self.name, self.comment, str(self.points))
 
     def __str__(self):
         # type: () -> str
@@ -299,8 +321,8 @@ class Line(Base, DBObject):
         :rtype: str
         """
         # return "[{}] {} - {}\n{}".format(self.id, self.closed, str(self.horizon), str(self.points))
-        text = "Line: id='{}', closed='{}', horizon='{}', points:" \
-            .format(self.id, self.closed, str(self.horizon))
+        text = "Line: id='{}', closed='{}', horizon='{}', name='{}', comment='', points:" \
+            .format(self.id, self.closed, str(self.horizon), self.name, self.comment)
 
         for point in self.points:
             text += "\n{}".format(str(point))
@@ -368,6 +390,9 @@ class Line(Base, DBObject):
         else:
             self.hor = value
 
+        # check stratigraphy
+        self.__check_line()
+
     def insert_point(self, point, position):
         # type: (GeoPoint, int) -> None
         """
@@ -390,8 +415,9 @@ class Line(Base, DBObject):
         else:
             self.points.insert(position, point)
 
-        # check doubled values in a line
+        # check doubled values and stratigraphy in the line
         self.__remove_doubled_points()
+        self.__check_line()
 
     def insert_points(self, points, position):
         # type: (List[GeoPoint], int) -> None
@@ -421,8 +447,9 @@ class Line(Base, DBObject):
         else:
             self.points[position:position] = points
 
-        # check doubled values in a line
+        # check doubled values and stratigraphy in the line
         self.__remove_doubled_points()
+        self.__check_line()
 
     def get_point_index(self, point):
         # type: (GeoPoint) -> int
@@ -460,8 +487,9 @@ class Line(Base, DBObject):
         except ValueError as e:
             raise ValueError(str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!')
 
-        # check doubled values in a line
+        # check doubled values and stratigraphy in the line
         self.__remove_doubled_points()
+        self.__check_line()
 
     def delete_point_by_coordinates(self, easting, northing, altitude=0):
         # type: (float, float, float) -> None
@@ -496,9 +524,22 @@ class Line(Base, DBObject):
                 self.points.remove(pnt)
                 # check doubled values in a line
                 self.__remove_doubled_points()
+                self.__check_line()
                 return
 
         raise ValueError('Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude))
+
+    def __check_line(self):
+        # type: () -> None
+        """
+        Checks the line for inconsistencies.
+        Current checks:
+        - stratigraphy check for all points
+
+        :return: Nothing
+        """
+        for point in self.points:
+            point.horizon = self.horizon
 
     def __remove_doubled_points(self):
         # type: () -> None
@@ -507,7 +548,6 @@ class Line(Base, DBObject):
 
         :return: None
         """
-
         # create a full copy of the point-list
         tmp_pnts = self.points[:]
         for i in range(len(tmp_pnts) - 1):

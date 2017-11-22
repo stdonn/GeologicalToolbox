@@ -348,6 +348,7 @@ class TestLineClass(unittest.TestCase):
 
         # Part 1: load all lines from the database
         lines = Line.load_all_from_db(self.session)
+
         self.assertEqual(len(lines), 4, "Wrong number of lines ({}), should be {}".format(len(lines), 4))
         self.assertEqual(lines[0].id, 1, "First line has wrong id ({}), should be {}".format(lines[0].id, 1))
         self.assertEqual(len(lines[0].points), 4, "Number of points ({}) of the first line is wrong. Should be {}". \

@@ -78,7 +78,7 @@ class TestWellClass(unittest.TestCase):
             for mark in well['marker']:
                 new_well.marker.append(WellMarker(mark[0],
                                                   Stratigraphy.init_stratigraphy(self.session, mark[1], mark[2], False),
-                                                  self.session, '', mark[3]))
+                                                  self.session, well['name'], mark[3]))
             new_well.save_to_db()
 
     def test_init(self):
