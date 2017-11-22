@@ -180,7 +180,7 @@ class TestGeoPointClass(unittest.TestCase):
         """
 
         # /1/ load all from database
-        points = GeoPoint.load_all_from_db(self.session, True)
+        points = GeoPoint.load_all_from_db(self.session)
         pnts_count = len(self.points)
         for line in self.lines:
             pnts_count += len(line['points'])
@@ -200,7 +200,7 @@ class TestGeoPointClass(unittest.TestCase):
                                math.fabs(float(points[-1].northing) - 691044.6091080031), float_precision))
         del points
 
-        points = GeoPoint.load_all_from_db(self.session)
+        points = GeoPoint.load_all_without_lines_from_db(self.session)
         pnts_count = len(self.points)  # only points which doesn't belong to a line are loaded
         self.assertEqual(len(points), pnts_count,
                          "Wrong point count ({}). Should be {}.".format(len(points), pnts_count))
@@ -218,7 +218,7 @@ class TestGeoPointClass(unittest.TestCase):
         del points
 
         # /2/ load by name
-        points = GeoPoint.load_by_name_from_db('', self.session, True)
+        points = GeoPoint.load_by_name_from_db('', self.session)
 
         pnts_count = len(self.points)
         for line in self.lines:
@@ -283,7 +283,7 @@ class TestGeoPointClass(unittest.TestCase):
 
         del points
 
-        points = GeoPoint.load_in_extent_from_db(self.session, 0, 1, 0, 1)
+        points = GeoPoint.load_in_extent_without_lines_from_db(self.session, 0, 1, 0, 1)
         self.assertEqual(len(points), 0, "Wrong number of points ({}), should be {}".format(len(points), 0))
 
         del points
@@ -296,7 +296,7 @@ class TestGeoPointClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        points = GeoPoint.load_all_from_db(self.session)
+        points = GeoPoint.load_all_without_lines_from_db(self.session)
         self.assertEqual(len(points), len(self.points),
                          "Wrong point length ({}). Should be {}.".format(len(points), len(self.points)))
         points[0].easting = 1
@@ -304,14 +304,14 @@ class TestGeoPointClass(unittest.TestCase):
         points[2].altitude = 3
         points[2].use_z()
         points[3].horizon = Stratigraphy.init_stratigraphy(self.session, 'so', 10, False)
-        points[0].point_name = 'point set name'
+        points[0].name = 'point set name'
         points[1].del_z()
 
         for point in points:
             point.save_to_db()
 
         del points
-        points = GeoPoint.load_all_from_db(self.session)
+        points = GeoPoint.load_all_without_lines_from_db(self.session)
         self.assertEqual(len(points), len(self.points),
                          "Wrong point length ({}). Should be {}.".format(len(points), len(self.points)))
         self.assertEqual(points[0].easting, 1, "Wrong easting value ({}). Should be {}.".format(points[0].easting, 1))
@@ -322,8 +322,8 @@ class TestGeoPointClass(unittest.TestCase):
         self.assertTrue(points[2].has_z, "Third point has no z-value...")  # Third point got z-value
         self.assertEqual(points[3].horizon.name, 'so',
                          "Wrong horizon ({}). Should be {}.".format(points[3].horizon.name, 'so'))
-        self.assertEqual(points[0].point_name, 'point set name',
-                         "Wrong point name ({}). Should be {}.".format(points[0].point_name, 'point set name'))
+        self.assertEqual(points[0].name, 'point set name',
+                         "Wrong point name ({}). Should be {}.".format(points[0].name, 'point set name'))
         self.assertFalse(points[1].has_z, "Second point has a z-value...")
         self.assertEqual(points[1].altitude, 0,
                          "Wrong altitude value ({}). Should be {}.".format(points[1].altitude, 0))

@@ -73,12 +73,12 @@ class TestWellClass(unittest.TestCase):
 
         for well in self.wells:
             new_well = Well(self.session, well['name'], well['east'], well['north'], well['altitude'], well['depth'],
-                            well['short_name'], well['comment'])
+                            well['short_name'], '', well['comment'])
 
             for mark in well['marker']:
-                new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
-                                                                                          mark[2], False),
-                                                  self.session, mark[3]))
+                new_well.marker.append(WellMarker(mark[0],
+                                                  Stratigraphy.init_stratigraphy(self.session, mark[1], mark[2], False),
+                                                  self.session, '', mark[3]))
             new_well.save_to_db()
 
     def test_init(self):
@@ -92,7 +92,7 @@ class TestWellClass(unittest.TestCase):
         result = self.session.query(Well).all()
         self.assertEqual(len(result), 3, "Wrong number of drill holes ({}). Should be {}".
                          format(len(result), len(self.wells)))
-        self.assertEqual(result[1].name, 'Well_2')
+        self.assertEqual(result[1].well_name, 'Well_2')
         self.assertEqual(result[1].short_name, 'W2')
         self.assertEqual(result[2].comment, 'A third well')
         self.assertTrue(math.fabs(float(result[0].easting) - 1234.56) < float_precision)
@@ -125,16 +125,16 @@ class TestWellClass(unittest.TestCase):
         # Part 1: load all wells from the database
         wells = Well.load_all_from_db(self.session)
         self.assertEqual(len(wells), 3)
-        self.assertEqual(wells[0].name, 'Well_1')
-        self.assertEqual(wells[1].name, 'Well_2')
-        self.assertEqual(wells[2].name, 'Well_3')
+        self.assertEqual(wells[0].well_name, 'Well_1')
+        self.assertEqual(wells[1].well_name, 'Well_2')
+        self.assertEqual(wells[2].well_name, 'Well_3')
         self.assertEqual(len(wells[1].marker), 4)
         self.assertTrue(wells[1].marker[0].horizon == wells[1].marker[3].horizon)
         del wells
 
         # Part 2: load well by name
         well = Well.load_by_name_from_db('Well_2', self.session)
-        self.assertEqual(well.name, 'Well_2')
+        self.assertEqual(well.well_name, 'Well_2')
         self.assertEqual(well.short_name, 'W2')
         self.assertEqual(well.depth, 341)
         self.assertEqual(len(well.marker), 4)
@@ -148,8 +148,8 @@ class TestWellClass(unittest.TestCase):
         # result: 'Well_1' and 'Well_2'
         wells = Well.load_in_extent_from_db(self.session, 500, 1300, 0, 2400)
         self.assertEqual(len(wells), 2)
-        self.assertEqual(wells[0].name, 'Well_1')
-        self.assertEqual(wells[1].name, 'Well_2')
+        self.assertEqual(wells[0].well_name, 'Well_1')
+        self.assertEqual(wells[1].well_name, 'Well_2')
         self.assertEqual(len(wells[0].marker), 5)
         self.assertEqual(len(wells[1].marker), 4)
         del wells
@@ -157,8 +157,8 @@ class TestWellClass(unittest.TestCase):
         # Part 4: load wells with minimal depth
         wells = Well.load_deeper_than_value_from_db(self.session, 395.23)
         self.assertEqual(len(wells), 2)
-        self.assertEqual(wells[0].name, 'Well_1')
-        self.assertEqual(wells[1].name, 'Well_3')
+        self.assertEqual(wells[0].well_name, 'Well_1')
+        self.assertEqual(wells[1].well_name, 'Well_3')
         self.assertTrue(wells[0].depth >= 395.23)
         self.assertTrue(wells[1].depth >= 395.23)
         del wells
@@ -266,8 +266,8 @@ class TestWellClass(unittest.TestCase):
             wells[2].depth = -123.43
         with(self.assertRaises(WellMarkerException)):
             wells[2].depth = 500
-        wells[0].name = "new Well Name"
-        wells[1].name = 4 * test_string
+        wells[0].well_name = "new Well Name"
+        wells[1].well_name = 4 * test_string
         wells[0].short_name = "NWN"
         wells[1].short_name = test_string
 
@@ -291,8 +291,8 @@ class TestWellClass(unittest.TestCase):
         self.assertEqual(wells[0].depth, 235.65)
         self.assertEqual(wells[1].depth, 3456.14)
         self.assertEqual(wells[2].depth, 645.21)
-        self.assertEqual(wells[0].name, 'new Well Name')
-        self.assertEqual(len(wells[1].name), 100)
+        self.assertEqual(wells[0].well_name, 'new Well Name')
+        self.assertEqual(len(wells[1].well_name), 100)
         self.assertEqual(wells[0].short_name, 'NWN')
         self.assertEqual(len(wells[1].short_name), 20)
 

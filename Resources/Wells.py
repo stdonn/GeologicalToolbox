@@ -8,7 +8,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from Exceptions import DatabaseException, WellMarkerException
+from Exceptions import DatabaseException
+from GeoObject import GeoObject
 from Geometries import GeoPoint
 from Resources.DBHandler import Base, DBObject
 from Resources.Stratigraphy import Stratigraphy
@@ -32,8 +33,8 @@ class WellMarker(Base, DBObject):
 
     well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
 
-    def __init__(self, depth, horizon, session, comment=''):
-        # type: (float, Stratigraphy, Session, str) -> None
+    def __init__(self, depth, horizon, session, name='', comment=''):
+        # type: (float, Stratigraphy, Session, str, str) -> None
         """
         Creates a new well marker
 
@@ -46,6 +47,9 @@ class WellMarker(Base, DBObject):
         :param session: session object create by SQLAlchemy sessionmaker
         :type session: Session
 
+        :param name: name of the wellmarker-set
+        :type name: str
+
         :param comment: additional comment
         :type comment: str
 
@@ -53,7 +57,7 @@ class WellMarker(Base, DBObject):
         :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected
                             type
         """
-        DBObject.__init__(self, session, comment)
+        DBObject.__init__(self, session, comment, name)
         if (type(horizon) is not Stratigraphy) and (horizon is not None):
             raise ValueError("'horizon' value is not of type Stratigraphy!")
 
@@ -243,7 +247,7 @@ class WellMarker(Base, DBObject):
         return result
 
 
-class Well(Base):
+class Well(Base, GeoObject):
     """
     Class Well
 
@@ -253,22 +257,18 @@ class Well(Base):
     __tablename__ = 'wells'
 
     id = sq.Column(sq.INTEGER, sq.Sequence('well_id_seq'), primary_key=True)
-    east = sq.Column(sq.FLOAT(10, 4))
-    north = sq.Column(sq.FLOAT(10, 4))
-    alt = sq.Column(sq.FLOAT(10, 4))
     drill_depth = sq.Column(sq.FLOAT(10, 4))
-    well_name = sq.Column(sq.VARCHAR(100), unique=True)
-    short_well_name = sq.Column(sq.VARCHAR(100), default="")
-    comment_col = sq.Column(sq.VARCHAR(100), default="")
+    wellname = sq.Column(sq.VARCHAR(100), unique=True)
+    shortwellname = sq.Column(sq.VARCHAR(100), default="")
 
     # define markers relationship
     marker = relationship("WellMarker", order_by=WellMarker.drill_depth,
                           backref="well", primaryjoin='Well.id==WellMarker.well_id',
                           cascade="all, delete, delete-orphan")
 
-    sq.Index('coordinate_index', east, north)
+    sq.Index('coordinate_index', GeoObject.east, GeoObject.north)
 
-    def __init__(self, session, name, easting, northing, altitude, depth, short_name='', comment=''):
+    def __init__(self, session, well_name, easting, northing, altitude, depth, short_name='', name='', comment=''):
         # type: (Session, str, float, float, float, float, str, str) -> None
         """
         Creates a new Well
@@ -276,8 +276,8 @@ class Well(Base):
         :param session: SQLAlchemy session, which includes the database connection
         :type session: Session
 
-        :param name: well name
-        :type name: str
+        :param well_name: well name
+        :type well_name: str
 
         :param easting: easting coordinate of the well
         :type easting: float
@@ -294,6 +294,9 @@ class Well(Base):
         :param short_name: well name
         :type short_name: str
 
+        :param name: name of the associated well-set
+        :type name: str
+
         :param comment: additional comment for the well
         :type comment: str
 
@@ -304,13 +307,12 @@ class Well(Base):
             raise ValueError("'session' value is not of type SQLAlchemy Session!")
 
         self.__session = session
-        self.easting = float(easting)
-        self.northing = float(northing)
-        self.altitude = float(altitude)
         self.depth = float(depth)
-        self.name = str(name)
+        self.well_name = well_name
         self.short_name = str(short_name)
-        self.comment = comment
+
+        # call base class constructor
+        GeoObject.__init__(self, '', easting, northing, altitude, session, name, comment)
 
     def __repr__(self):
         # type: () -> str
@@ -342,143 +344,7 @@ class Well(Base):
         return text
 
     @property
-    def comment(self):
-        # type: () -> str
-        """
-        Returns the additional comments for the well marker.
-
-        :return: Returns the additional comments for the well marker.
-        :rtype: str
-        """
-        return self.comment_col
-
-    @comment.setter
-    def comment(self, comment):
-        # type: (str) -> None
-        """
-        Sets an additional comments for the well marker
-
-        :param comment: additional comment
-        :type comment: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if comment is not of type str or cannot be converted to str
-        """
-        comment = str(comment)
-        if len(comment) > 100:
-            comment = comment[:100]
-        self.comment_col = comment
-
-    # define setter and getter for columns and local data
-    @property
-    def easting(self):
-        # type: () -> float
-        """
-        Returns the easting value of the well.
-
-        :return: Returns the easting value of the well.
-        :rtype: float
-        """
-        return float(self.east)
-
-    @easting.setter
-    def easting(self, value):
-        # type: (float) -> None
-        """
-        Sets a new easting value
-
-        :param value: new easting value
-        :type value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
-        """
-        self.east = float(value)
-
-    @property
-    def northing(self):
-        # type: () -> float
-        """
-        Returns the northing value of the well.
-
-        :return: Returns the northing value of the well.
-        :rtype: float
-        """
-        return float(self.north)
-
-    @northing.setter
-    def northing(self, value):
-        # type: (float) -> None
-        """
-        Sets a new northing value
-
-        :param value: new northing value
-        :type value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
-        """
-        self.north = float(value)
-
-    @property
-    def altitude(self):
-        # type: () -> float
-        """
-        Returns the height above sea level of the well.
-
-        :return: Returns the height above sea level of the well.
-        :rtype: float
-        """
-        return float(self.alt)
-
-    @altitude.setter
-    def altitude(self, value):
-        # type: (float) -> None
-        """
-        Sets a new height above sea level
-
-        :param value: New height above sea level
-        :type value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if value if not of type float or cannot be converted to float
-        """
-        self.alt = float(value)
-
-    @property
-    def depth(self):
-        # type: () -> float
-        """
-        Returns the drilled depth of the well
-
-        :return: Returns the drilled depth of the well
-        :rtype: float
-        """
-        return float(self.drill_depth)
-
-    @depth.setter
-    def depth(self, depth):
-        # type: (float) -> None
-        """
-        sets a drilled depth of the well
-
-        :param depth: drilled depth
-        :type depth: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if the committed value cannot be converted to float or depth is < 0
-        :raises WellMarkerException: Raises WellMarkerException if new depth is lower than last marker depth
-        """
-        depth = float(depth)
-        if depth < 0:
-            raise ValueError('Depth cannot be smaller than 0 (is {})!'.format(str(depth)))
-        if (len(self.marker) > 0) and (depth < self.marker[-1].depth):
-            raise WellMarkerException('new depth ({}) is below depth of last marker ({})!'.
-                                      format(depth, self.marker[-1].depth))
-        self.drill_depth = depth
-
-    @property
-    def name(self):
+    def well_name(self):
         # type: () -> str
         """
         Returns the name of the well
@@ -486,10 +352,10 @@ class Well(Base):
         :return: Returns the name of the well
         :rtype: str
         """
-        return self.well_name
+        return self.wellname
 
-    @name.setter
-    def name(self, name):
+    @well_name.setter
+    def well_name(self, name):
         # type: (str) -> None
         """
         Sets a new name for the well with a maximum of 100 characters
@@ -502,7 +368,7 @@ class Well(Base):
         name = str(name)
         if len(name) > 100:
             name = name[:100]
-        self.well_name = name
+        self.wellname = name
 
     @property
     def short_name(self):
@@ -513,7 +379,7 @@ class Well(Base):
         :return: Returns the short name of the well
         :rtype: str
         """
-        return self.short_well_name
+        return self.shortwellname
 
     @short_name.setter
     def short_name(self, short_name):
@@ -529,36 +395,7 @@ class Well(Base):
         short_name = str(short_name)
         if len(short_name) > 20:
             short_name = short_name[:20]
-        self.short_well_name = short_name
-
-    @property
-    def session(self):
-        # type: () -> Session
-        """
-        Return the current Session object
-
-        :return: returns the current Session object, which represents the connection to a database
-        :rtype: Session
-        """
-        return self.__session
-
-    @session.setter
-    def session(self, value):
-        # type: (Session) -> None
-        """
-        Sets a new session, which represents the connection to a database
-
-        :param value: session object create by SQLAlchemy sessionmaker
-        :type value: Session
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of an instance of Session
-        """
-
-        if not isinstance(value, Session):
-            raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
-        self.__session = value
+        self.shortwellname = short_name
 
     def insert_marker(self, marker):
         # type: (WellMarker) -> None
@@ -651,55 +488,8 @@ class Well(Base):
         except ValueError as e:
             raise ValueError(str(e) + '\nWellMarker with ID ' + str(marker.id) + ' not found in list!')
 
-    # save point to db / update point
-    def save_to_db(self):
-        # type: () -> None
-        """
-        Saves all changes of the well to the database
-
-        :return: Nothing
-
-        :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
-        """
-        # first: check that marker with the same stratigraphic name the same object (no doubled unique names)
-        marker_strat = dict()
-        for marker in self.marker:
-            if marker.horizon.name in marker_strat:
-                marker.horizon = marker_strat[marker.horizon.name]
-            else:
-                marker_strat[marker.horizon.name] = marker.horizon
-
-        self.__session.add(self)
-        try:
-            self.__session.commit()
-        except IntegrityError as e:
-            # Failure during database processing? -> rollback changes and raise error again
-            self.__session.rollback()
-            raise IntegrityError(
-                    'Cannot commit changes in wells table, Integrity Error (double unique values?) -- {} -- ' +
-                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
-
-    # load wells from db
     @classmethod
-    def load_all_from_db(cls, session):
-        # type: (Session) -> List[Well]
-        """
-        Returns all wells in the database connected to the SQLAlchemy Session session
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :return: a list of wells representing the result of the database query
-        :rtype: List[Well]
-        """
-        result = session.query(cls)
-        result = result.order_by(cls.id).all()
-        for well in result:
-            well.session = session
-        return result
-
-    @classmethod
-    def load_by_name_from_db(cls, name, session):
+    def load_by_wellname_from_db(cls, name, session):
         # type: (str, Session) -> Well
         """
         Returns the well with the given name in the database connected to the SQLAlchemy Session session
@@ -715,7 +505,7 @@ class Well(Base):
 
         :raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
         """
-        result = session.query(cls).filter(cls.well_name == name)
+        result = session.query(cls).filter(cls.wellname == name)
         if result.count() == 0:
             return None
         if result.count() == 1:
@@ -725,37 +515,6 @@ class Well(Base):
 
         raise DatabaseException('More than one ({}) well with the same name: {}! Database error!'.
                                 format(result.count(), name))
-
-    @classmethod
-    def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-        # type: (Session, float, float, float, float) -> List[Well]
-        """
-        Returns all wells inside the given extent in the database connected to the SQLAlchemy Session session
-
-        :param min_easting: minimal easting of extent
-        :type min_easting: float
-
-        :param max_easting: maximal easting of extent
-        :type max_easting: float
-
-        :param min_northing: minimal northing of extent
-        :type min_northing: float
-
-        :param max_northing: maximal northing of extent
-        :type max_northing: float
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :return: a list of wells representing the result of the database query
-        :rtype: List[Well]
-        """
-        result = session.query(cls).filter(sq.between(cls.east, min_easting, max_easting)). \
-            filter(sq.between(cls.north, min_northing, max_northing))
-        result = result.order_by(cls.id).all()
-        for well in result:
-            well.session = session
-        return result
 
     @classmethod
     def load_deeper_than_value_from_db(cls, session, min_depth):

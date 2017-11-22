@@ -4,13 +4,12 @@ This module provides basic geometries (points and lines) for storing geological 
 """
 
 import sqlalchemy as sq
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from Resources.DBHandler import Base
+from Resources.DBHandler import Base, DBObject
 from Resources.GeoObject import GeoObject
 from Resources.Stratigraphy import Stratigraphy
 from Resources.constants import float_precision
@@ -34,15 +33,14 @@ class GeoPoint(Base, GeoObject):
 
     line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=-1)
     line_pos = sq.Column(sq.INTEGER, default=-1)
-    name = sq.Column(sq.VARCHAR(100), default="")
 
     # make the points unique -> coordinates + horizon + belongs to one line?
     sq.UniqueConstraint(GeoObject.east, GeoObject.north, GeoObject.alt, horizon_id, line_id, line_pos,
                         name='u_point_constraint')
     sq.Index('geopoint_coordinate_index', GeoObject.east, GeoObject.north)
 
-    def __init__(self, easting, northing, altitude, horizon, session, has_z=True, name=""):
-        # type: (float, float, float, Stratigraphy, Session, bool, str) -> None
+    def __init__(self, easting, northing, altitude, horizon, session, has_z=True, name="", comment=""):
+        # type: (float, float, float, Stratigraphy, Session, bool, str, str) -> None
         """
         Creates a new GeoPoint
 
@@ -67,13 +65,12 @@ class GeoPoint(Base, GeoObject):
         :param name: name of the line with the aim to have the possibility to group more lines to a line-set
         :type name: str
 
+        :param comment: additional comment
+        :type comment: str
+
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
-        if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!")
-        if (type(horizon) is not Stratigraphy) and (horizon is not None):
-            raise ValueError("'horizon' value is not of type Stratigraphy!")
 
         if altitude is None:
             self.has_z = False
@@ -81,11 +78,10 @@ class GeoPoint(Base, GeoObject):
         else:
             self.has_z = bool(has_z)
 
-        GeoObject.__init__(self, '', easting, northing, altitude)
-
-        self.__session = session
         self.horizon = horizon
-        self.point_name = str(name)
+
+        # call base class constructor
+        GeoObject.__init__(self, '', easting, northing, altitude, session, name, comment)
 
     def __repr__(self):
         # type: () -> str
@@ -144,63 +140,6 @@ class GeoPoint(Base, GeoObject):
         else:
             self.hor = value
 
-    @property
-    def point_name(self):
-        # type: () -> str
-        """
-        Returns the name of the point
-
-        :return: Returns the name of the point
-        :rtype: str
-        """
-        return self.name
-
-    @point_name.setter
-    def point_name(self, value):
-        # type: (str) -> None
-        """
-        Sets a new name for the point with a maximum of 100 characters
-
-        :param value: point name
-        :type value: str
-
-        :return: Nothing
-        """
-
-        string = str(value)
-        if len(string) > 100:
-            string = string[:100]
-        self.name = string
-
-    @property
-    def session(self):
-        # type: () -> Session
-        """
-        Return the current Session object
-
-        :return: returns the current Session object, which represents the connection to a database
-        :rtype: Session
-        """
-        return self.__session
-
-    @session.setter
-    def session(self, value):
-        # type: (Session) -> None
-        """
-        Sets a new session, which represents the connection to a database
-
-        :param value: session object create by SQLAlchemy sessionmaker
-        :type value: Session
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of an instance of Session
-        """
-
-        if not isinstance(value, Session):
-            raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
-        self.__session = value
-
     # delete z-dimension and information from point
     def del_z(self):
         # type: () -> None
@@ -221,81 +160,34 @@ class GeoPoint(Base, GeoObject):
         """
         self.has_z = True
 
-    # save point to db / update point
-    def save_to_db(self):
-        # type: () -> None
-        """
-        Saves all changes of the point or the point itself to the connected database
 
-        :return: Nothing
-
-        :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
-        """
-        self.__session.add(self)
-        try:
-            self.__session.commit()
-        except IntegrityError as e:
-            # Failure during database processing? -> rollback changes and raise error again
-            self.__session.rollback()
-            raise IntegrityError(
-                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} --' +
-                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
-
-    # load points from db
+    # overwrite loading method
     @classmethod
-    def load_all_from_db(cls, session, get_lines=False):
-        # type: (Session, bool) -> List[GeoPoint]
+    def load_all_without_lines_from_db(cls, session):
+        # type: (Session) -> List[Line]
         """
-        Returns all points in the database connected to the SQLAlchemy Session session
+        Returns all points in the database connected to the SQLAlchemy Session session, which are not part of a line.
+        This function is similar the GeoObject.load_all_from_db(...) function.
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
-        :param get_lines: If True, also line nodes are returned
-        :type get_lines: bool
-
-        :return: a list of lines representing the result of the database query
-        :rtype: List[GeoPoint]
-        """
-        result = session.query(cls)
-        if not get_lines:
-            result = result.filter(GeoPoint.line_id == -1)
-        result = result.order_by(cls.id).all()
-        for point in result:
-            point.session = session
-        return result
-
-    @classmethod
-    def load_by_name_from_db(cls, name, session, get_lines=False):
-        # type: (str, Session, bool) -> List[GeoPoint]
-        """
-        Returns all points with the given name in the database connected to the SQLAlchemy Session session
-
-        :param name: Only points with this name will be returned
-        :type name: str
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :param get_lines: If True, also line nodes are returned
-        :type get_lines: bool
 
         :return: a list of points representing the result of the database query
         :rtype: List[GeoPoint]
         """
-        result = session.query(cls).filter(cls.name == name)
-        if not get_lines:
-            result = result.filter(GeoPoint.line_id == -1)
-        result = result.order_by(cls.id).all()
+        result = session.query(GeoPoint). \
+            filter(GeoPoint.line_id == -1). \
+            order_by(cls.id).all()
         for point in result:
             point.session = session
         return result
 
     @classmethod
-    def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing, get_lines=False):
-        # type: (Session, float, float, float, float, bool) -> List[Line]
+    def load_in_extent_without_lines_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
+        # type: (Session, float, float, float, float) -> List[Line]
         """
-        Returns all points inside the given extent in the database connected to the SQLAlchemy Session session
+        Returns all points inside the given extent in the database connected to the SQLAlchemy Session session, which
+        are not part of a line. This function is similar the GeoObject.load_in_extent_from_db(...) function.
 
         :param min_easting: minimal easting of extent
         :type min_easting: float
@@ -312,23 +204,19 @@ class GeoPoint(Base, GeoObject):
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
 
-        :param get_lines: If True, also line nodes are returned
-        :type get_lines: bool
-
         :return: a list of points representing the result of the database query
         :rtype: List[GeoPoint]
         """
         result = session.query(GeoPoint).filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
-            filter(sq.between(GeoPoint.north, min_northing, max_northing))
-        if not get_lines:
-            result = result.filter(GeoPoint.line_id == -1)
-        result = result.order_by(cls.id).all()
+            filter(sq.between(GeoPoint.north, min_northing, max_northing)). \
+            filter(GeoPoint.line_id == -1). \
+            order_by(cls.id).all()
         for point in result:
             point.session = session
         return result
 
 
-class Line(Base):
+class Line(Base, DBObject):
     """
     Class Line
 
@@ -339,7 +227,6 @@ class Line(Base):
 
     id = sq.Column(sq.INTEGER, sq.Sequence('line_id_seq'), primary_key=True)
     closed = sq.Column(sq.BOOLEAN)
-    name = sq.Column(sq.VARCHAR(100), default="")
 
     # set stratigraphy of the line
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
@@ -351,8 +238,8 @@ class Line(Base):
                           backref="line", primaryjoin='Line.id==GeoPoint.line_id',
                           cascade="all, delete, delete-orphan")
 
-    def __init__(self, closed, session, horizon, points, name=""):
-        # type: (bool, Session, Stratigraphy, List[GeoPoint], str) -> None
+    def __init__(self, closed, session, horizon, points, name="", comment=""):
+        # type: (bool, Session, Stratigraphy, List[GeoPoint], str, str) -> None
         """
         Create a new line.
 
@@ -371,26 +258,25 @@ class Line(Base):
         :param name: name of the line with the aim to have the possibility to group more lines to a line-set
         :type name: str
 
+        :param comment: additional comment
+        :type comment: str
+
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
-        if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!")
-        if (type(horizon) is not Stratigraphy) and (horizon is not None):
-            raise ValueError("'horizon' value is not of type Stratigraphy!")
-
         for pnt in points:
             if type(pnt) is not GeoPoint:
                 raise ValueError('At least on point in points is not of type GeoPoint!')
 
         self.is_closed = bool(closed)
-        self.__session = session
         self.horizon = horizon
         self.points = points
-        self.line_name = str(name)
 
         # check doubled values in a line
         self.__remove_doubled_points()
+
+        # call base class constructor
+        DBObject.__init__(self, session, name, comment)
 
     def __repr__(self):
         # type: () -> str
@@ -481,62 +367,6 @@ class Line(Base):
             self.horizon_id = -1
         else:
             self.hor = value
-
-    @property
-    def line_name(self):
-        # type: () -> str
-        """
-        Return the line name
-
-        :return: returns the line name
-        :rtype: str
-        """
-        return self.name
-
-    @line_name.setter
-    def line_name(self, value):
-        # type: (str) -> None
-        """
-        Sets a new name for the line with a maximum of 100 characters
-
-        :param value: line name
-        :type value: str
-
-        :return: Nothing
-        """
-        string = str(value)
-        if len(string) > 100:
-            string = string[:100]
-        self.name = string
-
-    @property
-    def session(self):
-        # type: () -> Session
-        """
-        Return the current Session object
-
-        :return: returns the current Session object, which represents the connection to a database
-        :rtype: Session
-        """
-        return self.__session
-
-    @session.setter
-    def session(self, value):
-        # type: (Session) -> None
-        """
-        Sets a new session, which represents the connection to a database
-
-        :param value: session object create by SQLAlchemy sessionmaker
-        :type value: Session
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of an instance of Session
-        """
-
-        if not isinstance(value, Session):
-            raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
-        self.__session = value
 
     def insert_point(self, point, position):
         # type: (GeoPoint, int) -> None
@@ -700,95 +530,12 @@ class Line(Base):
         # reorder to ensure right position value without reloading from database
         self.points.reorder()
 
-    def save_to_db(self):
-        # type: () -> None
-        """
-        Saves all changes of the line or the line itself to the connected database
-
-        :return: Nothing
-
-        :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
-        """
-        self.__session.add(self)
-
-        try:
-            # first: all points should have the same horizon as the line
-            for pnt in self.points:
-                pnt.hor = self.horizon  # directly set hor variable, hor still checked...
-                pnt.horizon_id = self.horizon_id
-            self.__session.commit()
-        except IntegrityError as e:
-            # Failure during database processing? -> rollback changes and raise error again
-            self.__session.rollback()
-            raise IntegrityError(
-                    'Cannot commit changes in lines table, Integrity Error (double unique values?) --' +
-                    '{} -- Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
-
-    @classmethod
-    def load_all_from_db(cls, session):
-        # type: (Session) -> List[Line]
-        """
-        Returns all lines in the database connected to the SQLAlchemy Session session
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :return: a list of lines representing the result of the database query
-        :rtype: List[Line]
-        """
-        result = session.query(cls).order_by(cls.id).all()
-        for line in result:
-            line.session = session
-        return result
-
-    @classmethod
-    def load_by_id_from_db(cls, line_id, session):
-        # type: (int, Session) -> Line
-        """
-        Returns the line with the given id in the database connected to the SQLAlchemy Session session
-
-        :param line_id: Only the line with this id will be returned (has to be 1, unique value)
-        :type line_id: int
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :return: a single line representing the result of the database query
-        :rtype: Line
-
-        :raises NoResultFound: Raises NoResultFound if no line was found with this id
-        :raises IntegrityError: Raises IntegrityError if more than one line is found (more than one unique value)
-        """
-        result = session.query(cls).filter(cls.id == line_id).one()
-        result.session = session
-        return result
-
-    @classmethod
-    def load_by_name_from_db(cls, name, session):
-        # type: (str, Session) -> List[Line]
-        """
-        Returns all lines with the given name in the database connected to the SQLAlchemy Session session
-
-        :param name: Only lines with this name will be returned
-        :type name: str
-
-        :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-
-        :return: a list of lines representing the result of the database query
-        :rtype: List[Line]
-        """
-        result = session.query(cls).filter(cls.name == name).order_by(cls.id).all()
-        for line in result:
-            line.session = session
-        return result
-
     @classmethod
     def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
         # type: (Session, float, float, float, float) -> List[Line]
         """
         Returns all lines with at least on point inside the given extent in the database connected to the SQLAlchemy
-        Session session
+        Session session. This function overloads the GeoObject.load_in_extent_from_db(...) function.
 
         :param min_easting: minimal easting of extent
         :type min_easting: float
