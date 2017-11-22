@@ -4,11 +4,13 @@ This module provides a class for database access through an SQLAlchemy session a
     related classes.
 """
 
+from abc import ABCMeta
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
+from typing import List
 
 Base = declarative_base()
 
@@ -45,19 +47,26 @@ class DBHandler:
         return self.__Session()
 
 
+# class DBObject(ABCMeta):
 class DBObject:
     """
-    This class represents the base class for all database objects
+    This class represents the base class for all database objects. It is an abstract base class, no object can and
+    should be created directly!
     """
+
+    object_name = sq.Column(sq.VARCHAR(100), default="")
     comment_col = sq.Column(sq.VARCHAR(100), default="")
 
-    def __init__(self, session, comment):
-        # type: (Session, str) -> None
+    def __init__(self, session, name="", comment=""):
+        # type: (Session, str, str) -> None
         """
         Initialises the class
 
         :param session: session object create by SQLAlchemy sessionmaker
         :type session: Session
+
+        :param name: used to group objects by name
+        :type name: str
 
         :param comment: additional comment
         :type comment: str
@@ -70,6 +79,9 @@ class DBObject:
 
         self.__session = session
         self.comment = comment
+        self.name = name
+
+        #ABCMeta.__init__(self)
 
     @property
     def comment(self):
@@ -97,6 +109,33 @@ class DBObject:
         if len(comment) > 100:
             comment = comment[:100]
         self.comment_col = comment
+
+    @property
+    def name(self):
+        # type: () -> str
+        """
+        Return the line name
+
+        :return: returns the line name
+        :rtype: str
+        """
+        return self.object_name
+
+    @name.setter
+    def name(self, value):
+        # type: (str) -> None
+        """
+        Sets a new name for the line with a maximum of 100 characters
+
+        :param value: line name
+        :type value: str
+
+        :return: Nothing
+        """
+        string = str(value)
+        if len(string) > 100:
+            string = string[:100]
+        self.object_name = string
 
     @property
     def session(self):
@@ -144,13 +183,13 @@ class DBObject:
             # Failure during database processing? -> rollback changes and raise error again
             self.__session.rollback()
             raise IntegrityError(
-                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
-                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
+                'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
+                'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
     # load points from db
     @classmethod
     def load_all_from_db(cls, session):
-        # type: (Session) -> List[WellMarker]
+        # type: (Session) -> List[cls]
         """
         Returns all well marker in the database connected to the SQLAlchemy Session session
 
@@ -164,4 +203,46 @@ class DBObject:
         result = result.order_by(cls.id).all()
         for marker in result:
             marker.session = session
+        return result
+
+    @classmethod
+    def load_by_id_from_db(cls, id, session):
+        # type: (int, Session) -> cls
+        """
+        Returns the line with the given id in the database connected to the SQLAlchemy Session session
+
+        :param id: Only the object with this id will be returned (has to be 1, unique value)
+        :type id: int
+
+        :param session: represents the database connection as SQLAlchemy Session
+        :type session: Session
+
+        :return: a single line representing the result of the database query
+        :rtype: Line
+
+        :raises NoResultFound: Raises NoResultFound if no line was found with this id
+        :raises IntegrityError: Raises IntegrityError if more than one line is found (more than one unique value)
+        """
+        result = session.query(cls).filter(cls.id == id).one()
+        result.session = session
+        return result
+
+    @classmethod
+    def load_by_name_from_db(cls, name, session):
+        # type: (str, Session) -> List[cls]
+        """
+        Returns all lines with the given name in the database connected to the SQLAlchemy Session session
+
+        :param name: Only lines with this name will be returned
+        :type name: str
+
+        :param session: represents the database connection as SQLAlchemy Session
+        :type session: Session
+
+        :return: a list of lines representing the result of the database query
+        :rtype: List[Line]
+        """
+        result = session.query(cls).filter(cls.name == name).order_by(cls.id).all()
+        for line in result:
+            line.session = session
         return result

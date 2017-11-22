@@ -422,7 +422,7 @@ class TestLineClass(unittest.TestCase):
         lines = Line.load_all_from_db(self.session)
         lines[0].is_closed = True
         lines[1].horizon = Stratigraphy.init_stratigraphy(self.session, 'mu')
-        lines[2].line_name = 'Line_2'
+        lines[2].name = 'Line_2'
         session_2 = lines[3].session
         lines[3].session = session_2
 
@@ -436,8 +436,8 @@ class TestLineClass(unittest.TestCase):
         self.assertTrue(lines[0].is_closed, "First line should be changed to closed.")
         self.assertEqual(lines[1].horizon.name, 'mu',
                          "Second line has wrong horizon ({}). Should have {}.".format(lines[1].horizon.name, 'mu'))
-        self.assertEqual(lines[2].line_name, 'Line_2',
-                         "Third line has wrong line name ({}). Should have {}".format(lines[2].line_name, 'Line_2'))
+        self.assertEqual(lines[2].name, 'Line_2',
+                         "Third line has wrong line name ({}). Should have {}".format(lines[2].name, 'Line_2'))
         self.assertEqual(len(line_with_name), 3, "Wrong Number of lines with line name 'Line_2' ({}). Should be {}". \
                          format(len(line_with_name), 3))
 
