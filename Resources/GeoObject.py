@@ -17,6 +17,7 @@ class GeoObject(DBObject):
     east = sq.Column(sq.REAL(10, 4))
     north = sq.Column(sq.REAL(10, 4))
     alt = sq.Column(sq.REAL(10, 4))
+    reference = sq.Column(sq.TEXT(1000), default='')
 
     def __init__(self, reference_system, easting, northing, altitude, session, name="", comment=""):
         # type: (str, float, float, float, Session, str, str) -> None

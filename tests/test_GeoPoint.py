@@ -113,11 +113,10 @@ class TestGeoPointClass(unittest.TestCase):
         for line in self.lines:
             points = list()
             for point in line['points']:
-                points.append(GeoPoint(point[0], point[1], None, None, self.session, ''))
+                points.append(GeoPoint(point[0], point[1], None, None, self.session, False, '', ''))
             new_line = Line(line['closed'], self.session,
                             Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
-                            points,
-                            line['name'])
+                            points, line['name'])
             new_line.save_to_db()
 
     def test_init(self):
@@ -242,7 +241,7 @@ class TestGeoPointClass(unittest.TestCase):
                                math.fabs(float(points[-1].northing) - 691044.6091080031), float_precision))
         del points
 
-        points = GeoPoint.load_by_name_from_db('', self.session)
+        points = GeoPoint.load_by_name_without_lines_from_db('', self.session)
 
         pnts_count = len(self.points)
         # 2 points have another name (obviously they have a name)
@@ -267,7 +266,12 @@ class TestGeoPointClass(unittest.TestCase):
         # x -> 1174000 - 1200000
         # y ->  613500 -  651000
         # should return points of 2 lines with line-ids 2 (all points) and 4 (1 point)
-        points = GeoPoint.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000, True)
+        points = GeoPoint.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000)
+
+        print("\n--------------------------------------------")
+        for point in points:
+            print(str(point))
+        print("--------------------------------------------\n")
         self.assertEqual(len(points), 5, "Wrong number of points ({}), should be {}".format(len(points), 5))
 
         self.assertTrue(math.fabs(float(points[0].easting) - 1179553.6811741155) < float_precision,
@@ -296,6 +300,7 @@ class TestGeoPointClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
+        # points = GeoPoint.load_all_from_db(self.session)
         points = GeoPoint.load_all_without_lines_from_db(self.session)
         self.assertEqual(len(points), len(self.points),
                          "Wrong point length ({}). Should be {}.".format(len(points), len(self.points)))

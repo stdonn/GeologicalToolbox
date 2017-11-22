@@ -54,7 +54,7 @@ class DBObject:
     should be created directly!
     """
 
-    object_name = sq.Column(sq.VARCHAR(100), default="")
+    name_col = sq.Column(sq.VARCHAR(100), default="")
     comment_col = sq.Column(sq.VARCHAR(100), default="")
 
     def __init__(self, session, name="", comment=""):
@@ -119,23 +119,23 @@ class DBObject:
         :return: returns the line name
         :rtype: str
         """
-        return self.object_name
+        return self.name_col
 
     @name.setter
-    def name(self, value):
+    def name(self, new_name):
         # type: (str) -> None
         """
         Sets a new name for the line with a maximum of 100 characters
 
-        :param value: line name
-        :type value: str
+        :param new_name: new name for the DBObject
+        :type new_name: str
 
         :return: Nothing
         """
-        string = str(value)
+        string = str(new_name)
         if len(string) > 100:
             string = string[:100]
-        self.object_name = string
+        self.name_col = string
 
     @property
     def session(self):
@@ -231,18 +231,18 @@ class DBObject:
     def load_by_name_from_db(cls, name, session):
         # type: (str, Session) -> List[cls]
         """
-        Returns all lines with the given name in the database connected to the SQLAlchemy Session session
+        Returns all DBObjects with the given name in the database connected to the SQLAlchemy Session session
 
-        :param name: Only lines with this name will be returned
+        :param name: Only DBObjects or derived types with this name will be returned
         :type name: str
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
 
-        :return: a list of lines representing the result of the database query
-        :rtype: List[Line]
+        :return: a list of DBObjects representing the result of the database query
+        :rtype: List[cls]
         """
-        result = session.query(cls).filter(cls.name == name).order_by(cls.id).all()
-        for line in result:
-            line.session = session
+        result = session.query(cls).filter(cls.name_col == name).order_by(cls.id).all()
+        for obj in result:
+            obj.session = session
         return result
