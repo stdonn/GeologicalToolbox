@@ -6,9 +6,9 @@ This module provides classes for storing drilling data in a database.
 import sqlalchemy as sq
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
-from typing import List
+from typing import List, Dict
 
-from Exceptions import DatabaseException
+from Exceptions import DatabaseException, WellMarkerException
 from GeoObject import GeoObject
 from Geometries import GeoPoint
 from Resources.DBHandler import Base, DBObject
@@ -33,8 +33,8 @@ class WellMarker(Base, DBObject):
 
     well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
 
-    def __init__(self, depth, horizon, session, name='', comment=''):
-        # type: (float, Stratigraphy, Session, str, str) -> None
+    def __init__(self, depth, horizon, *args, **kwargs):
+        # type: (float, Stratigraphy, List, Dict) -> None
         """
         Creates a new well marker
 
@@ -44,20 +44,19 @@ class WellMarker(Base, DBObject):
         :param horizon: stratigraphy object
         :type horizon: Stratigraphy
 
-        :param session: session object create by SQLAlchemy sessionmaker
-        :type session: Session
+        :param args: parameters for DBObject initialisation
+        :type args: List()
 
-        :param name: name of the wellmarker-set
-        :type name: str
-
-        :param comment: additional comment
-        :type comment: str
+        :param kwargs: parameters for DBObject initialisation
+        :type kwargs: Dict()
 
         :returns: Nothing
         :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected
                             type
         """
-        DBObject.__init__(self, session, comment, name)
+        print('kwargs {}: {}'.format(str(type(args)), str(args)))
+        print('kwargs {}: {}'.format(str(type(kwargs)), str(kwargs)))
+        DBObject.__init__(self, *args, **kwargs)
         if (type(horizon) is not Stratigraphy) and (horizon is not None):
             raise ValueError("'horizon' value is not of type Stratigraphy!")
 
@@ -72,8 +71,8 @@ class WellMarker(Base, DBObject):
         :return: Returns a text-representation of the well marker
         :rtype: str
         """
-        return "<WellMarker(id='{}', depth='{}', horizon='{}', comment='{}')>".format(self.id, self.depth, self.horizon,
-                                                                                      self.comment)
+        return "<WellMarker(id='{}', depth='{}', horizon='{}', set-name='{}', comment='{}')>". \
+            format(self.id, self.depth, self.horizon, self.name, self.comment)
 
     def __str__(self):
         # type: () -> str
@@ -83,7 +82,7 @@ class WellMarker(Base, DBObject):
         :return: Returns a text-representation of the well
         :rtype: str
         """
-        return "[{}] {}: {} - {}".format(self.id, self.depth, self.horizon, self.comment)
+        return "[{}] {}: {} - {} - {}".format(self.id, self.depth, self.horizon, self.name, self.comment)
 
     @property
     def depth(self):
@@ -154,7 +153,8 @@ class WellMarker(Base, DBObject):
         easting = self.well.easting
         northing = self.well.northing
         altitude = self.well.altitude - self.depth
-        return GeoPoint(easting, northing, altitude, self.horizon, self.session, True, self.well.name)
+        return GeoPoint(easting, northing, altitude, self.horizon, self.session, True, self.well.well_name,
+                        self.comment)
 
     # load points from db
     @classmethod
@@ -300,6 +300,12 @@ class Well(Base, GeoObject):
         :param comment: additional comment for the well
         :type comment: str
 
+        :param args: parameters for GeoObject initialisation
+        :type args: List()
+
+        :param kwargs: parameters for GeoObject initialisation
+        :type kwargs: Dict()
+
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
@@ -307,9 +313,9 @@ class Well(Base, GeoObject):
             raise ValueError("'session' value is not of type SQLAlchemy Session!")
 
         self.__session = session
-        self.depth = float(depth)
+        self.depth = depth
         self.well_name = well_name
-        self.short_name = str(short_name)
+        self.short_name = short_name
 
         # call base class constructor
         GeoObject.__init__(self, '', easting, northing, altitude, session, name, comment)
@@ -342,6 +348,38 @@ class Well(Base, GeoObject):
             text += "\n" + str(marker)
 
         return text
+
+    @property
+    def depth(self):
+        # type: () -> float
+        """
+        Returns the drilling depth of the well
+
+        :return: Returns the drilling depth of the well
+        :rtype: float
+        """
+        return float(self.drill_depth)
+
+    @depth.setter
+    def depth(self, dep):
+        # type: (float) -> None
+        """
+        Sets a new drilling depth for the well
+
+        :param dep: New drilling depth
+        :type dep: float
+
+        :return: Nothing
+        :raises ValueError: Raises ValueError if dep is not of type float or cannot be converted to float or when
+                            depth is < 0
+        """
+        dep = float(dep)
+        if dep < 0:
+            raise ValueError('Depth is below 0! ({})'.format(dep))
+        if (len(self.marker) > 0) and (dep < self.marker[-1].depth):
+            raise WellMarkerException(
+                'New depth ({}) lower than depth of last marker {}'.format(dep, self.marker[-1].depth))
+        self.drill_depth = dep
 
     @property
     def well_name(self):
@@ -437,7 +475,7 @@ class Well(Base, GeoObject):
         for mark in marker:
             if type(mark) is not WellMarker:
                 raise TypeError(
-                        'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
+                    'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
             if mark.depth > self.depth:
                 raise ValueError('Marker depth ({}) is larger than final well depth ({})!'.
                                  format(mark.depth, self.depth))

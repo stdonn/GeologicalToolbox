@@ -75,11 +75,12 @@ class TestWellClass(unittest.TestCase):
             new_well = Well(self.session, well['name'], well['east'], well['north'], well['altitude'], well['depth'],
                             well['short_name'], '', well['comment'])
 
+            new_well.save_to_db()
+
             for mark in well['marker']:
                 new_well.marker.append(WellMarker(mark[0],
                                                   Stratigraphy.init_stratigraphy(self.session, mark[1], mark[2], False),
                                                   self.session, well['name'], mark[3]))
-            new_well.save_to_db()
 
     def test_init(self):
         # type: () -> None
@@ -133,7 +134,7 @@ class TestWellClass(unittest.TestCase):
         del wells
 
         # Part 2: load well by name
-        well = Well.load_by_name_from_db('Well_2', self.session)
+        well = Well.load_by_wellname_from_db('Well_2', self.session)
         self.assertEqual(well.well_name, 'Well_2')
         self.assertEqual(well.short_name, 'W2')
         self.assertEqual(well.depth, 341)
@@ -203,7 +204,7 @@ class TestWellClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        well = Well.load_by_name_from_db('Well_1', self.session)
+        well = Well.load_by_wellname_from_db('Well_1', self.session)
         self.assertEqual(well.get_marker_by_depth(16).horizon.name, 'sm')
         self.assertRaises(ValueError, well.get_marker_by_depth, 100)
 
@@ -215,7 +216,7 @@ class TestWellClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        well = Well.load_by_name_from_db('Well_1', self.session)
+        well = Well.load_by_wellname_from_db('Well_1', self.session)
         marker = well.get_marker_by_depth(16)
         self.assertEqual(marker.horizon.name, 'sm')
         self.assertRaises(ValueError, well.get_marker_by_depth, 100)
@@ -224,7 +225,7 @@ class TestWellClass(unittest.TestCase):
         well.save_to_db()
         del well
 
-        well = Well.load_by_name_from_db('Well_1', self.session)
+        well = Well.load_by_wellname_from_db('Well_1', self.session)
         self.assertEqual(len(well.marker), 4)
 
         new_marker = WellMarker(23423, Stratigraphy.init_stratigraphy(self.session, 'so'), self.session, 'Nothing')
@@ -371,12 +372,12 @@ class TestWellMarkerClass(unittest.TestCase):
             new_well = Well(self.session, well['name'], well['east'], well['north'], well['altitude'],
                             well['depth'],
                             well['short_name'], well['comment'])
+            new_well.save_to_db()
 
             for mark in well['marker']:
                 new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
                                                                                           mark[2], False),
-                                                  self.session, mark[3]))
-            new_well.save_to_db()
+                                                  self.session, well['name'], mark[3]))
 
     def test_WellMarker_init(self):
         # type: () -> None

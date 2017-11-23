@@ -75,7 +75,8 @@ class DBObject:
         :raises ValueError: Raises ValueError if a type conflict is recognised
         """
         if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!")
+            raise ValueError("'session' value is not of type SQLAlchemy Session!\n{} - {}".format(str(type(session)),
+                                                                                                  str(Session)))
 
         self.__session = session
         self.comment = comment
