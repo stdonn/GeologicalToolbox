@@ -19,8 +19,8 @@ class GeoObject(DBObject):
     alt = sq.Column(sq.REAL(10, 4))
     reference = sq.Column(sq.TEXT(1000), default='')
 
-    def __init__(self, reference_system, easting, northing, altitude, session, name="", comment=""):
-        # type: (str, float, float, float, Session, str, str) -> None
+    def __init__(self, reference_system, easting, northing, altitude, *args, **kwargs):
+        # type: (str, float, float, float, *str, **str) -> None
         """
         Initialise the GeoObject
 
@@ -37,14 +37,11 @@ class GeoObject(DBObject):
         :param altitude: height above sea level of the object or None
         :type altitude: float or None
 
-        :param session: session object create by SQLAlchemy sessionmaker
-        :type session: Session
+        :param args: parameters for DBObject initialisation
+        :type args: List()
 
-        :param name: name of the line with the aim to have the possibility to group more lines to a line-set
-        :type name: str
-
-        :param comment: additional comment
-        :type comment: str
+        :param kwargs: parameters for DBObject initialisation
+        :type kwargs: Dict()
 
         :return: nothing
         """
@@ -55,7 +52,7 @@ class GeoObject(DBObject):
         self.altitude = altitude
 
         # call constructor of base class
-        DBObject.__init__(self, session, name, comment)
+        DBObject.__init__(self, *args, **kwargs)
 
     # define setter and getter for columns and local data
     @property
