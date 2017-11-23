@@ -34,7 +34,7 @@ class WellMarker(Base, DBObject):
     well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
 
     def __init__(self, depth, horizon, *args, **kwargs):
-        # type: (float, Stratigraphy, List, Dict) -> None
+        # type: (float, Stratigraphy, *str, **str) -> None
         """
         Creates a new well marker
 
@@ -54,8 +54,6 @@ class WellMarker(Base, DBObject):
         :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected
                             type
         """
-        print('kwargs {}: {}'.format(str(type(args)), str(args)))
-        print('kwargs {}: {}'.format(str(type(kwargs)), str(kwargs)))
         DBObject.__init__(self, *args, **kwargs)
         if (type(horizon) is not Stratigraphy) and (horizon is not None):
             raise ValueError("'horizon' value is not of type Stratigraphy!")
@@ -268,8 +266,8 @@ class Well(Base, GeoObject):
 
     sq.Index('coordinate_index', GeoObject.east, GeoObject.north)
 
-    def __init__(self, session, well_name, easting, northing, altitude, depth, short_name='', name='', comment=''):
-        # type: (Session, str, float, float, float, float, str, str) -> None
+    def __init__(self, well_name, short_name, depth, *args, **kwargs):
+        # type: (str, str, float, *str, **str) -> None
         """
         Creates a new Well
 
@@ -279,26 +277,11 @@ class Well(Base, GeoObject):
         :param well_name: well name
         :type well_name: str
 
-        :param easting: easting coordinate of the well
-        :type easting: float
-
-        :param northing: northing coordinate of the well
-        :type northing: float
-
-        :param altitude: height above sea level of the well
-        :type altitude: float
+        :param short_name: shortened well name
+        :type short_name: str
 
         :param depth: drilled depth of the well
         :type depth: float
-
-        :param short_name: well name
-        :type short_name: str
-
-        :param name: name of the associated well-set
-        :type name: str
-
-        :param comment: additional comment for the well
-        :type comment: str
 
         :param args: parameters for GeoObject initialisation
         :type args: List()
@@ -309,16 +292,13 @@ class Well(Base, GeoObject):
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
-        if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!")
 
-        self.__session = session
         self.depth = depth
         self.well_name = well_name
         self.short_name = short_name
 
         # call base class constructor
-        GeoObject.__init__(self, '', easting, northing, altitude, session, name, comment)
+        GeoObject.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
