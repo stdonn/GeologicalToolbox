@@ -268,10 +268,6 @@ class TestGeoPointClass(unittest.TestCase):
         # should return points of 2 lines with line-ids 2 (all points) and 4 (1 point)
         points = GeoPoint.load_in_extent_from_db(self.session, 1174000, 1200000, 613500, 651000)
 
-        print("\n--------------------------------------------")
-        for point in points:
-            print(str(point))
-        print("--------------------------------------------\n")
         self.assertEqual(len(points), 5, "Wrong number of points ({}), should be {}".format(len(points), 5))
 
         self.assertTrue(math.fabs(float(points[0].easting) - 1179553.6811741155) < float_precision,
