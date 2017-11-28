@@ -80,6 +80,7 @@ class TestWellClass(unittest.TestCase):
                 new_well.marker.append(WellMarker(mark[0],
                                                   Stratigraphy.init_stratigraphy(self.session, mark[1], mark[2], False),
                                                   self.session, well['name'], mark[3]))
+                new_well.marker[-1].save_to_db()
 
     def test_init(self):
         # type: () -> None
@@ -376,6 +377,7 @@ class TestWellMarkerClass(unittest.TestCase):
                 new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
                                                                                           mark[2], False),
                                                   self.session, well['name'], mark[3]))
+                new_well.marker[-1].save_to_db()
 
     def test_WellMarker_init(self):
         # type: () -> None

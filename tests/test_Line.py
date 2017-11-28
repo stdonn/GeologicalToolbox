@@ -81,10 +81,10 @@ class TestLineClass(unittest.TestCase):
         for line in self.lines:
             points = list()
             for point in line['points']:
-                points.append(GeoPoint(point[0], point[1], None, None, self.session, ""))
-            new_line = Line(line['closed'], self.session,
+                points.append(GeoPoint(None, False, '', point[0], point[1], 0, self.session, line['name'], ''))
+            new_line = Line(line['closed'],
                             Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
-                            points, line['name'])
+                            points, self.session, line['name'], '')
             new_line.save_to_db()
 
     def test_init(self):
@@ -140,7 +140,8 @@ class TestLineClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        insert_point = GeoPoint(1204200, 620800, None, Stratigraphy.init_stratigraphy(self.session, 'mu'), self.session)
+        insert_point = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
+                                self.session)
         line_query = self.session.query(Line).filter_by(id=1)
         count = line_query.count()
         self.assertEqual(count, 1, "Get more than one expected result for line-id-request ({})".format(count))
@@ -192,13 +193,13 @@ class TestLineClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        insert_point_1 = GeoPoint(1204200, 620800, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+        insert_point_1 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
                                   self.session)
-        insert_point_2 = GeoPoint(1204500, 621200, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+        insert_point_2 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204500, 621200, 0,
                                   self.session)
-        insert_point_3 = GeoPoint(1204700, 621000, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+        insert_point_3 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
                                   self.session)
-        insert_point_4 = GeoPoint(1204700, 621000, None, Stratigraphy.init_stratigraphy(self.session, 'mu'),
+        insert_point_4 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
                                   self.session)
 
         points = [insert_point_1, insert_point_2, insert_point_3, insert_point_4]
@@ -283,7 +284,7 @@ class TestLineClass(unittest.TestCase):
 
         # test exception handling
         self.assertRaises(TypeError, line.delete_point, "string")
-        self.assertRaises(ValueError, line.delete_point, GeoPoint(1, 2, None, None, self.session))
+        self.assertRaises(ValueError, line.delete_point, GeoPoint(None, False, '', 1, 2, 0, self.session, '', ''))
 
         del line
 
