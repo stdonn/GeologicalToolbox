@@ -25,7 +25,7 @@ class GeoObject(DBObject):
         Initialise the GeoObject
 
         :param reference_system: Stores the spatial reference information in WKT format. This parameter is not checked
-                                  for correctness!
+                                 for correctness!
         :type reference_system: str
 
         :param easting: easting coordinate of the object

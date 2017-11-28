@@ -106,17 +106,18 @@ class TestGeoPointClass(unittest.TestCase):
 
         for point in self.points:
             strat = Stratigraphy.init_stratigraphy(self.session, point['horizon'], point['age'], point['update'])
-            new_point = GeoPoint(point['coords'][0], point['coords'][1], point['coords'][2], strat, self.session,
-                                 False if (point['coords'][2] is None) else True, point['name'])
+            new_point = GeoPoint(strat, False if (point['coords'][2] is None) else True, '', point['coords'][0],
+                                 point['coords'][1], 0 if (point['coords'][2] is None) else point['coords'][2],
+                                 self.session, point['name'], '')
             new_point.save_to_db()
 
         for line in self.lines:
             points = list()
             for point in line['points']:
-                points.append(GeoPoint(point[0], point[1], None, None, self.session, False, '', ''))
-            new_line = Line(line['closed'], self.session,
+                points.append(GeoPoint(None, False, '', point[0], point[1], 0, self.session, line['name'], ''))
+            new_line = Line(line['closed'],
                             Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
-                            points, line['name'])
+                            points, self.session, line['name'], '')
             new_line.save_to_db()
 
     def test_init(self):
@@ -220,25 +221,27 @@ class TestGeoPointClass(unittest.TestCase):
         points = GeoPoint.load_by_name_from_db('', self.session)
 
         pnts_count = len(self.points)
-        for line in self.lines:
-            pnts_count += len(line['points'])
+        # Added line name as points set name, so we have to comment the line points out...
+        # for line in self.lines:
+        #    pnts_count += len(line['points'])
 
         # 2 points will be automatically deleted and the lines will be closed
-        pnts_count -= 2
+        # pnts_count -= 2
+
         # 2 points have another name (obviously they have a name)
         pnts_count -= 2
 
         self.assertEqual(len(points), pnts_count,
                          "Wrong point count ({}). Should be {}.".format(len(points), pnts_count))
         self.assertEqual(points[0].id, 1, "First point should have id {}, but has {}.".format(1, points[0].id))
-        self.assertTrue(math.fabs(float(points[-1].easting) - 1191579.1097525698) < float_precision,
+        self.assertTrue(math.fabs(float(points[-1].easting) - 1254367) < float_precision,
                         "Wrong easting difference to large ( |{} - {}| = {} > {}).". \
-                        format(float(points[-1].easting), 1191579.1097525698,
-                               math.fabs(float(points[-1].easting) - 1191579.1097525698), float_precision))
-        self.assertTrue(math.fabs(float(points[-1].northing) - 691044.6091080031) < float_precision,
+                        format(float(points[-1].easting), 1254367,
+                               math.fabs(float(points[-1].easting) - 1254367), float_precision))
+        self.assertTrue(math.fabs(float(points[-1].northing) - 5443636) < float_precision,
                         "Wrong northing difference to large ( |{} - {}| = {} > {}).". \
-                        format(float(points[-1].northing), 691044.6091080031,
-                               math.fabs(float(points[-1].northing) - 691044.6091080031), float_precision))
+                        format(float(points[-1].northing), 5443636,
+                               math.fabs(float(points[-1].northing) - 5443636), float_precision))
         del points
 
         points = GeoPoint.load_by_name_without_lines_from_db('', self.session)

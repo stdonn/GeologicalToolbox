@@ -151,8 +151,8 @@ class WellMarker(Base, DBObject):
         easting = self.well.easting
         northing = self.well.northing
         altitude = self.well.altitude - self.depth
-        return GeoPoint(easting, northing, altitude, self.horizon, self.session, True, self.well.well_name,
-                        self.comment)
+        return GeoPoint(self.horizon, True, self.well.reference_system, easting, northing, altitude, self.session,
+                        self.well.well_name, self.comment)
 
     # load points from db
     @classmethod

@@ -39,49 +39,32 @@ class GeoPoint(Base, GeoObject):
                         name='u_point_constraint')
     sq.Index('geopoint_coordinate_index', GeoObject.east, GeoObject.north)
 
-    def __init__(self, easting, northing, altitude, horizon, session, has_z=True, name="", comment=""):
-        # type: (float, float, float, Stratigraphy, Session, bool, str, str) -> None
+    def __init__(self, horizon, has_z, *args, **kwargs):
+        # type: (Stratigraphy, bool, *str, **str) -> None
         """
         Creates a new GeoPoint
-
-        :param easting: easting coordinate of the point
-        :type easting: float
-
-        :param northing: northing coordinate of the point
-        :type northing: float
-
-        :param altitude: height above sea level of the point or None
-        :type altitude: float or None
 
         :param horizon: stratigraphy of the point
         :type horizon: Stratigraphy
 
-        :param session: SQLAlchemy session, which includes the database connection
-        :type session: Session
-
         :param has_z: Is altitude stored as z value?
         :type has_z: bool
 
-        :param name: name of the line with the aim to have the possibility to group more lines to a line-set
-        :type name: str
+        :param args: parameters for GeoObject initialisation
+        :type args: List()
 
-        :param comment: additional comment
-        :type comment: str
+        :param kwargs: parameters for GeoObject initialisation
+        :type kwargs: Dict()
 
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
 
-        if altitude is None:
-            self.has_z = False
-            altitude = 0
-        else:
-            self.has_z = bool(has_z)
-
+        self.has_z = bool(has_z)
         self.horizon = horizon
 
         # call base class constructor
-        GeoObject.__init__(self, '', easting, northing, altitude, session, name, comment)
+        GeoObject.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
@@ -259,16 +242,13 @@ class Line(Base, DBObject):
                           backref="line", primaryjoin='Line.id==GeoPoint.line_id',
                           cascade="all, delete, delete-orphan")
 
-    def __init__(self, closed, session, horizon, points, name="", comment=""):
-        # type: (bool, Session, Stratigraphy, List[GeoPoint], str, str) -> None
+    def __init__(self, closed, horizon, points, *args, **kwargs):
+        # type: (bool, Stratigraphy, List[GeoPoint], *str, **str) -> None
         """
         Create a new line.
 
         :param closed: True if the line should be closed, else False
         :type closed: bool
-
-        :param session: SQLAlchemy session, which includes the database connection
-        :type session: Session
 
         :param horizon: Stratigraphy to which the line belongs
         :type horizon: Stratigraphy
@@ -276,11 +256,11 @@ class Line(Base, DBObject):
         :param points: list of points which represents the lines nodes
         :type points: List[GeoPoint]
 
-        :param name: name of the line with the aim to have the possibility to group more lines to a line-set
-        :type name: str
+        :param args: parameters for DBObject initialisation
+        :type args: List()
 
-        :param comment: additional comment
-        :type comment: str
+        :param kwargs: parameters for DBObject initialisation
+        :type kwargs: Dict()
 
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
@@ -298,7 +278,7 @@ class Line(Base, DBObject):
         self.__check_line()
 
         # call base class constructor
-        DBObject.__init__(self, session, name, comment)
+        DBObject.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
