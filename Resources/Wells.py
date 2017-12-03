@@ -9,13 +9,14 @@ from sqlalchemy.orm.session import Session
 from typing import List, Dict
 
 from Exceptions import DatabaseException, WellMarkerException
-from GeoObject import GeoObject
+from GeoObject import AbstractGeoObject
 from Geometries import GeoPoint
-from Resources.DBHandler import Base, DBObject
+from PropertyLogs import WellLogging
+from Resources.DBHandler import Base, AbstractDBObject
 from Resources.Stratigraphy import Stratigraphy
 
 
-class WellMarker(Base, DBObject):
+class WellMarker(Base, AbstractDBObject):
     """
     Class WellMarker
 
@@ -24,8 +25,8 @@ class WellMarker(Base, DBObject):
     # define db table name and columns
     __tablename__ = 'well_marker'
 
-    id = sq.Column(sq.INTEGER, sq.Sequence('well_id_seq'), primary_key=True)
-    drill_depth = sq.Column(sq.FLOAT(10, 4))
+    id = sq.Column(sq.INTEGER, sq.Sequence('wellmarker_id_seq'), primary_key=True)
+    drill_depth = sq.Column(sq.FLOAT)
 
     # define relationship to stratigraphic table
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
@@ -44,17 +45,17 @@ class WellMarker(Base, DBObject):
         :param horizon: stratigraphy object
         :type horizon: Stratigraphy
 
-        :param args: parameters for DBObject initialisation
+        :param args: parameters for AbstractDBObject initialisation
         :type args: List()
 
-        :param kwargs: parameters for DBObject initialisation
+        :param kwargs: parameters for AbstractDBObject initialisation
         :type kwargs: Dict()
 
         :returns: Nothing
         :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected
                             type
         """
-        DBObject.__init__(self, *args, **kwargs)
+        AbstractDBObject.__init__(self, *args, **kwargs)
         if (type(horizon) is not Stratigraphy) and (horizon is not None):
             raise ValueError("'horizon' value is not of type Stratigraphy!")
 
@@ -69,8 +70,8 @@ class WellMarker(Base, DBObject):
         :return: Returns a text-representation of the well marker
         :rtype: str
         """
-        return "<WellMarker(id='{}', depth='{}', horizon='{}', set-name='{}', comment='{}')>". \
-            format(self.id, self.depth, self.horizon, self.name, self.comment)
+        return "<WellMarker(id='{}', depth='{}', horizon='{}'\nAbstractObject: {}". \
+            format(self.id, self.depth, self.horizon, AbstractDBObject.__repr__(self))
 
     def __str__(self):
         # type: () -> str
@@ -80,7 +81,7 @@ class WellMarker(Base, DBObject):
         :return: Returns a text-representation of the well
         :rtype: str
         """
-        return "[{}] {}: {} - {} - {}".format(self.id, self.depth, self.horizon, self.name, self.comment)
+        return "[{}] {}: {} - {}".format(self.id, self.depth, self.horizon, AbstractDBObject.__str__(self))
 
     @property
     def depth(self):
@@ -245,7 +246,7 @@ class WellMarker(Base, DBObject):
         return result
 
 
-class Well(Base, GeoObject):
+class Well(Base, AbstractGeoObject):
     """
     Class Well
 
@@ -255,16 +256,20 @@ class Well(Base, GeoObject):
     __tablename__ = 'wells'
 
     id = sq.Column(sq.INTEGER, sq.Sequence('well_id_seq'), primary_key=True)
-    drill_depth = sq.Column(sq.FLOAT(10, 4))
+    drill_depth = sq.Column(sq.FLOAT)
     wellname = sq.Column(sq.VARCHAR(100), unique=True)
     shortwellname = sq.Column(sq.VARCHAR(100), default="")
 
     # define markers relationship
     marker = relationship("WellMarker", order_by=WellMarker.drill_depth,
-                          backref="well", primaryjoin='Well.id==WellMarker.well_id',
+                          backref="well", primaryjoin='Well.id == WellMarker.well_id',
                           cascade="all, delete, delete-orphan")
 
-    sq.Index('coordinate_index', GeoObject.east, GeoObject.north)
+    logs = relationship("WellLogging", order_by=WellLogging.id,
+                        backref="well", primaryjoin='Well.id == WellLogging.well_id',
+                        cascade="all, delete, delete-orphan")
+
+    sq.Index('coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
 
     def __init__(self, well_name, short_name, depth, *args, **kwargs):
         # type: (str, str, float, *str, **str) -> None
@@ -283,10 +288,10 @@ class Well(Base, GeoObject):
         :param depth: drilled depth of the well
         :type depth: float
 
-        :param args: parameters for GeoObject initialisation
+        :param args: parameters for AbstractGeoObject initialisation
         :type args: List()
 
-        :param kwargs: parameters for GeoObject initialisation
+        :param kwargs: parameters for AbstractGeoObject initialisation
         :type kwargs: Dict()
 
         :return: Nothing
@@ -298,7 +303,7 @@ class Well(Base, GeoObject):
         self.short_name = short_name
 
         # call base class constructor
-        GeoObject.__init__(self, *args, **kwargs)
+        AbstractGeoObject.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
@@ -308,7 +313,7 @@ class Well(Base, GeoObject):
         :return: Returns a text-representation of the well
         :rtype: str
         """
-        return "<Well(id='{}', name='{}', short_name='{}', east='{}', north='{}', alt='{}', depth='{}',' +" \
+        return "<Well(id='{}', name='{}', short_name='{}', depth='{}', marker='{}', logs='{}' +" \
                "'comment='{}', marker='{}')>".format(self.id, self.name, self.short_name, self.easting, self.northing,
                                                      self.altitude, self.depth, self.comment, repr(self.marker))
 
@@ -358,7 +363,7 @@ class Well(Base, GeoObject):
             raise ValueError('Depth is below 0! ({})'.format(dep))
         if (len(self.marker) > 0) and (dep < self.marker[-1].depth):
             raise WellMarkerException(
-                'New depth ({}) lower than depth of last marker {}'.format(dep, self.marker[-1].depth))
+                    'New depth ({}) lower than depth of last marker {}'.format(dep, self.marker[-1].depth))
         self.drill_depth = dep
 
     @property
@@ -455,7 +460,7 @@ class Well(Base, GeoObject):
         for mark in marker:
             if type(mark) is not WellMarker:
                 raise TypeError(
-                    'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
+                        'At least on marker is not of type WellMarker ({}: {})!'.format(str(mark), str(type(mark))))
             if mark.depth > self.depth:
                 raise ValueError('Marker depth ({}) is larger than final well depth ({})!'.
                                  format(mark.depth, self.depth))

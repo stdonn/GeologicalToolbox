@@ -4,7 +4,6 @@ This module provides a class for database access through an SQLAlchemy session a
     related classes.
 """
 
-from abc import ABCMeta
 import sqlalchemy as sq
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,7 +14,7 @@ from typing import List
 Base = declarative_base()
 
 
-class DBHandler:
+class DBHandler(object):
     """
     A class for database access through an SQLAlchemy session.
     """
@@ -47,10 +46,10 @@ class DBHandler:
         return self.__Session()
 
 
-# class DBObject(ABCMeta):
-class DBObject:
+# class AbstractDBObject(object):
+class AbstractDBObject(object):
     """
-    This class represents the base class for all database objects. It is an abstract base class, no object can and
+    This class represents the base class for all database objects. This class should be treated as abstract, no object
     should be created directly!
     """
 
@@ -82,7 +81,7 @@ class DBObject:
         self.comment = comment
         self.name = name
 
-        #ABCMeta.__init__(self)
+        # ABCMeta.__init__(self)
 
     @property
     def comment(self):
@@ -128,7 +127,7 @@ class DBObject:
         """
         Sets a new name for the line with a maximum of 100 characters
 
-        :param new_name: new name for the DBObject
+        :param new_name: new name for the AbstractDBObject
         :type new_name: str
 
         :return: Nothing
@@ -184,8 +183,8 @@ class DBObject:
             # Failure during database processing? -> rollback changes and raise error again
             self.__session.rollback()
             raise IntegrityError(
-                'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
-                'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
+                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
+                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
     # load points from db
     @classmethod
