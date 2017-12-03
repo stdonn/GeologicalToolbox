@@ -9,13 +9,13 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from Resources.DBHandler import Base, DBObject
-from Resources.GeoObject import GeoObject
+from Resources.DBHandler import Base, AbstractDBObject
+from Resources.GeoObject import AbstractGeoObject
 from Resources.Stratigraphy import Stratigraphy
 from Resources.constants import float_precision
 
 
-class GeoPoint(Base, GeoObject):
+class GeoPoint(Base, AbstractGeoObject):
     """
     Class GeoPoint
 
@@ -35,9 +35,9 @@ class GeoPoint(Base, GeoObject):
     line_pos = sq.Column(sq.INTEGER, default=-1)
 
     # make the points unique -> coordinates + horizon + belongs to one line?
-    sq.UniqueConstraint(GeoObject.east, GeoObject.north, GeoObject.alt, horizon_id, line_id, line_pos,
+    sq.UniqueConstraint(AbstractGeoObject.east, AbstractGeoObject.north, AbstractGeoObject.alt, horizon_id, line_id, line_pos,
                         name='u_point_constraint')
-    sq.Index('geopoint_coordinate_index', GeoObject.east, GeoObject.north)
+    sq.Index('geopoint_coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
 
     def __init__(self, horizon, has_z, *args, **kwargs):
         # type: (Stratigraphy, bool, *str, **str) -> None
@@ -50,10 +50,10 @@ class GeoPoint(Base, GeoObject):
         :param has_z: Is altitude stored as z value?
         :type has_z: bool
 
-        :param args: parameters for GeoObject initialisation
+        :param args: parameters for AbstractGeoObject initialisation
         :type args: List()
 
-        :param kwargs: parameters for GeoObject initialisation
+        :param kwargs: parameters for AbstractGeoObject initialisation
         :type kwargs: Dict()
 
         :return: Nothing
@@ -64,7 +64,7 @@ class GeoPoint(Base, GeoObject):
         self.horizon = horizon
 
         # call base class constructor
-        GeoObject.__init__(self, *args, **kwargs)
+        AbstractGeoObject.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
@@ -150,7 +150,7 @@ class GeoPoint(Base, GeoObject):
         # type: (Session) -> List[Line]
         """
         Returns all points in the database connected to the SQLAlchemy Session session, which are not part of a line.
-        This function is similar the GeoObject.load_all_from_db(...) function.
+        This function is similar the AbstractGeoObject.load_all_from_db(...) function.
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
@@ -191,7 +191,7 @@ class GeoPoint(Base, GeoObject):
         # type: (Session, float, float, float, float) -> List[Line]
         """
         Returns all points inside the given extent in the database connected to the SQLAlchemy Session session, which
-        are not part of a line. This function is similar the GeoObject.load_in_extent_from_db(...) function.
+        are not part of a line. This function is similar the AbstractGeoObject.load_in_extent_from_db(...) function.
 
         :param min_easting: minimal easting of extent
         :type min_easting: float
@@ -220,7 +220,7 @@ class GeoPoint(Base, GeoObject):
         return result
 
 
-class Line(Base, DBObject):
+class Line(Base, AbstractDBObject):
     """
     Class Line
 
@@ -256,10 +256,10 @@ class Line(Base, DBObject):
         :param points: list of points which represents the lines nodes
         :type points: List[GeoPoint]
 
-        :param args: parameters for DBObject initialisation
+        :param args: parameters for AbstractDBObject initialisation
         :type args: List()
 
-        :param kwargs: parameters for DBObject initialisation
+        :param kwargs: parameters for AbstractDBObject initialisation
         :type kwargs: Dict()
 
         :return: Nothing
@@ -278,7 +278,7 @@ class Line(Base, DBObject):
         self.__check_line()
 
         # call base class constructor
-        DBObject.__init__(self, *args, **kwargs)
+        AbstractDBObject.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
@@ -555,7 +555,7 @@ class Line(Base, DBObject):
         # type: (Session, float, float, float, float) -> List[Line]
         """
         Returns all lines with at least on point inside the given extent in the database connected to the SQLAlchemy
-        Session session. This function overloads the GeoObject.load_in_extent_from_db(...) function.
+        Session session. This function overloads the AbstractGeoObject.load_in_extent_from_db(...) function.
 
         :param min_easting: minimal easting of extent
         :type min_easting: float

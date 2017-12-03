@@ -1,28 +1,29 @@
 # -*- coding: UTF-8 -*-
 """
-This module hosts the basic GeoObject class. This class inherits all basic function for GeoObjects
+This module hosts the basic AbstractGeoObject class. This class inherits all basic function for GeoObjects
 """
 
 import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 
-from Resources.DBHandler import DBObject
+from Resources.DBHandler import AbstractDBObject
 
 
-class GeoObject(DBObject):
+class AbstractGeoObject(AbstractDBObject):
     """
-    This is a base class which stores central GeoObject data
+    This is a base class which stores central GeoObject data. This class should be treated as abstract, no object
+    should be created directly!
     """
 
-    east = sq.Column(sq.REAL(10, 4))
-    north = sq.Column(sq.REAL(10, 4))
-    alt = sq.Column(sq.REAL(10, 4))
+    east = sq.Column(sq.FLOAT)
+    north = sq.Column(sq.FLOAT)
+    alt = sq.Column(sq.FLOAT)
     reference = sq.Column(sq.TEXT(1000), default='')
 
     def __init__(self, reference_system, easting, northing, altitude, *args, **kwargs):
         # type: (str, float, float, float, *str, **str) -> None
         """
-        Initialise the GeoObject
+        Initialise the AbstractGeoObject
 
         :param reference_system: Stores the spatial reference information in WKT format. This parameter is not checked
                                  for correctness!
@@ -37,10 +38,10 @@ class GeoObject(DBObject):
         :param altitude: height above sea level of the object or None
         :type altitude: float or None
 
-        :param args: parameters for DBObject initialisation
+        :param args: parameters for AbstractDBObject initialisation
         :type args: List()
 
-        :param kwargs: parameters for DBObject initialisation
+        :param kwargs: parameters for AbstractDBObject initialisation
         :type kwargs: Dict()
 
         :return: nothing
@@ -52,7 +53,7 @@ class GeoObject(DBObject):
         self.altitude = altitude
 
         # call constructor of base class
-        DBObject.__init__(self, *args, **kwargs)
+        AbstractDBObject.__init__(self, *args, **kwargs)
 
     # define setter and getter for columns and local data
     @property
