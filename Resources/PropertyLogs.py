@@ -5,7 +5,6 @@ Properties for points are the same as logs, except there is only one value, not 
 """
 
 import sqlalchemy as sq
-from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
 from typing import List
 
