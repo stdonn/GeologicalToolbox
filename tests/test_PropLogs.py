@@ -7,7 +7,7 @@ import unittest
 
 from Exceptions import WellMarkerException
 from Resources.DBHandler import DBHandler
-from Resources.PropertyLogs import WellLogValue, WellLogging
+from Resources.PropertyLogs import WellLogValue, WellLog
 from Resources.Wells import WellMarker, Well
 
 
@@ -116,7 +116,7 @@ class TestWellLogValueClass(unittest.TestCase):
 
 class TestWellLoggingClass(unittest.TestCase):
     """
-    a unittest for WellLogging class
+    a unittest for WellLog class
     """
 
     def setUp(self):
@@ -150,7 +150,7 @@ class TestWellLoggingClass(unittest.TestCase):
                     self.well['east'], self.well['north'], self.well['altitude'], self.session, '', '')
         well.save_to_db()
 
-        logging = WellLogging('logging', 'unit name', self.session, '', '')
+        logging = WellLog('logging', 'unit name', self.session, '', '')
         logging.save_to_db()
 
         well.add_log(logging)
@@ -166,7 +166,7 @@ class TestWellLoggingClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        logging = self.session.query(WellLogging).one()
+        logging = self.session.query(WellLog).one()
         self.assertEqual(len(logging.log_values), 5)
         self.assertEqual(logging.log_values[0].depth, 5)
         self.assertEqual(logging.log_values[1].value, 4)
@@ -184,7 +184,7 @@ class TestWellLoggingClass(unittest.TestCase):
         :raises AssertionError: Raises AssertionError if a test fails
         """
 
-        logging = WellLogging.load_all_from_db(self.session)
+        logging = WellLog.load_all_from_db(self.session)
         self.assertEqual(len(logging), 1)
         logging = logging[0]
         self.assertEqual(logging.log_values[0].depth, 5)
@@ -199,7 +199,7 @@ class TestWellLoggingClass(unittest.TestCase):
 
         del logging
 
-        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging = WellLog.load_all_from_db(self.session)[0]
         self.assertEqual(logging.property_name, 'new log name')
         self.assertEqual(logging.property_unit, u'km²')
 
@@ -209,25 +209,25 @@ class TestWellLoggingClass(unittest.TestCase):
 
         del logging
 
-        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging = WellLog.load_all_from_db(self.session)[0]
         self.assertEqual(logging.property_name, longname[:100])
         self.assertEqual(logging.property_unit, longname[:100])
 
     def test_insert_and_delete_logvalue(self):
         # type: () -> None
         """
-        Test insertion and deletion functionality of class WellLogging
+        Test insertion and deletion functionality of class WellLog
 
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging = WellLog.load_all_from_db(self.session)[0]
         logging.insert_log_value(WellLogValue(14.3, 1234, self.session, '', ''))
         self.assertRaises(ValueError, logging.insert_log_value, WellLogValue(556, 1234, self.session, '', ''))
 
         del logging
 
-        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging = WellLog.load_all_from_db(self.session)[0]
         self.assertEqual(6, len(logging.log_values))
         self.assertEqual(14.3, logging.log_values[2].depth)
         self.assertEqual(1234, logging.get_value_by_depth(14.3).value)
@@ -250,7 +250,7 @@ class TestWellLoggingClass(unittest.TestCase):
 
         del logging
 
-        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging = WellLog.load_all_from_db(self.session)[0]
         self.assertEqual(10, len(logging.log_values))
         self.assertEqual(14.3, logging.log_values[2].depth)
         self.assertEqual(3456, logging.get_value_by_depth(156.34).value)
@@ -261,7 +261,7 @@ class TestWellLoggingClass(unittest.TestCase):
 
         del logging
 
-        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging = WellLog.load_all_from_db(self.session)[0]
         self.assertEqual(9, len(logging.log_values))
         self.assertEqual(14.3, logging.log_values[2].depth)
         self.assertEqual(234, logging.log_values[6].value)
