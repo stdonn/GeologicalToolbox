@@ -11,7 +11,7 @@ from typing import List, Dict
 from Exceptions import DatabaseException, WellMarkerException
 from GeoObject import AbstractGeoObject
 from Geometries import GeoPoint
-from PropertyLogs import WellLogging
+from PropertyLogs import WellLog
 from Resources.DBHandler import Base, AbstractDBObject
 from Resources.Stratigraphy import Stratigraphy
 
@@ -265,8 +265,8 @@ class Well(Base, AbstractGeoObject):
                           backref="well", primaryjoin='Well.id == WellMarker.well_id',
                           cascade="all, delete, delete-orphan")
 
-    logs = relationship("WellLogging", order_by=WellLogging.id,
-                        backref="well", primaryjoin='Well.id == WellLogging.well_id',
+    logs = relationship("WellLog", order_by=WellLog.id,
+                        backref="well", primaryjoin='Well.id == WellLog.well_id',
                         cascade="all, delete, delete-orphan")
 
     sq.Index('coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
@@ -512,40 +512,40 @@ class Well(Base, AbstractGeoObject):
             raise ValueError(str(e) + '\nWellMarker with ID ' + str(marker.id) + ' not found in list!')
 
     def add_log(self, log):
-        # type: (WellLogging) -> None
+        # type: (WellLog) -> None
         """
         Adds a new log to the well
 
         :param log: new well log
-        :type log: WellLogging
+        :type log: WellLog
 
         :return: Nothing
         :raises TypeError: Raises TypeError if log is not of type WellLogging
         """
-        if type(log) is not WellLogging:
-            raise TypeError('log {} is not of type WellLogging!'.format(str(log)))
+        if type(log) is not WellLog:
+            raise TypeError('log {} is not of type WellLog!'.format(str(log)))
 
         self.logs.append(log)
 
     def remove_log(self, log):
-        # type: (WellLogging) -> None
+        # type: (WellLog) -> None
         """
         Removes a log from the well
 
         :param log: log to remove
-        :type log: WellLogging
+        :type log: WellLog
 
         :return: Nothing
         :raises TypeError: Raises TypeError if log is not of type WellLogging
         :raises ValueError: Raises ValueError if log is not part of WellLogging.logs
         """
-        if type(log) is not WellLogging:
-            raise TypeError('log {} is not of type WellLogging!'.format(str(log)))
+        if type(log) is not WellLog:
+            raise TypeError('log {} is not of type WellLog!'.format(str(log)))
 
         try:
             self.logs.remove(log)
         except ValueError as e:
-            raise ValueError(str(e) + '\nWellLogging with ID ' + str(log.id) + ' not found in list!')
+            raise ValueError(str(e) + '\nWellLog with ID ' + str(log.id) + ' not found in list!')
 
     @classmethod
     def load_by_wellname_from_db(cls, name, session):

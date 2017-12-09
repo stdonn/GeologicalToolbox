@@ -209,7 +209,7 @@ class WellLogValue(Base, AbstractDBObject):
         self.log_value = float(log_value)
 
 
-class WellLogging(Base, AbstractLogPropClass):
+class WellLog(Base, AbstractLogPropClass):
     """
     This class represents logging information for wells
     """
@@ -220,7 +220,7 @@ class WellLogging(Base, AbstractLogPropClass):
     well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
     # define markers relationship
     log_values = relationship("WellLogValue", order_by=WellLogValue.log_depth,
-                              backref="well_log", primaryjoin='WellLogging.id==WellLogValue.log_id',
+                              backref="well_log", primaryjoin='WellLog.id==WellLogValue.log_id',
                               cascade="all, delete, delete-orphan")
 
     def __init__(self, *args, **kwargs):

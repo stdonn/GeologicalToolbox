@@ -8,7 +8,7 @@ import unittest
 
 from Exceptions import WellMarkerException
 from Resources.DBHandler import DBHandler
-from Resources.PropertyLogs import WellLogging, WellLogValue
+from Resources.PropertyLogs import WellLog, WellLogValue
 from Resources.Stratigraphy import Stratigraphy
 from Resources.Wells import WellMarker, Well
 from Resources.constants import float_precision
@@ -326,7 +326,7 @@ class TestWellClass(unittest.TestCase):
 
         well = Well.load_by_wellname_from_db('Well_2', self.session)
         for i in range(len(log_values)):
-            log = WellLogging('log {}'.format(i), 'unit name', self.session, '', '')
+            log = WellLog('log {}'.format(i), 'unit name', self.session, '', '')
             log.save_to_db()
             well.add_log(log)
 
