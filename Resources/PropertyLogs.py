@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 from typing import List
 
 from Resources.DBHandler import Base, AbstractDBObject
-from Resources.Geometries import GeoPoint, Line
+# from Resources.Geometries import GeoPoint, Line
 
 
 class AbstractLogPropClass(AbstractDBObject):
@@ -63,9 +63,9 @@ class AbstractLogPropClass(AbstractDBObject):
         :return: Nothing
         """
         name = str(name)
-        if len(name) > 50:
-            name = name[:50]
-        self.property_name = name
+        if len(name) > 100:
+            name = name[:100]
+        self.prop_name = name
 
     @property
     def property_unit(self):
@@ -75,7 +75,7 @@ class AbstractLogPropClass(AbstractDBObject):
 
         :return: Returns the unit of the property
         """
-        return str(self.prop_unit)
+        return unicode(self.prop_unit)
 
     @property_unit.setter
     def property_unit(self, unit):
@@ -88,10 +88,10 @@ class AbstractLogPropClass(AbstractDBObject):
 
         :return: Nothing
         """
-        unit = str(unit)
-        if len(unit) > 50:
-            unit = unit[:50]
-        self.property_unit = unit
+        unit = unicode(unit)
+        if len(unit) > 100:
+            unit = unit[:100]
+        self.prop_unit = unit
 
 
 class WellLogValue(Base, AbstractDBObject):
@@ -106,9 +106,10 @@ class WellLogValue(Base, AbstractDBObject):
     log_value = sq.Column(sq.FLOAT)
 
     log_id = sq.Column(sq.INTEGER, sq.ForeignKey('well_logs.id'), default=-1)
+    sq.Index('welllogdepth_index', log_depth)
 
     def __init__(self, depth, value, *args, **kwargs):
-        # type: (float, float, *str, **str)
+        # type: (float, float, *str, **str) -> None
         """
         Initialise the class
 
@@ -141,9 +142,9 @@ class WellLogValue(Base, AbstractDBObject):
         :return: Returns a text-representation of the association
         :rtype: str
         """
-        text = "<WellLogValue(id='{}', depth='{}', value='{}', log_id='{}')>\n". \
+        text = "<WellLogValue(id='{}', depth='{}', value='{}', log_id='{}'),\n". \
             format(self.id, self.depth, self.value, self.log_id)
-        text += "Additional DBObject: {}".format(AbstractDBObject.__repr__(self))
+        text += "Additional DBObject: {}>".format(AbstractDBObject.__repr__(self))
         return text
 
     def __str__(self):
@@ -277,9 +278,9 @@ class WellLogging(Base, AbstractLogPropClass):
         :raises TypeError: Raises TypeError if marker is not an instance of WellLogValue
         :raises ValueError: Raises ValueError if the depth of the marker is larger than the drilled depth of the well
         """
-        if isinstance(log_value, WellLogValue):
+        if not isinstance(log_value, WellLogValue):
             raise TypeError('log_value {} is not of type WellLogValue!'.format(str(log_value)))
-        if log_value.depth > self.well.depth:
+        if (not (self.well is None)) and (log_value.depth > self.well.depth):
             raise ValueError('Value depth ({}) is larger than final well depth ({})!'.format(log_value.depth,
                                                                                              self.well.depth))
         self.log_values.append(log_value)
@@ -287,7 +288,7 @@ class WellLogging(Base, AbstractLogPropClass):
         # new sorting to ensure correct order without storage and reloading from the database
         self.log_values.sort(key=lambda x: x.depth)
 
-    def insert_multiple_marker(self, log_values):
+    def insert_multiple_log_values(self, log_values):
         # type: (List[WellLogValue]) -> None
         """
         Insert the multiple log values in the log
@@ -305,7 +306,7 @@ class WellLogging(Base, AbstractLogPropClass):
             if not isinstance(value, WellLogValue):
                 raise TypeError(
                         'At least on value is not of type WellLogValue ({}: {})!'.format(str(value), str(type(value))))
-            if value.depth > self.well.depth:
+            if (not(self.well is None)) and (value.depth > self.well.depth):
                 raise ValueError('Value depth ({}) is larger than final well depth ({})!'.
                                  format(value.depth, self.well.depth))
 

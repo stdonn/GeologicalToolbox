@@ -511,6 +511,42 @@ class Well(Base, AbstractGeoObject):
         except ValueError as e:
             raise ValueError(str(e) + '\nWellMarker with ID ' + str(marker.id) + ' not found in list!')
 
+    def add_log(self, log):
+        # type: (WellLogging) -> None
+        """
+        Adds a new log to the well
+
+        :param log: new well log
+        :type log: WellLogging
+
+        :return: Nothing
+        :raises TypeError: Raises TypeError if log is not of type WellLogging
+        """
+        if type(log) is not WellLogging:
+            raise TypeError('log {} is not of type WellLogging!'.format(str(log)))
+
+        self.logs.append(log)
+
+    def remove_log(self, log):
+        # type: (WellLogging) -> None
+        """
+        Removes a log from the well
+
+        :param log: log to remove
+        :type log: WellLogging
+
+        :return: Nothing
+        :raises TypeError: Raises TypeError if log is not of type WellLogging
+        :raises ValueError: Raises ValueError if log is not part of WellLogging.logs
+        """
+        if type(log) is not WellLogging:
+            raise TypeError('log {} is not of type WellLogging!'.format(str(log)))
+
+        try:
+            self.logs.remove(log)
+        except ValueError as e:
+            raise ValueError(str(e) + '\nWellLogging with ID ' + str(log.id) + ' not found in list!')
+
     @classmethod
     def load_by_wellname_from_db(cls, name, session):
         # type: (str, Session) -> Well
@@ -545,7 +581,6 @@ class Well(Base, AbstractGeoObject):
         """
         Returns all wells with a drilled depth below the min_depth in the database connected to the SQLAlchemy Session
         session
-
 
         :param min_depth: minimal drilled depth
         :type min_depth: float
