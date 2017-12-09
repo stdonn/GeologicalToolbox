@@ -5,6 +5,7 @@ This module hosts the basic AbstractGeoObject class. This class inherits all bas
 
 import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
+from typing import List
 
 from Resources.DBHandler import AbstractDBObject
 
@@ -21,7 +22,7 @@ class AbstractGeoObject(AbstractDBObject):
     reference = sq.Column(sq.TEXT(1000), default='')
 
     def __init__(self, reference_system, easting, northing, altitude, *args, **kwargs):
-        # type: (str, float, float, float, *str, **str) -> None
+        # type: (str, float, float, float, *object, **object) -> None
         """
         Initialise the AbstractGeoObject
 

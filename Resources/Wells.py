@@ -35,7 +35,7 @@ class WellMarker(Base, AbstractDBObject):
     well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
 
     def __init__(self, depth, horizon, *args, **kwargs):
-        # type: (float, Stratigraphy, *str, **str) -> None
+        # type: (float, Stratigraphy, *object, **object) -> None
         """
         Creates a new well marker
 
@@ -272,7 +272,7 @@ class Well(Base, AbstractGeoObject):
     sq.Index('coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
 
     def __init__(self, well_name, short_name, depth, *args, **kwargs):
-        # type: (str, str, float, *str, **str) -> None
+        # type: (str, str, float, *object, **object) -> None
         """
         Creates a new Well
 
@@ -520,24 +520,24 @@ class Well(Base, AbstractGeoObject):
         :type log: WellLog
 
         :return: Nothing
-        :raises TypeError: Raises TypeError if log is not of type WellLogging
+        :raises TypeError: Raises TypeError if log is not of type WellLog
         """
         if type(log) is not WellLog:
             raise TypeError('log {} is not of type WellLog!'.format(str(log)))
 
         self.logs.append(log)
 
-    def remove_log(self, log):
+    def delete_log(self, log):
         # type: (WellLog) -> None
         """
-        Removes a log from the well
+        Deletes a log from the well
 
-        :param log: log to remove
+        :param log: log to delete
         :type log: WellLog
 
         :return: Nothing
-        :raises TypeError: Raises TypeError if log is not of type WellLogging
-        :raises ValueError: Raises ValueError if log is not part of WellLogging.logs
+        :raises TypeError: Raises TypeError if log is not of type WellLog
+        :raises ValueError: Raises ValueError if log is not part of self.logs
         """
         if type(log) is not WellLog:
             raise TypeError('log {} is not of type WellLog!'.format(str(log)))
