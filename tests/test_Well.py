@@ -343,7 +343,7 @@ class TestWellClass(unittest.TestCase):
         self.assertEqual(3, len(well.logs[1].log_values))
         self.assertEqual('log 1', well.logs[1].property_name)
 
-        well.remove_log(well.logs[1])
+        well.delete_log(well.logs[1])
 
         del well
 
@@ -351,6 +351,9 @@ class TestWellClass(unittest.TestCase):
         self.assertEqual(1, len(well.logs))
         self.assertEqual(5, len(well.logs[0].log_values))
         self.assertEqual('log 0', well.logs[0].property_name)
+
+        logs = WellLog.load_all_from_db(self.session)
+        self.assertEqual(1, len(logs))
 
     def tearDown(self):
         # type: () -> None

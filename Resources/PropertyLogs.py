@@ -9,7 +9,6 @@ from sqlalchemy.orm import relationship
 from typing import List
 
 from Resources.DBHandler import Base, AbstractDBObject
-# from Resources.Geometries import GeoPoint, Line
 
 
 class AbstractLogPropClass(AbstractDBObject):
@@ -23,7 +22,7 @@ class AbstractLogPropClass(AbstractDBObject):
     prop_unit = sq.Column(sq.VARCHAR(100), default='')
 
     def __init__(self, property_name, property_unit, *args, **kwargs):
-        # type: (str, str, *str, **str) -> None
+        # type: (str, str, *object, **object) -> None
         """
         Initialises the class
 
@@ -69,7 +68,7 @@ class AbstractLogPropClass(AbstractDBObject):
 
     @property
     def property_unit(self):
-        # type: () -> str
+        # type: () -> unicode
         """
         Returns the unit of the property
 
@@ -109,7 +108,7 @@ class WellLogValue(Base, AbstractDBObject):
     sq.Index('welllogdepth_index', log_depth)
 
     def __init__(self, depth, value, *args, **kwargs):
-        # type: (float, float, *str, **str) -> None
+        # type: (float, float, *object, **object) -> None
         """
         Initialise the class
 
@@ -224,7 +223,7 @@ class WellLog(Base, AbstractLogPropClass):
                               cascade="all, delete, delete-orphan")
 
     def __init__(self, *args, **kwargs):
-        # type: (*str, **str) -> None
+        # type: (*object, **object) -> None
         """
         Initialise the class
 
@@ -306,7 +305,7 @@ class WellLog(Base, AbstractLogPropClass):
             if not isinstance(value, WellLogValue):
                 raise TypeError(
                         'At least on value is not of type WellLogValue ({}: {})!'.format(str(value), str(type(value))))
-            if (not(self.well is None)) and (value.depth > self.well.depth):
+            if (not (self.well is None)) and (value.depth > self.well.depth):
                 raise ValueError('Value depth ({}) is larger than final well depth ({})!'.
                                  format(value.depth, self.well.depth))
 
@@ -355,3 +354,52 @@ class WellLog(Base, AbstractLogPropClass):
             self.log_values.remove(value)
         except ValueError as e:
             raise ValueError(str(e) + '\nWellLogValue with ID ' + str(value.id) + ' not found in value list!')
+
+
+class Property(Base, AbstractLogPropClass):
+    """
+    This class represents logging information for wells
+    """
+    # define db table name and columns
+    __tablename__ = 'properties'
+
+    id = sq.Column(sq.INTEGER, sq.Sequence('properties_id_seq'), primary_key=True)
+    point_id = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'), default=-1)
+    prop_value = sq.Column(sq.FLOAT, default=0)
+
+    def __init__(self, *args, **kwargs):
+        # type: (*object, **object) -> None
+        """
+        Initialise the class
+
+        :param args: parameters for AbstractLogPropClass initialisation
+        :type args: List()
+
+        :param kwargs: parameters for AbstractLogPropClass initialisation
+        :type kwargs: Dict()
+        """
+        AbstractLogPropClass.__init__(self, *args, **kwargs)
+
+    @property
+    def value(self):
+        # type: () -> float
+        """
+        Returns the value of the property
+
+        :return: Returns the value of the property
+        """
+        return float(self.prop_value)
+
+    @value.setter
+    def value(self, prop_value):
+        # type: (float) -> None
+        """
+        Sets a new value for the property
+
+        :param prop_value: new value
+        :type prop_value: float
+
+        :return: Nothing
+        :raises ValueError: Raises ValueError if prop_value is not type float or cannot be converted to it
+        """
+        self.prop_value = float(prop_value)

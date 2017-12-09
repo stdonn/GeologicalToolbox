@@ -8,6 +8,7 @@ import unittest
 
 from Resources.DBHandler import DBHandler
 from Resources.Geometries import GeoPoint, Line
+from Resources.PropertyLogs import Property
 from Resources.Stratigraphy import Stratigraphy
 from Resources.constants import float_precision
 
@@ -331,6 +332,47 @@ class TestGeoPointClass(unittest.TestCase):
         self.assertFalse(points[1].has_z, "Second point has a z-value...")
         self.assertEqual(points[1].altitude, 0,
                          "Wrong altitude value ({}). Should be {}.".format(points[1].altitude, 0))
+
+    def test_add_and_delete_properties(self):
+        # type: () -> None
+        """
+        Test the add_property and delete_property function
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        point = GeoPoint.load_all_from_db(self.session)[0]
+        prop = Property('test prop', 'test unit', self.session)
+        point.add_property(prop)
+        prop = Property('test prop 2', 'test unit 2', self.session)
+        point.add_property(prop)
+
+        self.assertRaises(TypeError, point.add_property, 'string')
+
+        del point
+        del prop
+
+        point = GeoPoint.load_all_from_db(self.session)[0]
+        self.assertEqual(2, len(point.properties))
+        self.assertEqual('test prop', point.properties[0].property_name)
+        self.assertEqual('test prop 2', point.properties[1].property_name)
+        self.assertEqual('test unit', point.properties[0].property_unit)
+        self.assertEqual('test unit 2', point.properties[1].property_unit)
+
+        prop = point.properties[0]
+        point.delete_property(prop)
+        self.assertRaises(TypeError, point.delete_property, 'string')
+        self.assertRaises(ValueError, point.delete_property, prop)
+        self.assertEqual(1, len(point.properties))
+        self.assertEqual('test prop 2', point.properties[0].property_name)
+        self.assertEqual('test unit 2', point.properties[0].property_unit)
+
+        del point
+
+        point = GeoPoint.load_all_from_db(self.session)[0]
+        self.assertEqual(1, len(point.properties))
+        self.assertEqual('test prop 2', point.properties[0].property_name)
+        self.assertEqual('test unit 2', point.properties[0].property_unit)
 
     def tearDown(self):
         # type: () -> None

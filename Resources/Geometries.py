@@ -11,6 +11,7 @@ from typing import List
 
 from Resources.DBHandler import Base, AbstractDBObject
 from Resources.GeoObject import AbstractGeoObject
+from Resources.PropertyLogs import Property
 from Resources.Stratigraphy import Stratigraphy
 from Resources.constants import float_precision
 
@@ -35,12 +36,17 @@ class GeoPoint(Base, AbstractGeoObject):
     line_pos = sq.Column(sq.INTEGER, default=-1)
 
     # make the points unique -> coordinates + horizon + belongs to one line?
-    sq.UniqueConstraint(AbstractGeoObject.east, AbstractGeoObject.north, AbstractGeoObject.alt, horizon_id, line_id, line_pos,
-                        name='u_point_constraint')
+    sq.UniqueConstraint(AbstractGeoObject.east, AbstractGeoObject.north, AbstractGeoObject.alt, horizon_id, line_id,
+                        line_pos, name='u_point_constraint')
     sq.Index('geopoint_coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
 
+    # add Property relation
+    # order by property name
+    properties = relationship("Property", order_by=Property.prop_name, backref="point",
+                              primaryjoin='GeoPoint.id==Property.point_id', cascade="all, delete, delete-orphan")
+
     def __init__(self, horizon, has_z, *args, **kwargs):
-        # type: (Stratigraphy, bool, *str, **str) -> None
+        # type: (Stratigraphy, bool, *object, **object) -> None
         """
         Creates a new GeoPoint
 
@@ -144,6 +150,43 @@ class GeoPoint(Base, AbstractGeoObject):
         """
         self.has_z = True
 
+    # add and remove property information form point
+    def add_property(self, prop):
+        # type: (Property) -> None
+        """
+        Adds a new property to the point
+
+        :param prop: new point property
+        :type prop: Property
+
+        :return: Nothing
+        :raises TypeError: Raises TypeError if log is not of type Property
+        """
+        if type(prop) is not Property:
+            raise TypeError('property {} is not of type Property!'.format(str(prop)))
+
+        self.properties.append(prop)
+
+    def delete_property(self, prop):
+        # type: (Property) -> None
+        """
+        Deletes a property from the point
+
+        :param prop: property to delete
+        :type prop: Property
+
+        :return: Nothing
+        :raises TypeError: Raises TypeError if log is not of type Property
+        :raises ValueError: Raises ValueError if log is not part of self.properties
+        """
+        if type(prop) is not Property:
+            raise TypeError('property {} is not of type Property!'.format(str(prop)))
+
+        try:
+            self.properties.remove(prop)
+        except ValueError as e:
+            raise ValueError(str(e) + '\nProperty with ID ' + str(prop.id) + ' not found in list!')
+
     # overwrite loading method
     @classmethod
     def load_all_without_lines_from_db(cls, session):
@@ -243,7 +286,7 @@ class Line(Base, AbstractDBObject):
                           cascade="all, delete, delete-orphan")
 
     def __init__(self, closed, horizon, points, *args, **kwargs):
-        # type: (bool, Stratigraphy, List[GeoPoint], *str, **str) -> None
+        # type: (bool, Stratigraphy, List[GeoPoint], *object, **object) -> None
         """
         Create a new line.
 
@@ -362,7 +405,7 @@ class Line(Base, AbstractDBObject):
         :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
         if (value is not None) and (type(value) is not Stratigraphy):
-            raise TypeError('type of commited value ({}) is not Stratigraphy!'.format(type(value)))
+            raise TypeError('type of committed value ({}) is not Stratigraphy!'.format(type(value)))
 
         if value is None:
             self.hor = None
@@ -499,8 +542,8 @@ class Line(Base, AbstractDBObject):
         # iterate over a copy of the list to avoid iteration issues caused by the deletion of values
         for pnt in self.points[:]:
             if (abs(float(pnt.easting) - easting) < float_precision) and (
-                        abs(float(pnt.northing) - northing) < float_precision) and (
-                        (abs(float(pnt.altitude) - altitude) < float_precision) or not pnt.has_z):
+                    abs(float(pnt.northing) - northing) < float_precision) and (
+                    (abs(float(pnt.altitude) - altitude) < float_precision) or not pnt.has_z):
                 self.points.remove(pnt)
                 # check doubled values in a line
                 self.__remove_doubled_points()

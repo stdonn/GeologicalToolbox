@@ -5,10 +5,11 @@ This is a test module for the Resources.PropertyLogs-Module classes using unitte
 
 import unittest
 
-from Exceptions import WellMarkerException
 from Resources.DBHandler import DBHandler
-from Resources.PropertyLogs import WellLogValue, WellLog
-from Resources.Wells import WellMarker, Well
+from Resources.Geometries import GeoPoint, Line
+from Resources.PropertyLogs import Property, WellLog, WellLogValue
+from Resources.Stratigraphy import Stratigraphy
+from Resources.Wells import Well
 
 
 class TestWellLogValueClass(unittest.TestCase):
@@ -114,7 +115,7 @@ class TestWellLogValueClass(unittest.TestCase):
         pass
 
 
-class TestWellLoggingClass(unittest.TestCase):
+class TestWellLogClass(unittest.TestCase):
     """
     a unittest for WellLog class
     """
@@ -267,6 +268,82 @@ class TestWellLoggingClass(unittest.TestCase):
         self.assertEqual(234, logging.log_values[6].value)
         self.assertRaises(ValueError, logging.get_value_by_depth, 16)
         self.assertListEqual([5, 10, 14.3, 15, 15.8, 16.2, 17, 123, 156.34], [x.depth for x in logging.log_values])
+
+    def tearDown(self):
+        # type: () -> None
+        """
+        Empty function, nothing to shutdown after the testing process
+
+        :return: Nothing
+        """
+        pass
+
+
+class TestPropertyClass(unittest.TestCase):
+    """
+    a unittest for Property class
+    """
+
+    def setUp(self):
+        # type: () -> None
+        """
+        Initialise a temporary database connection for all test cases and fill the database with test data
+
+        :return: None
+        """
+        # initialise a in-memory sqlite database
+        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.session = self.handler.get_session()
+
+        # add test data to the database
+        point = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu', 1), True, '', 1, 2, 3, self.session, 'test',
+                         '')
+        point.save_to_db()
+
+        prop = Property('test prop', 'test unit', self.session)
+        point.add_property(prop)
+        prop = Property('test prop 2', 'test unit 2', self.session)
+        point.add_property(prop)
+
+    def test_init(self):
+        # type: () -> None
+        """
+        Test the initialisation of the class
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        point = GeoPoint.load_all_from_db(self.session)[0]
+        self.assertEqual(2, len(point.properties))
+        self.assertEqual('test prop', point.properties[0].property_name)
+        self.assertEqual('test prop 2', point.properties[1].property_name)
+        self.assertEqual('test unit', point.properties[0].property_unit)
+        self.assertEqual('test unit 2', point.properties[1].property_unit)
+
+    def test_setter_and_getter(self):
+        # type: () -> None
+        """
+        Test the setter and getter functionality
+
+        :return: Nothing
+        :raises AssertionError: Raises Assertion Error when a test fails
+        """
+        point = GeoPoint.load_all_from_db(self.session)[0]
+        point.properties[0].value = 342.234
+        point.properties[1].value = "345.34"
+        point.properties[1].name = "some text information"
+        point.properties[1].comment = "unused"
+
+        with self.assertRaises(ValueError):
+            point.properties[0].value = "string"
+
+        del point
+
+        point = GeoPoint.load_all_from_db(self.session)[0]
+        self.assertEqual(342.234, point.properties[0].value)
+        self.assertEqual(345.34, point.properties[1].value)
+        self.assertEqual('some text information', point.properties[1].name)
+        self.assertEqual('unused', point.properties[1].comment)
 
     def tearDown(self):
         # type: () -> None
