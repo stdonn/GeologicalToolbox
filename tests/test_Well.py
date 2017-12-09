@@ -8,6 +8,7 @@ import unittest
 
 from Exceptions import WellMarkerException
 from Resources.DBHandler import DBHandler
+from Resources.PropertyLogs import WellLogging, WellLogValue
 from Resources.Stratigraphy import Stratigraphy
 from Resources.Wells import WellMarker, Well
 from Resources.constants import float_precision
@@ -32,42 +33,42 @@ class TestWellClass(unittest.TestCase):
         # add test data to the database
         self.wells = [
             {
-                'name': 'Well_1',
+                'name'      : 'Well_1',
                 'short_name': 'W1',
-                'comment': 'A drilled well',
-                'east': 1234.56,
-                'north': 123.45,
-                'altitude': 10.5,
-                'depth': 555,
-                'marker': ((10, 'mu', 4, ''),
-                           (15, 'so', 3, 'Comment 1'),
-                           (16, 'sm', 2, ''),
-                           (17, 'su', 1, 'Comment 2'),
-                           (5, 'mm', 5, 'Comment 3'))
+                'comment'   : 'A drilled well',
+                'east'      : 1234.56,
+                'north'     : 123.45,
+                'altitude'  : 10.5,
+                'depth'     : 555,
+                'marker'    : ((10, 'mu', 4, ''),
+                               (15, 'so', 3, 'Comment 1'),
+                               (16, 'sm', 2, ''),
+                               (17, 'su', 1, 'Comment 2'),
+                               (5, 'mm', 5, 'Comment 3'))
             }, {
-                'name': 'Well_2',
+                'name'      : 'Well_2',
                 'short_name': 'W2',
-                'comment': '',
-                'east': 1000.23,
-                'north': 2300.34,
-                'altitude': 342.23,
-                'depth': 341,
-                'marker': ((12, 'mo', 6, ''),
-                           (120, 'mm', 5, 'Comment 1'),
-                           (300, 'Fault', 0, 'Comment 2'),
-                           (320, 'mo', 6, ''))
+                'comment'   : '',
+                'east'      : 1000.23,
+                'north'     : 2300.34,
+                'altitude'  : 342.23,
+                'depth'     : 341,
+                'marker'    : ((12, 'mo', 6, ''),
+                               (120, 'mm', 5, 'Comment 1'),
+                               (300, 'Fault', 0, 'Comment 2'),
+                               (320, 'mo', 6, ''))
             }, {
-                'name': 'Well_3',
+                'name'      : 'Well_3',
                 'short_name': 'W3',
-                'comment': 'A third well',
-                'east': 3454.34,
-                'north': 2340.22,
-                'altitude': 342.20,
-                'depth': 645.21,
-                'marker': ((34, 'mu', 4, ''),
-                           (234, 'so', 3, 'Comment 1'),
-                           (345, 'Fault', 0, 'Comment 2'),
-                           (635, 'mu', 4, 'Comment 3'))
+                'comment'   : 'A third well',
+                'east'      : 3454.34,
+                'north'     : 2340.22,
+                'altitude'  : 342.20,
+                'depth'     : 645.21,
+                'marker'    : ((34, 'mu', 4, ''),
+                               (234, 'so', 3, 'Comment 1'),
+                               (345, 'Fault', 0, 'Comment 2'),
+                               (635, 'mu', 4, 'Comment 3'))
             }
         ]
 
@@ -300,6 +301,57 @@ class TestWellClass(unittest.TestCase):
         # setter and getter for session
         wells[2].session = wells[1].session
 
+    def test_log_handling(self):
+        # type: () -> None
+        """
+        Tests the log handling functionality
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        log_values = (
+            (
+                (10, 4, '', ''),
+                (15, '45.4', 'name 1', 'Comment 1'),
+                (16, 34.3, '', ''),
+                (17, 234, '', 'Comment 2'),
+                (5, '34.4', '', 'Comment 3')
+            ),
+            (
+                (34.3, 4, '', ''),
+                (13, 234, '', 'Comment 2'),
+                (34, '34.4', '', 'Comment 3')
+            )
+        )
+
+        well = Well.load_by_wellname_from_db('Well_2', self.session)
+        for i in range(len(log_values)):
+            log = WellLogging('log {}'.format(i), 'unit name', self.session, '', '')
+            log.save_to_db()
+            well.add_log(log)
+
+            for value in log_values[i]:
+                log.insert_log_value(WellLogValue(value[0], value[1], self.session, value[2], value[3]))
+            del log
+
+        del well
+
+        well = Well.load_by_wellname_from_db('Well_2', self.session)
+        self.assertEqual(2, len(well.logs))
+        self.assertEqual(5, len(well.logs[0].log_values))
+        self.assertEqual('log 0', well.logs[0].property_name)
+        self.assertEqual(3, len(well.logs[1].log_values))
+        self.assertEqual('log 1', well.logs[1].property_name)
+
+        well.remove_log(well.logs[1])
+
+        del well
+
+        well = Well.load_by_wellname_from_db('Well_2', self.session)
+        self.assertEqual(1, len(well.logs))
+        self.assertEqual(5, len(well.logs[0].log_values))
+        self.assertEqual('log 0', well.logs[0].property_name)
+
     def tearDown(self):
         # type: () -> None
         """
@@ -329,42 +381,42 @@ class TestWellMarkerClass(unittest.TestCase):
         # add test data to the database
         self.wells = [
             {
-                'name': 'Well_1',
+                'name'      : 'Well_1',
                 'short_name': 'W1',
-                'comment': 'A drilled well',
-                'east': 1234.56,
-                'north': 123.45,
-                'altitude': 10.5,
-                'depth': 555,
-                'marker': ((10, 'mu', 4, ''),
-                           (15, 'so', 3, 'Comment 1'),
-                           (16, 'sm', 2, ''),
-                           (17, 'su', 1, 'Comment 2'),
-                           (5, 'mm', 5, 'Comment 3'))
+                'comment'   : 'A drilled well',
+                'east'      : 1234.56,
+                'north'     : 123.45,
+                'altitude'  : 10.5,
+                'depth'     : 555,
+                'marker'    : ((10, 'mu', 4, ''),
+                               (15, 'so', 3, 'Comment 1'),
+                               (16, 'sm', 2, ''),
+                               (17, 'su', 1, 'Comment 2'),
+                               (5, 'mm', 5, 'Comment 3'))
             }, {
-                'name': 'Well_2',
+                'name'      : 'Well_2',
                 'short_name': 'W2',
-                'comment': '',
-                'east': 1000.23,
-                'north': 2300.34,
-                'altitude': 342.23,
-                'depth': 341,
-                'marker': ((12, 'mo', 6, ''),
-                           (120, 'mm', 5, 'Comment 1'),
-                           (300, 'Fault', 0, 'Comment 2'),
-                           (320, 'mo', 6, ''))
+                'comment'   : '',
+                'east'      : 1000.23,
+                'north'     : 2300.34,
+                'altitude'  : 342.23,
+                'depth'     : 341,
+                'marker'    : ((12, 'mo', 6, ''),
+                               (120, 'mm', 5, 'Comment 1'),
+                               (300, 'Fault', 0, 'Comment 2'),
+                               (320, 'mo', 6, ''))
             }, {
-                'name': 'Well_3',
+                'name'      : 'Well_3',
                 'short_name': 'W3',
-                'comment': 'A third well',
-                'east': 3454.34,
-                'north': 2340.22,
-                'altitude': 342.20,
-                'depth': 645.21,
-                'marker': ((34, 'mu', 4, ''),
-                           (234, 'so', 3, 'Comment 1'),
-                           (345, 'Fault', 0, 'Comment 2'),
-                           (635, 'mu', 4, 'Comment 3'))
+                'comment'   : 'A third well',
+                'east'      : 3454.34,
+                'north'     : 2340.22,
+                'altitude'  : 342.20,
+                'depth'     : 645.21,
+                'marker'    : ((34, 'mu', 4, ''),
+                               (234, 'so', 3, 'Comment 1'),
+                               (345, 'Fault', 0, 'Comment 2'),
+                               (635, 'mu', 4, 'Comment 3'))
             }
         ]
 
@@ -440,23 +492,6 @@ class TestWellMarkerClass(unittest.TestCase):
         self.assertEqual(point.altitude, 0.5)
         self.assertEqual(point.name, 'Well_1')
         self.assertEqual(point.horizon.name, 'mu')
-
-    def test_loading_functionality(self):
-        # type: () -> None
-        """
-        Test the loading functionality of the WellMarker class
-
-        Part 1: load_all_from_db
-        Part 2: load_in_extent_from_db
-        Part 3: load_all_by_stratigraphy_from_db
-        Part 4: load_in_extent_by_stratigraphy_from_db
-
-        :return: Nothing
-        :raises AssertionError: Raises Assertion Error if a test fails
-        """
-        pass
-
-        # TODO!!!!!
 
     def tearDown(self):
         # type: () -> None

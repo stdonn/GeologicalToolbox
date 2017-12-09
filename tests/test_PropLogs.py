@@ -30,19 +30,19 @@ class TestWellLogValueClass(unittest.TestCase):
         # add test data to the database
         self.log_values = [
             {
-                'depth' : 200,
-                'value' : 123,
-                'name': 'log name',
+                'depth'  : 200,
+                'value'  : 123,
+                'name'   : 'log name',
                 'comment': 'unknown'
             }, {
-                'depth' : 200.324,
-                'value' : 12.5455,
-                'name': 'log name 2',
+                'depth'  : 200.324,
+                'value'  : 12.5455,
+                'name'   : 'log name 2',
                 'comment': 'unknown'
             }, {
-                'depth' : '2345.54',
-                'value' : '641.54',
-                'name': '',
+                'depth'  : '2345.54',
+                'value'  : '641.54',
+                'name'   : '',
                 'comment': ''
             }
         ]
@@ -103,6 +103,170 @@ class TestWellLogValueClass(unittest.TestCase):
         self.assertEqual(log_values[0].value, 4345.4)
         self.assertEqual(log_values[1].value, 3245.4)
         self.assertEqual(log_values[2].value, 641.54)
+
+    def tearDown(self):
+        # type: () -> None
+        """
+        Empty function, nothing to shutdown after the testing process
+
+        :return: Nothing
+        """
+        pass
+
+
+class TestWellLoggingClass(unittest.TestCase):
+    """
+    a unittest for WellLogging class
+    """
+
+    def setUp(self):
+        # type: () -> None
+        """
+        Initialise a temporary database connection for all test cases and fill the database with test data
+
+        :return: None
+        """
+        # initialise a in-memory sqlite database
+        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.session = self.handler.get_session()
+
+        # add test data to the database
+        self.well = {
+            'name'      : 'Well_1',
+            'short_name': 'W1',
+            'reference' : 'none',
+            'east'      : 1234.56,
+            'north'     : 123.45,
+            'altitude'  : 10.5,
+            'depth'     : 555,
+            'log_values': ((10, 4, '', ''),
+                           (15, '45.4', 'name 1', 'Comment 1'),
+                           (16, 34.3, '', ''),
+                           (17, 234, '', 'Comment 2'),
+                           (5, '34.4', '', 'Comment 3'))
+        }
+
+        well = Well(self.well['name'], self.well['short_name'], self.well['depth'], self.well['reference'],
+                    self.well['east'], self.well['north'], self.well['altitude'], self.session, '', '')
+        well.save_to_db()
+
+        logging = WellLogging('logging', 'unit name', self.session, '', '')
+        logging.save_to_db()
+
+        well.add_log(logging)
+
+        for value in self.well['log_values']:
+            logging.insert_log_value(WellLogValue(value[0], value[1], self.session, value[2], value[3]))
+
+    def test_WellLogValue_init(self):
+        # type: () -> None
+        """
+        Test the initialisation of the database
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        logging = self.session.query(WellLogging).one()
+        self.assertEqual(len(logging.log_values), 5)
+        self.assertEqual(logging.log_values[0].depth, 5)
+        self.assertEqual(logging.log_values[1].value, 4)
+        self.assertEqual(logging.log_values[2].name, 'name 1')
+        self.assertEqual(logging.log_values[2].depth, 15)
+        self.assertEqual(logging.log_values[2].value, 45.4)
+        self.assertEqual(logging.log_values[4].comment, 'Comment 2')
+
+    def test_setter_and_getter(self):
+        # type: () -> None
+        """
+        Tests the setter and getter functionality of the WellLogValue class
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+
+        logging = WellLogging.load_all_from_db(self.session)
+        self.assertEqual(len(logging), 1)
+        logging = logging[0]
+        self.assertEqual(logging.log_values[0].depth, 5)
+        self.assertEqual(logging.log_values[1].value, 4)
+        self.assertEqual(logging.log_values[2].name, 'name 1')
+        self.assertEqual(logging.log_values[4].comment, 'Comment 2')
+        self.assertEqual(logging.property_name, 'logging')
+        self.assertEqual(logging.property_unit, 'unit name')
+
+        logging.property_name = 'new log name'
+        logging.property_unit = u'km²'
+
+        del logging
+
+        logging = WellLogging.load_all_from_db(self.session)[0]
+        self.assertEqual(logging.property_name, 'new log name')
+        self.assertEqual(logging.property_unit, u'km²')
+
+        longname = 4 * 'abcdefghijklmnopqrstuvwxyz'
+        logging.property_name = longname
+        logging.property_unit = longname
+
+        del logging
+
+        logging = WellLogging.load_all_from_db(self.session)[0]
+        self.assertEqual(logging.property_name, longname[:100])
+        self.assertEqual(logging.property_unit, longname[:100])
+
+    def test_insert_and_delete_logvalue(self):
+        # type: () -> None
+        """
+        Test insertion and deletion functionality of class WellLogging
+
+        :return: Nothing
+        :raises AssertionError: Raises AssertionError if a test fails
+        """
+        logging = WellLogging.load_all_from_db(self.session)[0]
+        logging.insert_log_value(WellLogValue(14.3, 1234, self.session, '', ''))
+        self.assertRaises(ValueError, logging.insert_log_value, WellLogValue(556, 1234, self.session, '', ''))
+
+        del logging
+
+        logging = WellLogging.load_all_from_db(self.session)[0]
+        self.assertEqual(6, len(logging.log_values))
+        self.assertEqual(14.3, logging.log_values[2].depth)
+        self.assertEqual(1234, logging.get_value_by_depth(14.3).value)
+        self.assertRaises(ValueError, logging.get_value_by_depth, 13)
+        self.assertRaises(ValueError, logging.get_value_by_depth, 'test')
+        self.assertRaises(TypeError, logging.insert_log_value, 'abcde')
+
+        logvalues = [
+            WellLogValue(123, 4152, self.session, '', ''),
+            WellLogValue(156.34, 3456, self.session, '', ''),
+            WellLogValue(16.2, 34.43, self.session, '', ''),
+            WellLogValue(15.8, '234.2', self.session, '', '')
+        ]
+
+        logging.insert_multiple_log_values(logvalues)
+        self.assertRaises(TypeError, logging.insert_multiple_log_values, logvalues.append('abcde'))
+        logvalues.pop()
+        logvalues.append(WellLogValue(1234, 345, self.session, '', ''))
+        self.assertRaises(ValueError, logging.insert_multiple_log_values, logvalues)
+
+        del logging
+
+        logging = WellLogging.load_all_from_db(self.session)[0]
+        self.assertEqual(10, len(logging.log_values))
+        self.assertEqual(14.3, logging.log_values[2].depth)
+        self.assertEqual(3456, logging.get_value_by_depth(156.34).value)
+        self.assertListEqual([5, 10, 14.3, 15, 15.8, 16, 16.2, 17, 123, 156.34], [x.depth for x in logging.log_values])
+        self.assertEqual(34.43, logging.log_values[6].value)
+
+        logging.delete_value(logging.get_value_by_depth(16))
+
+        del logging
+
+        logging = WellLogging.load_all_from_db(self.session)[0]
+        self.assertEqual(9, len(logging.log_values))
+        self.assertEqual(14.3, logging.log_values[2].depth)
+        self.assertEqual(234, logging.log_values[6].value)
+        self.assertRaises(ValueError, logging.get_value_by_depth, 16)
+        self.assertListEqual([5, 10, 14.3, 15, 15.8, 16.2, 17, 123, 156.34], [x.depth for x in logging.log_values])
 
     def tearDown(self):
         # type: () -> None
