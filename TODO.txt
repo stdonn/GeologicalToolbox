@@ -1,14 +1,7 @@
 TODO:
 
-Well:
-- Add marker to wells
-- Add insert and delete WellMarker
-
 Line:
 - possibly: integrate has_z
-
-Stratigraphy:
-- doubled age test!!!
 
 COMMENTS:
 
