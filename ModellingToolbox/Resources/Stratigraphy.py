@@ -12,7 +12,7 @@ from Exceptions import DatabaseException
 from Resources.DBHandler import Base
 
 
-class Stratigraphy(Base):
+class StratigraphicObject(Base):
     """
     A class for storing stratigraphical information in database.
     """
@@ -205,7 +205,7 @@ class Stratigraphy(Base):
             age = -1
 
         # check if horizon exists (unique name)
-        result = session.query(Stratigraphy).filter(Stratigraphy.unit_name == name)
+        result = session.query(StratigraphicObject).filter(StratigraphicObject.unit_name == name)
         if result.count() == 0:  # no result found -> create new stratigraphic unit
             return cls(session, name, age)
         if result.count() == 1:  # one result found -> stratigr. unit exists in db -> return and possibly update
@@ -224,7 +224,7 @@ class Stratigraphy(Base):
     # load units from db
     @classmethod
     def load_all_from_db(cls, session):
-        # type: (Session) -> List[Stratigraphy]
+        # type: (Session) -> List[StratigraphicObject]
         """
         Returns all stratigraphic units stored in the database connected to the SQLAlchemy Session session
 
@@ -232,7 +232,7 @@ class Stratigraphy(Base):
         :type session: Session
 
         :return: a list of stratigraphic units representing the result of the database query
-        :rtype: List[Stratigraphy]
+        :rtype: List[StratigraphicObject]
         """
         result = session.query(cls).all()
         for horizon in result:  # set session value
@@ -241,7 +241,7 @@ class Stratigraphy(Base):
 
     @classmethod
     def load_by_name_from_db(cls, name, session):
-        # type: (str, Session) -> Stratigraphy
+        # type: (str, Session) -> StratigraphicObject
         """
         Returns the stratigraphic unit with the given name in the database connected to the SQLAlchemy Session session
 
@@ -252,7 +252,7 @@ class Stratigraphy(Base):
         :type session: Session
 
         :return: As the name is a unique value, only one result can be returned or None
-        :rtype: Stratigraphy or None
+        :rtype: StratigraphicObject or None
 
         :raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
         """
@@ -269,7 +269,7 @@ class Stratigraphy(Base):
 
     @classmethod
     def load_by_age_from_db(cls, min_age, max_age, session):
-        # type: (int, int, Session) -> List[Stratigraphy]
+        # type: (int, int, Session) -> List[StratigraphicObject]
         """
         Returns a list of stratigraphic units with an age between min_age and max_age from the database connected to
         the SQLAlchemy Session session. If no result was found, this function returns an empty list.
@@ -284,7 +284,7 @@ class Stratigraphy(Base):
         :type session: Session
 
         :return: Returns a list of stratigraphic units with an age between min_age and max_age.
-        :rtype: List[Stratigraphy]
+        :rtype: List[StratigraphicObject]
         """
         result = session.query(cls).filter(sq.between(cls.age, min_age, max_age)).all()
         for horizon in result:

@@ -8,7 +8,7 @@ import unittest
 from Resources.DBHandler import DBHandler
 from Resources.Geometries import GeoPoint, Line
 from Resources.PropertyLogs import Property, WellLog, WellLogValue
-from Resources.Stratigraphy import Stratigraphy
+from Resources.Stratigraphy import StratigraphicObject
 from Resources.Wells import Well
 
 
@@ -296,7 +296,7 @@ class TestPropertyClass(unittest.TestCase):
         self.session = self.handler.get_session()
 
         # add test data to the database
-        point = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu', 1), True, '', 1, 2, 3, self.session, 'test',
+        point = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu', 1), True, '', 1, 2, 3, self.session, 'test',
                          '')
         point.save_to_db()
 

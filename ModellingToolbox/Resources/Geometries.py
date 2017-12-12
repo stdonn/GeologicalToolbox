@@ -12,7 +12,7 @@ from typing import List
 from Resources.DBHandler import Base, AbstractDBObject
 from Resources.GeoObject import AbstractGeoObject
 from Resources.PropertyLogs import Property
-from Resources.Stratigraphy import Stratigraphy
+from Resources.Stratigraphy import StratigraphicObject
 from Resources.constants import float_precision
 
 
@@ -30,7 +30,7 @@ class GeoPoint(Base, AbstractGeoObject):
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'), default=-1)
 
     # define relationship to stratigraphic table
-    hor = relationship("Stratigraphy")
+    hor = relationship("StratigraphicObject")
 
     line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=-1)
     line_pos = sq.Column(sq.INTEGER, default=-1)
@@ -46,12 +46,12 @@ class GeoPoint(Base, AbstractGeoObject):
                               primaryjoin='GeoPoint.id==Property.point_id', cascade="all, delete, delete-orphan")
 
     def __init__(self, horizon, has_z, *args, **kwargs):
-        # type: (Stratigraphy, bool, *object, **object) -> None
+        # type: (StratigraphicObject, bool, *object, **object) -> None
         """
         Creates a new GeoPoint
 
         :param horizon: stratigraphy of the point
-        :type horizon: Stratigraphy
+        :type horizon: StratigraphicObject
 
         :param has_z: Is altitude stored as z value?
         :type has_z: bool
@@ -99,30 +99,30 @@ class GeoPoint(Base, AbstractGeoObject):
 
     @property
     def horizon(self):
-        # type: () -> Stratigraphy
+        # type: () -> StratigraphicObject
         """
         Returns the stratigraphy of the point
 
         :return: Returns the current Stratigraphy
-        :rtype: Stratigraphy
+        :rtype: StratigraphicObject
         """
         return self.hor
 
     @horizon.setter
     def horizon(self, value):
-        # type: (Stratigraphy) -> None
+        # type: (StratigraphicObject) -> None
         """
         sets a new stratigraphy
 
         :param value: new stratigraphy
-        :type value: Stratigraphy or None
+        :type value: StratigraphicObject or None
 
         :return: Nothing
 
         :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
-        if (value is not None) and (type(value) is not Stratigraphy):
-            raise TypeError('type of commited value ({}) is not Stratigraphy!'.format(type(value)))
+        if (value is not None) and (type(value) is not StratigraphicObject):
+            raise TypeError('type of commited value ({}) is not StratigraphicObject!'.format(type(value)))
 
         if value is None:
             self.hor = None
@@ -277,7 +277,7 @@ class Line(Base, AbstractDBObject):
 
     # set stratigraphy of the line
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
-    hor = relationship("Stratigraphy")
+    hor = relationship("StratigraphicObject")
 
     # add GeoPoint relation, important is the ordering by line_pos value
     # collection_class function automatically reorders this value in case of insertion or deletion of points
@@ -286,7 +286,7 @@ class Line(Base, AbstractDBObject):
                           cascade="all, delete, delete-orphan")
 
     def __init__(self, closed, horizon, points, *args, **kwargs):
-        # type: (bool, Stratigraphy, List[GeoPoint], *object, **object) -> None
+        # type: (bool, StratigraphicObject, List[GeoPoint], *object, **object) -> None
         """
         Create a new line.
 
@@ -294,7 +294,7 @@ class Line(Base, AbstractDBObject):
         :type closed: bool
 
         :param horizon: Stratigraphy to which the line belongs
-        :type horizon: Stratigraphy
+        :type horizon: StratigraphicObject
 
         :param points: list of points which represents the lines nodes
         :type points: List[GeoPoint]
@@ -382,30 +382,30 @@ class Line(Base, AbstractDBObject):
 
     @property
     def horizon(self):
-        # type: () -> Stratigraphy
+        # type: () -> StratigraphicObject
         """
         Returns the stratigraphy of the line
 
         :return: Returns the horizon of the line
-        :rtype: Stratigraphy
+        :rtype: StratigraphicObject
         """
         return self.hor
 
     @horizon.setter
     def horizon(self, value):
-        # type: (Stratigraphy) -> None
+        # type: (StratigraphicObject) -> None
         """
         sets a new stratigraphy
 
         :param value: new stratigraphy
-        :type value: Stratigraphy or None
+        :type value: StratigraphicObject or None
 
         :return: Nothing
 
         :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
-        if (value is not None) and (type(value) is not Stratigraphy):
-            raise TypeError('type of committed value ({}) is not Stratigraphy!'.format(type(value)))
+        if (value is not None) and (type(value) is not StratigraphicObject):
+            raise TypeError('type of committed value ({}) is not StratigraphicObject!'.format(type(value)))
 
         if value is None:
             self.hor = None
