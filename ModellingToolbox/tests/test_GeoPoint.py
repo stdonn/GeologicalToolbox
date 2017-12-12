@@ -14,6 +14,9 @@ from Resources.constants import float_precision
 
 
 class TestGeoPointClass(unittest.TestCase):
+    """
+    This is a unittest class for the Resources.Geometries.GeoPoint class
+    """
     def setUp(self):
         # type: () -> None
         """

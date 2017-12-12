@@ -3,12 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Modelling Toolbox's documentation!
-=============================================
+Welcome to the documentation of the Modelling Toolbox!
+======================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :numbered:
+
+   api.rst
+   tests.rst
 
 
 

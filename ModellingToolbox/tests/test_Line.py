@@ -13,6 +13,9 @@ from Resources.Stratigraphy import Stratigraphy
 
 
 class TestLineClass(unittest.TestCase):
+    """
+    This is a unittest class for the Resources.Geometries.Line class
+    """
     def setUp(self):
         # type: () -> None
         """
