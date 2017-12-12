@@ -9,7 +9,7 @@ import unittest
 from Resources.DBHandler import DBHandler
 from Resources.Geometries import GeoPoint, Line
 from Resources.PropertyLogs import Property
-from Resources.Stratigraphy import Stratigraphy
+from Resources.Stratigraphy import StratigraphicObject
 from Resources.constants import float_precision
 
 
@@ -109,7 +109,7 @@ class TestGeoPointClass(unittest.TestCase):
         ]
 
         for point in self.points:
-            strat = Stratigraphy.init_stratigraphy(self.session, point['horizon'], point['age'], point['update'])
+            strat = StratigraphicObject.init_stratigraphy(self.session, point['horizon'], point['age'], point['update'])
             new_point = GeoPoint(strat, False if (point['coords'][2] is None) else True, '', point['coords'][0],
                                  point['coords'][1], 0 if (point['coords'][2] is None) else point['coords'][2],
                                  self.session, point['name'], '')
@@ -120,7 +120,7 @@ class TestGeoPointClass(unittest.TestCase):
             for point in line['points']:
                 points.append(GeoPoint(None, False, '', point[0], point[1], 0, self.session, line['name'], ''))
             new_line = Line(line['closed'],
-                            Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
+                            StratigraphicObject.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
                             points, self.session, line['name'], '')
             new_line.save_to_db()
 
@@ -143,7 +143,7 @@ class TestGeoPointClass(unittest.TestCase):
         points = self.session.query(GeoPoint)
         count_points = points.count()
         points = points.all()
-        stored_horizons = self.session.query(Stratigraphy).all()
+        stored_horizons = self.session.query(StratigraphicObject).all()
         # for horizon in stored_horizons:
         #	print(str(horizon))
 
@@ -311,7 +311,7 @@ class TestGeoPointClass(unittest.TestCase):
         points[1].northing = 2
         points[2].altitude = 3
         points[2].use_z()
-        points[3].horizon = Stratigraphy.init_stratigraphy(self.session, 'so', 10, False)
+        points[3].horizon = StratigraphicObject.init_stratigraphy(self.session, 'so', 10, False)
         points[0].name = 'point set name'
         points[1].del_z()
 

@@ -16,8 +16,8 @@ Unittest for the 'Resources.PropertyLogs' module
 .. automodule:: tests.test_PropLogs
    :members:
 
-Unittest for the 'Resources.Stratigraphy' module
-------------------------------------------------
+Unittest for the 'Resources.StratigraphicObject' module
+-------------------------------------------------------
 .. automodule:: tests.test_Stratigraphy
    :members:
 

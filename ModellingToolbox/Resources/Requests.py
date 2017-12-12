@@ -30,6 +30,9 @@ class Requests:
         """
         This static method generates a point set including a thickness property derived from the committed well marker
 
+        .. todo:: - Finalise the well_markers_to_thickness(...) function
+                  - include args and kwargs parsing
+
         :param session: The SQLAlchemy session connected to the database storing the geodata
         :type session: Session
 
@@ -53,3 +56,32 @@ class Requests:
         :raises TypeError: Raises TypeError if a parameter is not compatible with the required type
         """
         pass
+
+    @staticmethod
+    def interpolate_geopoints(points, property_name, method):
+        # type: (List[GeoPoint], str, str) -> None
+        """
+        Interpolate the property values of the given GeoPoints using the interpolation method 'method'
+
+        .. todo:: - Integrate functionality
+                  - define interpolation methods
+                  - define return statement
+
+        :param points: List of GeoPoints as interpolation base
+        :type points: List[GeoPoint]
+
+        :param property_name: Name of the property to interpolate
+        :type property_name: str
+
+        :param method: Interpolation method
+        :type method: str
+
+        :return: Currently Nothing
+        :raises TypeError: if on of the points is not of type GeoPoint
+
+        possible values for interpolation **method** are:
+
+        - **nearest** (Nearest Neighbour interpolation)
+        - **ide** (Inverse Distance interpolation)
+        - **spline** (Thin-Plate-Spline interpolation)
+        """

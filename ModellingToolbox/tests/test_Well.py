@@ -9,7 +9,7 @@ import unittest
 from Exceptions import WellMarkerException
 from Resources.DBHandler import DBHandler
 from Resources.PropertyLogs import WellLog, WellLogValue
-from Resources.Stratigraphy import Stratigraphy
+from Resources.Stratigraphy import StratigraphicObject
 from Resources.Wells import WellMarker, Well
 from Resources.constants import float_precision
 
@@ -79,7 +79,7 @@ class TestWellClass(unittest.TestCase):
 
             for mark in well['marker']:
                 new_well.marker.append(WellMarker(mark[0],
-                                                  Stratigraphy.init_stratigraphy(self.session, mark[1], mark[2], False),
+                                                  StratigraphicObject.init_stratigraphy(self.session, mark[1], mark[2], False),
                                                   self.session, well['name'], mark[3]))
                 new_well.marker[-1].save_to_db()
 
@@ -174,9 +174,9 @@ class TestWellClass(unittest.TestCase):
         :raises AssertionError: Raises AssertionError if a test fails
         """
         wells = Well.load_all_from_db(self.session)
-        marker_1 = WellMarker(301.43, Stratigraphy.init_stratigraphy(self.session, "ku"), self.session, 'Comment 1')
-        marker_2 = WellMarker(351.65, Stratigraphy.init_stratigraphy(self.session, "mo"), self.session)
-        marker_3 = WellMarker(934.23, Stratigraphy.init_stratigraphy(self.session, "mm"), self.session, 'Comment 3')
+        marker_1 = WellMarker(301.43, StratigraphicObject.init_stratigraphy(self.session, "ku"), self.session, 'Comment 1')
+        marker_2 = WellMarker(351.65, StratigraphicObject.init_stratigraphy(self.session, "mo"), self.session)
+        marker_3 = WellMarker(934.23, StratigraphicObject.init_stratigraphy(self.session, "mm"), self.session, 'Comment 3')
 
         wells[0].insert_marker(marker_1)
         self.assertEqual(len(wells[0].marker), 6)
@@ -229,7 +229,7 @@ class TestWellClass(unittest.TestCase):
         well = Well.load_by_wellname_from_db('Well_1', self.session)
         self.assertEqual(len(well.marker), 4)
 
-        new_marker = WellMarker(23423, Stratigraphy.init_stratigraphy(self.session, 'so'), self.session, 'Nothing')
+        new_marker = WellMarker(23423, StratigraphicObject.init_stratigraphy(self.session, 'so'), self.session, 'Nothing')
         self.assertRaises(ValueError, well.delete_marker, new_marker)
         self.assertRaises(TypeError, well.delete_marker, 'test')
 
@@ -429,8 +429,8 @@ class TestWellMarkerClass(unittest.TestCase):
             new_well.save_to_db()
 
             for mark in well['marker']:
-                new_well.marker.append(WellMarker(mark[0], Stratigraphy.init_stratigraphy(self.session, mark[1],
-                                                                                          mark[2], False),
+                new_well.marker.append(WellMarker(mark[0], StratigraphicObject.init_stratigraphy(self.session, mark[1],
+                                                                                                 mark[2], False),
                                                   self.session, well['name'], mark[3]))
                 new_well.marker[-1].save_to_db()
 
@@ -466,7 +466,7 @@ class TestWellMarkerClass(unittest.TestCase):
         marker[3].depth = '2345.54'
         with (self.assertRaises(ValueError)):
             marker[4].depth = 'Test'
-        marker[4].horizon = Stratigraphy.init_stratigraphy(self.session, 'z', 50, False)
+        marker[4].horizon = StratigraphicObject.init_stratigraphy(self.session, 'z', 50, False)
         with (self.assertRaises(TypeError)):
             marker[5].horizon = 'test'
 

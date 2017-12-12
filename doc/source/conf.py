@@ -99,7 +99,7 @@ html_theme_options = {
     'inner_theme': True,
     'inner_theme_name': 'bootswatch-cosmo',
     'googlewebfont': True,
-    'googlewebfont_url': 'https://fonts.googleapis.com/css?family=Play:400,700|Raleway:400,700',
+    'googlewebfont_url': 'https://fonts.googleapis.com/css?family=Play:400,700|Raleway:400,400i,700,700i&amp;subset=latin-ext',
     'googlewebfont_style': "font-family: 'Raleway', sans-serif;",
     'content_fixed': True,
     'content_width': '1000px'

@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+======================================================
 Welcome to the documentation of the Modelling Toolbox!
 ======================================================
 
@@ -14,10 +15,13 @@ Welcome to the documentation of the Modelling Toolbox!
    api.rst
    tests.rst
 
+TODO List
+---------
 
+.. todolist::
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

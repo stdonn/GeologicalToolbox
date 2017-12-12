@@ -13,7 +13,7 @@ from GeoObject import AbstractGeoObject
 from Geometries import GeoPoint
 from PropertyLogs import WellLog
 from Resources.DBHandler import Base, AbstractDBObject
-from Resources.Stratigraphy import Stratigraphy
+from Resources.Stratigraphy import StratigraphicObject
 
 
 class WellMarker(Base, AbstractDBObject):
@@ -30,12 +30,12 @@ class WellMarker(Base, AbstractDBObject):
 
     # define relationship to stratigraphic table
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
-    hor = relationship("Stratigraphy")
+    hor = relationship("StratigraphicObject")
 
     well_id = sq.Column(sq.INTEGER, sq.ForeignKey('wells.id'), default=-1)
 
     def __init__(self, depth, horizon, *args, **kwargs):
-        # type: (float, Stratigraphy, *object, **object) -> None
+        # type: (float, StratigraphicObject, *object, **object) -> None
         """
         Creates a new well marker
 
@@ -43,7 +43,7 @@ class WellMarker(Base, AbstractDBObject):
         :type depth: float
 
         :param horizon: stratigraphy object
-        :type horizon: Stratigraphy
+        :type horizon: StratigraphicObject
 
         :param args: parameters for AbstractDBObject initialisation
         :type args: List()
@@ -56,8 +56,8 @@ class WellMarker(Base, AbstractDBObject):
                             type
         """
         AbstractDBObject.__init__(self, *args, **kwargs)
-        if (type(horizon) is not Stratigraphy) and (horizon is not None):
-            raise ValueError("'horizon' value is not of type Stratigraphy!")
+        if (type(horizon) is not StratigraphicObject) and (horizon is not None):
+            raise ValueError("'horizon' value is not of type StratigraphicObject!")
 
         self.depth = float(depth)
         self.horizon = horizon
@@ -110,30 +110,30 @@ class WellMarker(Base, AbstractDBObject):
 
     @property
     def horizon(self):
-        # type: () -> Stratigraphy
+        # type: () -> StratigraphicObject
         """
         Returns the stratigraphy of the point
 
         :return: Returns the current Stratigraphy
-        :rtype: Stratigraphy
+        :rtype: StratigraphicObject
         """
         return self.hor
 
     @horizon.setter
     def horizon(self, value):
-        # type: (Stratigraphy) -> None
+        # type: (StratigraphicObject) -> None
         """
         sets a new stratigraphy
 
         :param value: new stratigraphy
-        :type value: Stratigraphy or None
+        :type value: StratigraphicObject or None
 
         :return: Nothing
 
         :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
-        if (value is not None) and (type(value) is not Stratigraphy):
-            raise TypeError('type of commited value ({}) is not Stratigraphy!'.format(type(value)))
+        if (value is not None) and (type(value) is not StratigraphicObject):
+            raise TypeError('type of commited value ({}) is not StratigraphicObject!'.format(type(value)))
 
         if value is None:
             self.hor = None
@@ -192,12 +192,12 @@ class WellMarker(Base, AbstractDBObject):
 
     @classmethod
     def load_all_by_stratigraphy_from_db(cls, horizon, session):
-        # type: (Stratigraphy) -> List[WellMarker]
+        # type: (StratigraphicObject) -> List[WellMarker]
         """
         Returns all WellMarker in the database which are connected to the horizon 'horizon'
 
         :param horizon: stratigraphy for the database query
-        :type horizon: Stratigraphy
+        :type horizon: StratigraphicObject
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
@@ -210,12 +210,12 @@ class WellMarker(Base, AbstractDBObject):
     @classmethod
     def load_all_by_stratigraphy_in_extent_from_db(cls, horizon, min_easting, max_easting, min_northing, max_northing,
                                                    session):
-        # type: (Stratigraphy) -> List[WellMarker]
+        # type: (StratigraphicObject) -> List[WellMarker]
         """
         Returns all WellMarker in the database which are connected to the horizon 'horizon'
 
         :param horizon: stratigraphy for the database query
-        :type horizon: Stratigraphy
+        :type horizon: StratigraphicObject
 
         :param min_easting: minimal easting of extent
         :type min_easting: float

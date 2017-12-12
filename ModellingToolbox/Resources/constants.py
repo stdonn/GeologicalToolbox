@@ -7,6 +7,12 @@ float_precision = 0.001  # 1 mm
 """
 precision for float comparison
 """
+standard_reference_system = ""
+"""
+Represents the standard reference system in WKT format
+
+here: *DHDN 3 Degree Gauß-Krueger-Zone 4*
+"""
 
 standard_reference_system = u"PROJCS['DHDN_3_Degree_Gauss_Zone_4'," + \
                              u"GEOGCS['GCS_Deutsches_Hauptdreiecksnetz'," + \
@@ -18,6 +24,3 @@ standard_reference_system = u"PROJCS['DHDN_3_Degree_Gauss_Zone_4'," + \
                              u"PARAMETER['Scale_Factor',1.0],PARAMETER['Latitude_Of_Origin',0.0]," + \
                              u"UNIT['Meter',1.0]];-1122500 -10001000 10000;-100000 10000;-100000 10000;" + \
                              u"0,001;0,001;0,001;IsHighPrecision"
-"""
-Represents the standard reference system in WKT format (here: DHDN 3 Degree Gauß-Krueger-Zone 4)
-"""

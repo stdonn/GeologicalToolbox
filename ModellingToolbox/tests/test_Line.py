@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Resources.DBHandler import DBHandler
 from Resources.Geometries import GeoPoint, Line
-from Resources.Stratigraphy import Stratigraphy
+from Resources.Stratigraphy import StratigraphicObject
 
 
 class TestLineClass(unittest.TestCase):
@@ -86,7 +86,7 @@ class TestLineClass(unittest.TestCase):
             for point in line['points']:
                 points.append(GeoPoint(None, False, '', point[0], point[1], 0, self.session, line['name'], ''))
             new_line = Line(line['closed'],
-                            Stratigraphy.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
+                            StratigraphicObject.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
                             points, self.session, line['name'], '')
             new_line.save_to_db()
 
@@ -110,7 +110,7 @@ class TestLineClass(unittest.TestCase):
         lines = self.session.query(Line)
         count_lines = lines.count()
         lines = lines.all()
-        stored_horizons = [x.unit_name for x in self.session.query(Stratigraphy.unit_name).all()]
+        stored_horizons = [x.unit_name for x in self.session.query(StratigraphicObject.unit_name).all()]
         # expected number of horizons
         horizons = set([x['horizon'] for x in self.lines])
 
@@ -143,7 +143,7 @@ class TestLineClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        insert_point = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
+        insert_point = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
                                 self.session)
         line_query = self.session.query(Line).filter_by(id=1)
         count = line_query.count()
@@ -196,13 +196,13 @@ class TestLineClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        insert_point_1 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
+        insert_point_1 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
                                   self.session)
-        insert_point_2 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204500, 621200, 0,
+        insert_point_2 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204500, 621200, 0,
                                   self.session)
-        insert_point_3 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
+        insert_point_3 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
                                   self.session)
-        insert_point_4 = GeoPoint(Stratigraphy.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
+        insert_point_4 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
                                   self.session)
 
         points = [insert_point_1, insert_point_2, insert_point_3, insert_point_4]
@@ -426,7 +426,7 @@ class TestLineClass(unittest.TestCase):
         """
         lines = Line.load_all_from_db(self.session)
         lines[0].is_closed = True
-        lines[1].horizon = Stratigraphy.init_stratigraphy(self.session, 'mu')
+        lines[1].horizon = StratigraphicObject.init_stratigraphy(self.session, 'mu')
         lines[2].name = 'Line_2'
         session_2 = lines[3].session
         lines[3].session = session_2
