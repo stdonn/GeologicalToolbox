@@ -16,9 +16,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../ModellingToolbox'))
 
 
 # -- General configuration ------------------------------------------------
@@ -33,7 +33,8 @@
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+    'sphinxjp.themes.basicstrap']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -85,13 +86,24 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+html_theme = 'basicstrap'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'header_inverse': False,
+    'relbar_inverse': False,
+    'inner_theme': True,
+    'inner_theme_name': 'bootswatch-cosmo',
+    'googlewebfont': True,
+    'googlewebfont_url': 'https://fonts.googleapis.com/css?family=Play:400,700|Raleway:400,700',
+    'googlewebfont_style': "font-family: 'Raleway', sans-serif;",
+    'content_fixed': True,
+    'content_width': '1000px'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -122,11 +134,11 @@ htmlhelp_basename = 'ModellingToolboxdoc'
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
-    # 'papersize': 'letterpaper',
+    'papersize': 'a4paper',
 
     # The font size ('10pt', '11pt' or '12pt').
     #
-    # 'pointsize': '10pt',
+    'pointsize': '10pt',
 
     # Additional stuff for the LaTeX preamble.
     #
@@ -180,7 +192,7 @@ epub_copyright = copyright
 # The unique identifier of the text. This can be a ISBN number
 # or the project homepage.
 #
-# epub_identifier = ''
+epub_identifier = 'stephan@donndorf.info'
 
 # A unique identification for the text.
 #
@@ -189,4 +201,9 @@ epub_copyright = copyright
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+# add custom style information
+def setup(app):
+    app.add_stylesheet('css/custom.css')  # may also be an URL
 
+# Others
+numfig = True
