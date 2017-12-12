@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 This module provides a class for database access through an SQLAlchemy session and the base class for all database
-    related classes.
+related classes.
 """
 
 import sqlalchemy as sq
