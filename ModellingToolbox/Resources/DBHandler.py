@@ -26,7 +26,6 @@ class DBHandler(object):
 
         :param connection: Connection uri to a database, format defined by SQLAlchemy
         :type connection: str
-
         :param debug: enable debug output for database access (default False)
         :type debug: bool
 
@@ -39,9 +38,9 @@ class DBHandler(object):
     def get_session(self):
         # type: () -> sessionmaker
         """
-        Returns the a session for the current database connection
+        Returns the session object for the current database connection
 
-        :return: Returns the a session for the current database connection
+        :return: Returns the session object for the current database connection
         """
         return self.__Session()
 
@@ -49,8 +48,8 @@ class DBHandler(object):
 # class AbstractDBObject(object):
 class AbstractDBObject(object):
     """
-    This class represents the base class for all database objects. This class should be treated as abstract, no object
-    should be created directly!
+    This class represents the base class for all database objects. It should be treated as abstract, no object should be
+    created directly!
     """
 
     name_col = sq.Column(sq.VARCHAR(100), default="")
@@ -63,18 +62,15 @@ class AbstractDBObject(object):
 
         :param session: session object create by SQLAlchemy sessionmaker
         :type session: Session
-
         :param name: used to group objects by name
         :type name: str
-
         :param comment: additional comment
         :type comment: str
-
         :return: Nothing
-        :raises ValueError: Raises ValueError if a type conflict is recognised
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
         if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!\n{} - {}".format(str(type(session)),
+            raise TypeError("'session' value is not of type SQLAlchemy Session!\n{} - {}".format(str(type(session)),
                                                                                                   str(Session)))
 
         self.__session = session
@@ -83,14 +79,33 @@ class AbstractDBObject(object):
 
         # ABCMeta.__init__(self)
 
+    def __repr__(self):
+        # type: () -> str
+        """
+        Returns a text-representation of the AbstractDBObject
+
+        :return: Returns a text-representation of the AbstractDBObject
+        :rtype: str
+        """
+        return "<AbstractDBObject(name='{}', comment='{}')>".format(self.name, self.comment)
+
+    def __str__(self):
+        # type: () -> str
+        """
+        Returns a text-representation of the AbstractDBObject
+
+        :return: Returns a text-representation of the AbstractDBObject
+        :rtype: str
+        """
+        return "{} - {}'".format(self.name, self.comment)
+
     @property
     def comment(self):
         # type: () -> str
         """
-        Returns the additional comments for the well marker.
+        The additional comments for the AbstractDBObject
 
-        :return: Returns the additional comments for the well marker.
-        :rtype: str
+        :type: str
         """
         return self.comment_col
 
@@ -98,12 +113,7 @@ class AbstractDBObject(object):
     def comment(self, comment):
         # type: (str) -> None
         """
-        Sets an additional comments for the well marker
-
-        :param comment: additional comment
-        :type comment: str
-
-        :return: Nothing
+        see getter
         """
         comment = str(comment)
         if len(comment) > 100:
@@ -114,10 +124,9 @@ class AbstractDBObject(object):
     def name(self):
         # type: () -> str
         """
-        Return the line name
+        The name of the AbstractDBObject
 
-        :return: returns the line name
-        :rtype: str
+        :type: str
         """
         return self.name_col
 
@@ -125,12 +134,7 @@ class AbstractDBObject(object):
     def name(self, new_name):
         # type: (str) -> None
         """
-        Sets a new name for the line with a maximum of 100 characters
-
-        :param new_name: new name for the AbstractDBObject
-        :type new_name: str
-
-        :return: Nothing
+        see getter
         """
         string = str(new_name)
         if len(string) > 100:
@@ -141,10 +145,10 @@ class AbstractDBObject(object):
     def session(self):
         # type: () -> Session
         """
-        Return the current Session object
+        The current Session object
 
-        :return: returns the current Session object, which represents the connection to a database
-        :rtype: Session
+        :type: Session
+        :raises TypeError: if session is not of an instance of Session
         """
         return self.__session
 
@@ -152,18 +156,12 @@ class AbstractDBObject(object):
     def session(self, session):
         # type: (Session) -> None
         """
-        Sets a new session, which represents the connection to a database
-
-        :param session: session object create by SQLAlchemy sessionmaker
-        :type session: Session
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if session is not of an instance of Session
+        see getter
         """
 
         if not isinstance(session, Session):
             raise TypeError("Value is not of type {} (it is {})!".format(Session, type(session)))
+
         self.__session = session
 
     # save point to db / update point
@@ -173,7 +171,6 @@ class AbstractDBObject(object):
         Saves all changes of the well marker to the database
 
         :return: Nothing
-
         :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
         """
         self.__session.add(self)
@@ -195,10 +192,13 @@ class AbstractDBObject(object):
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of well marker representing the result of the database query
         :rtype: List[WellMarker]
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls)
         result = result.order_by(cls.id).all()
         for marker in result:
@@ -213,16 +213,17 @@ class AbstractDBObject(object):
 
         :param id: Only the object with this id will be returned (has to be 1, unique value)
         :type id: int
-
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a single line representing the result of the database query
         :rtype: Line
-
         :raises NoResultFound: Raises NoResultFound if no line was found with this id
         :raises IntegrityError: Raises IntegrityError if more than one line is found (more than one unique value)
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls).filter(cls.id == id).one()
         result.session = session
         return result
@@ -235,13 +236,15 @@ class AbstractDBObject(object):
 
         :param name: Only DBObjects or derived types with this name will be returned
         :type name: str
-
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of DBObjects representing the result of the database query
         :rtype: List[cls]
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls).filter(cls.name_col == name).order_by(cls.id).all()
         for obj in result:
             obj.session = session

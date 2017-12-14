@@ -2,6 +2,9 @@
 """
 This module provides classes for storing property and log information in wells and points (and therefore also in lines).
 Properties for points are the same as logs, except there is only one value, not a list of values.
+
+.. todo:: - reformat docstrings, espacially of setter and getter functions
+          - check exception types
 """
 
 import sqlalchemy as sq

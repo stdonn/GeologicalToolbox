@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
 """
 This module provides classes for storing drilling data in a database.
+
+.. todo:: - reformat docstrings, espacially of setter and getter functions
+          - check exception types
 """
 
 import sqlalchemy as sq

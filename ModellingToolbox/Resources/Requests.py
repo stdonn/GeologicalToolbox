@@ -1,5 +1,8 @@
 """
 This module hosts the class Requests, which provides functionality for special (geo-)database requests.
+
+.. todo:: - reformat docstrings, espacially of setter and getter functions
+          - check exception types
 """
 
 from typing import List

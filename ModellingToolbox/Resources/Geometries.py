@@ -52,18 +52,14 @@ class GeoPoint(Base, AbstractGeoObject):
 
         :param horizon: stratigraphy of the point
         :type horizon: StratigraphicObject
-
         :param has_z: Is altitude stored as z value?
         :type has_z: bool
-
         :param args: parameters for AbstractGeoObject initialisation
         :type args: List()
-
         :param kwargs: parameters for AbstractGeoObject initialisation
         :type kwargs: Dict()
-
         :return: Nothing
-        :raises ValueError: Raises ValueError if one of the types cannot be converted
+        :raises ValueError: if has_z is not compatible to type bool
         """
 
         self.has_z = bool(has_z)
@@ -75,36 +71,36 @@ class GeoPoint(Base, AbstractGeoObject):
     def __repr__(self):
         # type: () -> str
         """
-        Returns a text-representation of the line
+        Returns a text-representation of the point
 
-        :return: Returns a text-representation of the line
+        :return: Returns a text-representation of the point
         :rtype: str
         """
-        return "<GeoPoint(id='{}', east='{}', north='{}', alt='{}', horizon='{}', line={}, line-position={}, " + \
-               "name='{}', comment='{}')>".format(self.id, self.easting, self.northing, self.altitude,
-                                                  str(self.horizon), self.line_id, self.line_pos, self.name,
-                                                  self.comment)
+        text = "<GeoPoint(id='{}', horizon='{}', line={}, line-position={})>\n".\
+            format(self.id, str(self.horizon), self.line_id, self.line_pos)
+        text += AbstractGeoObject.__repr__(self)
+        return text
 
     def __str__(self):
         # type: () -> str
         """
-        Returns a text-representation of the line
+        Returns a text-representation of the point
 
-        :return: Returns a text-representation of the line
+        :return: Returns a text-representation of the point
         :rtype: str
         """
-        return "[{} - {}] {} - {} - {}: {} - {} - {} - {}" \
-            .format(self.id, self.name, self.easting, self.northing, self.altitude, str(self.horizon), self.line_id,
-                    self.line_pos, self.comment)
+        text = "[{}] {} - {} - {}\n".format(self.id, str(self.horizon), self.line_id, self.line_pos)
+        text += AbstractGeoObject.__str__(self)
+        return text
 
     @property
     def horizon(self):
         # type: () -> StratigraphicObject
         """
-        Returns the stratigraphy of the point
+        The stratigraphy of the point object
 
-        :return: Returns the current Stratigraphy
-        :rtype: StratigraphicObject
+        :type: StratigraphicObject or None
+        :raises TypeError: if value is not of type Stratigraphy
         """
         return self.hor
 
@@ -112,14 +108,7 @@ class GeoPoint(Base, AbstractGeoObject):
     def horizon(self, value):
         # type: (StratigraphicObject) -> None
         """
-        sets a new stratigraphy
-
-        :param value: new stratigraphy
-        :type value: StratigraphicObject or None
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of type Stratigraphy
+        see getter
         """
         if (value is not None) and (type(value) is not StratigraphicObject):
             raise TypeError('type of commited value ({}) is not StratigraphicObject!'.format(type(value)))
@@ -158,9 +147,8 @@ class GeoPoint(Base, AbstractGeoObject):
 
         :param prop: new point property
         :type prop: Property
-
         :return: Nothing
-        :raises TypeError: Raises TypeError if log is not of type Property
+        :raises TypeError: if log is not of type Property
         """
         if type(prop) is not Property:
             raise TypeError('property {} is not of type Property!'.format(str(prop)))
@@ -176,8 +164,8 @@ class GeoPoint(Base, AbstractGeoObject):
         :type prop: Property
 
         :return: Nothing
-        :raises TypeError: Raises TypeError if log is not of type Property
-        :raises ValueError: Raises ValueError if log is not part of self.properties
+        :raises TypeError: if log is not of type Property
+        :raises ValueError: if log is not part of self.properties
         """
         if type(prop) is not Property:
             raise TypeError('property {} is not of type Property!'.format(str(prop)))
@@ -197,10 +185,13 @@ class GeoPoint(Base, AbstractGeoObject):
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of points representing the result of the database query
         :rtype: List[GeoPoint]
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(GeoPoint). \
             filter(GeoPoint.line_id == -1). \
             order_by(cls.id).all()
@@ -217,13 +208,15 @@ class GeoPoint(Base, AbstractGeoObject):
 
         :param name: Only GeoPoints with this name will be returned
         :type name: str
-
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of GeoPoints representing the result of the database query
         :rtype: List[GeoPoints]
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls).filter(cls.line_id == -1).filter(cls.name_col == name).order_by(cls.id).all()
         for obj in result:
             obj.session = session
@@ -238,22 +231,27 @@ class GeoPoint(Base, AbstractGeoObject):
 
         :param min_easting: minimal easting of extent
         :type min_easting: float
-
         :param max_easting: maximal easting of extent
         :type max_easting: float
-
         :param min_northing: minimal northing of extent
         :type min_northing: float
-
         :param max_northing: maximal northing of extent
         :type max_northing: float
-
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of points representing the result of the database query
         :rtype: List[GeoPoint]
+        :raises ValueError: if one of the extension values is not compatible to type float
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        min_easting = float(min_easting)
+        max_easting = float(max_easting)
+        min_northing = float(min_northing)
+        max_northing = float(max_northing)
+
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(GeoPoint).filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
             filter(sq.between(GeoPoint.north, min_northing, max_northing)). \
             filter(GeoPoint.line_id == -1). \
@@ -292,19 +290,14 @@ class Line(Base, AbstractDBObject):
 
         :param closed: True if the line should be closed, else False
         :type closed: bool
-
         :param horizon: Stratigraphy to which the line belongs
         :type horizon: StratigraphicObject
-
         :param points: list of points which represents the lines nodes
         :type points: List[GeoPoint]
-
         :param args: parameters for AbstractDBObject initialisation
         :type args: List()
-
         :param kwargs: parameters for AbstractDBObject initialisation
         :type kwargs: Dict()
-
         :return: Nothing
         :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
@@ -331,9 +324,10 @@ class Line(Base, AbstractDBObject):
         :return: Returns a text-representation of the line
         :rtype: str
         """
-
-        return "<Line(id='{}', closed='{}', horizon='{}', name='{}', comment='{}'\npoints='{}')>" \
-            .format(self.id, self.closed, str(self.horizon), self.name, self.comment, str(self.points))
+        text = "<Line(id='{}', closed='{}', horizon='{}'\n)>".format(self.id, self.closed, str(self.horizon))
+        text += AbstractDBObject.__repr__(self)
+        text += "\npoints=\n" + str(self.points)
+        return text
 
     def __str__(self):
         # type: () -> str
@@ -343,9 +337,9 @@ class Line(Base, AbstractDBObject):
         :return: Returns a text-representation of the line
         :rtype: str
         """
-        # return "[{}] {} - {}\n{}".format(self.id, self.closed, str(self.horizon), str(self.points))
-        text = "Line: id='{}', closed='{}', horizon='{}', name='{}', comment='', points:" \
-            .format(self.id, self.closed, str(self.horizon), self.name, self.comment)
+        text = "[{}] {} - {}\n".format(self.id, "closed" if self.closed else "not closed", str(self.horizon))
+        text += AbstractDBObject.__str__(self)
+        text += "\npoints:\n"
 
         for point in self.points:
             text += "\n{}".format(str(point))
@@ -356,10 +350,10 @@ class Line(Base, AbstractDBObject):
     def is_closed(self):
         # type: () -> bool
         """
-        Returns True if the line is close else False
+        True if the line is closed else False
 
-        :return: Returns True if the line is close else False
-        :rtype: bool
+        :type: bool
+        :raises ValueError: if value is not compatible to type bool
         """
         return self.closed
 
@@ -367,27 +361,19 @@ class Line(Base, AbstractDBObject):
     def is_closed(self, value):
         # type: (bool) -> None
         """
-        Sets closed value
-
-        :param value: new close value
-        :type value: bool
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of type bool
+        see getter
         """
-        if type(value) != bool:
-            raise TypeError('Value must be of type bool, but is {}'.format(str(type(value))))
+        value = bool(value)
         self.closed = bool(value)
 
     @property
     def horizon(self):
         # type: () -> StratigraphicObject
         """
-        Returns the stratigraphy of the line
+        The stratigraphy of the line object
 
-        :return: Returns the horizon of the line
-        :rtype: StratigraphicObject
+        :type: StratigraphicObject
+        :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
         return self.hor
 
@@ -395,14 +381,7 @@ class Line(Base, AbstractDBObject):
     def horizon(self, value):
         # type: (StratigraphicObject) -> None
         """
-        sets a new stratigraphy
-
-        :param value: new stratigraphy
-        :type value: StratigraphicObject or None
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of type Stratigraphy
+        see getter
         """
         if (value is not None) and (type(value) is not StratigraphicObject):
             raise TypeError('type of committed value ({}) is not StratigraphicObject!'.format(type(value)))
@@ -423,12 +402,9 @@ class Line(Base, AbstractDBObject):
 
         :param point: point to be inserted in the line
         :type point: GeoPoint
-
         :param position: Index, where points should be inserted in the line
         :type position: int
-
         :return: Nothing
-
         :raises TypeError: Raises TypeError if point is not of type GeoPoint
         :raises ValueError: Raises ValueError if position is not of type int or cannot be converted to int
         """
@@ -449,12 +425,9 @@ class Line(Base, AbstractDBObject):
 
         :param points: List of points to be inserted in the line
         :type points: List[GeoPoint]
-
         :param position: Index, where points should be inserted in the line
         :type position: int
-
         :return: Nothing
-
         :raises TypeError: Raises TypeError if one of the points is not of type GeoPoint
         :raises ValueError: Raises ValueError if position is not of type int or cannot be converted to int
         """
@@ -481,10 +454,8 @@ class Line(Base, AbstractDBObject):
 
         :param point: point which has to be looked up
         :type point: GeoPoint
-
         :return: Index of the point in the line
         :rtype: int
-
         :raises ValueError: Raises ValueError if committed point is not part of the line
         """
         return self.points.index(point)
@@ -496,9 +467,7 @@ class Line(Base, AbstractDBObject):
 
         :param point: GeoPoint object which should be deleted
         :type point: GeoPoint
-
         :return: Nothing
-
         :raises TypeError: Raises TypeError if point is not of type GeoPoint
         :raises ValueError: Raises ValueError the point is not part of the line
         """
@@ -521,15 +490,11 @@ class Line(Base, AbstractDBObject):
 
         :param easting: easting value of the point to be deleted
         :type easting: float
-
         :param northing: northing value of the point to be deleted
         :type northing: float
-
         :param altitude: altitude value of the point to be deleted (only necessary if point has z-values!)
         :type altitude: float
-
         :return: Nothing
-
         :raises ValueError: Raises ValueError if one parameter is not compatible to type float or no point can be found
         """
         try:
@@ -602,33 +567,37 @@ class Line(Base, AbstractDBObject):
 
         :param min_easting: minimal easting of extent
         :type min_easting: float
-
         :param max_easting: maximal easting of extent
         :type max_easting: float
-
         :param min_northing: minimal northing of extent
         :type min_northing: float
-
         :param max_northing: maximal northing of extent
         :type max_northing: float
-
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of lines representing the result of the database query
         :rtype: List[Line]
+        :raises ValueError: if one of the extension values is not compatible to type float
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        min_easting = float(min_easting)
+        max_easting = float(max_easting)
+        min_northing = float(min_northing)
+        max_northing = float(max_northing)
+
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
 
         # select the points with a line_id that are located inside the extent
         # -> result will be a list of tuples with only a single line-id value
         # -> convert this list to a set in order to remove doubled values
 
         points = set(
-                [x[0] for x in session.query(GeoPoint.line_id).
-                    filter(GeoPoint.line_id != -1).
-                    filter(sq.between(GeoPoint.east, min_easting, max_easting)).
-                    filter(sq.between(GeoPoint.north, min_northing, max_northing)).all()
-                 ])
+            [x[0] for x in session.query(GeoPoint.line_id).
+                filter(GeoPoint.line_id != -1).
+                filter(sq.between(GeoPoint.east, min_easting, max_easting)).
+                filter(sq.between(GeoPoint.north, min_northing, max_northing)).all()
+             ])
 
         # return line with points in extend
         # to speed up the process, test if points (len > 0) exist in extent first
