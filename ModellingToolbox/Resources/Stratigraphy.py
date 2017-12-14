@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
-This module provides a class for storing stratigraphical information in database.
+This module provides a class for storing stratigraphical information in a database.
 """
 
 import sqlalchemy as sq
@@ -14,38 +14,37 @@ from Resources.DBHandler import Base
 
 class StratigraphicObject(Base):
     """
-    A class for storing stratigraphical information in database.
+    A class for storing stratigraphical information in a database.
     """
     # define db table name and columns
     __tablename__ = 'stratigraphy'
 
     id = sq.Column(sq.INTEGER, sq.Sequence('strat_id_seq'), primary_key=True)
     unit_name = sq.Column(sq.VARCHAR(50), unique=True)
-    age = sq.Column(sq.INTEGER(), default=-1)
+    age = sq.Column(sq.FLOAT(), default=-1)
 
     def __init__(self, session, name, age=-1):
         # type: (Session, str, float) -> None
         """
         Initialize a stratigraphic unit
+
         :param session: SQLAlchemy session, which includes the database connection
         :type session: Session
-
         :param name: Name of the stratigraphic unit
         :type name: str
-
         :param age: age of the stratigraphic unit (-1 if none)
         :type age: float
-
         :return: nothing
-        :raises ValueError: Raises ValueError if one of the types cannot be converted
+        :raises ValueError: if age is not compatible to float
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
-        if not isinstance(session, Session):
-            raise ValueError("'session' value is not of type SQLAlchemy Session!")
-
         try:
             age = int(age)
         except ValueError as e:
             raise ValueError("Cannot convert age to int:\n{}".format(str(e)))
+
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
 
         self.__session = session
         self.unit_name = str(name)
@@ -54,32 +53,32 @@ class StratigraphicObject(Base):
     def __repr__(self):
         # type: () -> str
         """
-        Returns a text-representation of the line
+        Returns a text-representation of the AbstractDBObject
 
-        :return: Returns a text-representation of the line
+        :return: Returns a text-representation of the AbstractDBObject
         :rtype: str
         """
-        return "<StratigraphicHorizon(id='{}', name='{}', age='{}')>".format(self.id, self.unit_name, self.age)
+        return "<AbstractDBObject(id='{}', name='{}', age='{}')>".format(self.id, self.unit_name, self.age)
 
     def __str__(self):
         # type: () -> str
         """
-        Returns a text-representation of the line
+        Returns a text-representation of the AbstractDBObject
 
-        :return: Returns a text-representation of the line
+        :return: Returns a text-representation of the AbstractDBObject
         :rtype: str
         """
-        return "horizon [{}]: name='{}', age='{}'".format(self.id, self.unit_name, self.age)
+        return "[{}]: name='{}', age='{}'".format(self.id, self.unit_name, self.age)
 
     # define setter and getter for columns and local data
     @property
     def horizon_age(self):
-        # type: () -> int
+        # type: () -> float
         """
-        Return the age of the stratigraphic unit
+        The age of the stratigraphic unit
 
-        :return: age of the stratigraphic unit
-        :rtype: int
+        :type: float
+        :raises ValueError: if new value is convertible to type int
         """
         return float(self.age)
 
@@ -87,14 +86,7 @@ class StratigraphicObject(Base):
     def horizon_age(self, value):
         # type: (float) -> None
         """
-        Set a new age of the stratigraphic unit
-
-        :param value: new age of the stratigraphic unit
-        :type value: float
-
-        :return: Nothing
-
-        :raises ValueError: Raises ValueError if value is convertible to type int
+        See getter
         """
         try:
             value = float(value)
@@ -110,10 +102,9 @@ class StratigraphicObject(Base):
     def name(self):
         # type: () -> str
         """
-        Returns the name of the stratigraphic unit
+        The name of the stratigraphic unit
 
-        :return: Returns the name of the stratigraphic unit
-        :rtype: str
+        :type: str
         """
         return self.unit_name
 
@@ -121,12 +112,7 @@ class StratigraphicObject(Base):
     def name(self, value):
         # type: (str) -> None
         """
-        Sets a new name to the stratigraphic unit
-
-        :param value: New name of the stratigraphic unit
-        :type value: str
-
-        :return: Nothing
+        see getter
         """
         self.unit_name = str(value)
 
@@ -134,10 +120,10 @@ class StratigraphicObject(Base):
     def session(self):
         # type: () -> Session
         """
-        Return the current Session object
+        The current Session object
 
-        :return: returns the current Session object, which represents the connection to a database
-        :rtype: Session
+        :type: Session
+        :raises TypeError: if new value is not of an instance of Session
         """
         return self.__session
 
@@ -145,18 +131,11 @@ class StratigraphicObject(Base):
     def session(self, value):
         # type: (Session) -> None
         """
-        Sets a new session, which represents the connection to a database
-
-        :param value: session object create by SQLAlchemy sessionmaker
-        :type value: Session
-
-        :return: Nothing
-
-        :raises TypeError: Raises TypeError if value is not of an instance of Session
+        see getter
         """
-
         if not isinstance(value, Session):
             raise TypeError("Value is not of type {} (it is {})!".format(Session, type(value)))
+
         self.__session = value
 
     def save_to_db(self):
@@ -165,8 +144,7 @@ class StratigraphicObject(Base):
         Saves all changes of the line or the line itself to the connected database
 
         :return: Nothing
-
-        :raises IntegrityError: raises IntegrityError if the commit to the database fails and rolls all changes back
+        :raises IntegrityError: if the commit to the database fails and rolls all changes back
         """
         self.__session.add(self)
         try:
@@ -185,21 +163,22 @@ class StratigraphicObject(Base):
 
         :param session: SQLAlchemy session, which includes the database connection
         :type session: Session
-
         :param name: Name of the stratigraphic unit
         :type name: str
-
         :param age: age of the stratigraphic unit (-1 if none)
         :type age: float
-
         :param update: update age if stratigraphic unit exists
         :type update: bool
+        :raises ValueError: if age is not compatible to float
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
 
         try:
             age = float(age)
         except ValueError as e:
-            raise ValueError("Cannot convert age to int:\n{}".format(str(e)))
+            raise ValueError("Cannot convert age to float:\n{}".format(str(e)))
 
         if age < 0:
             age = -1
@@ -230,10 +209,13 @@ class StratigraphicObject(Base):
 
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: a list of stratigraphic units representing the result of the database query
         :rtype: List[StratigraphicObject]
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls).all()
         for horizon in result:  # set session value
             horizon.session = session
@@ -247,15 +229,16 @@ class StratigraphicObject(Base):
 
         :param name: The name of the requested stratigraphic unit
         :type name: str
-
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: As the name is a unique value, only one result can be returned or None
         :rtype: StratigraphicObject or None
-
-        :raises DatabaseException: Raises DatabaseException if more than one result was found (name is an unique value)
+        :raises DatabaseException: if more than one result was found (name is an unique value)
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls).filter(cls.unit_name == name)
         if result.count() == 0:
             return None
@@ -269,23 +252,27 @@ class StratigraphicObject(Base):
 
     @classmethod
     def load_by_age_from_db(cls, min_age, max_age, session):
-        # type: (int, int, Session) -> List[StratigraphicObject]
+        # type: (float, float, Session) -> List[StratigraphicObject]
         """
         Returns a list of stratigraphic units with an age between min_age and max_age from the database connected to
         the SQLAlchemy Session session. If no result was found, this function returns an empty list.
 
         :param min_age: Minimal age of the stratigraphic units
-        :type min_age: int
-
+        :type min_age: float
         :param max_age: Maximal age of the stratigraphic units
-        :type max_age: int
-
+        :type max_age: float
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
-
         :return: Returns a list of stratigraphic units with an age between min_age and max_age.
         :rtype: List[StratigraphicObject]
+        :raises ValueError: if min_age or max_age is not compatible to float
+        :raises TypeError: if session is not of type SQLAlchemy Session
         """
+        min_age = float(min_age)
+        max_age = float(max_age)
+        if not isinstance(session, Session):
+            raise TypeError("'session' is not of type SQLAlchemy Session!")
+
         result = session.query(cls).filter(sq.between(cls.age, min_age, max_age)).all()
         for horizon in result:
             horizon.session = session
