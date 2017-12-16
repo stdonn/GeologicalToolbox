@@ -6,7 +6,7 @@ This is a test module for the Resources.Geometries.Well and WellMarker classes u
 import math
 import unittest
 
-from Exceptions import WellMarkerException
+from Exceptions import WellMarkerDepthException
 from Resources.DBHandler import DBHandler
 from Resources.PropertyLogs import WellLog, WellLogValue
 from Resources.Stratigraphy import StratigraphicObject
@@ -266,7 +266,7 @@ class TestWellClass(unittest.TestCase):
             wells[2].depth = 'test'
         with(self.assertRaises(ValueError)):
             wells[2].depth = -123.43
-        with(self.assertRaises(WellMarkerException)):
+        with(self.assertRaises(WellMarkerDepthException)):
             wells[2].depth = 500
         wells[0].well_name = "new Well Name"
         wells[1].well_name = 4 * test_string

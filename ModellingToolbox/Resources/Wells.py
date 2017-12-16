@@ -9,9 +9,9 @@ This module provides classes for storing drilling data in a database.
 import sqlalchemy as sq
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
-from typing import List, Dict
+from typing import List
 
-from Exceptions import DatabaseException, WellMarkerException
+from Exceptions import DatabaseException, WellMarkerDepthException
 from GeoObject import AbstractGeoObject
 from Geometries import GeoPoint
 from PropertyLogs import WellLog
@@ -365,7 +365,7 @@ class Well(Base, AbstractGeoObject):
         if dep < 0:
             raise ValueError('Depth is below 0! ({})'.format(dep))
         if (len(self.marker) > 0) and (dep < self.marker[-1].depth):
-            raise WellMarkerException(
+            raise WellMarkerDepthException(
                     'New depth ({}) lower than depth of last marker {}'.format(dep, self.marker[-1].depth))
         self.drill_depth = dep
 
