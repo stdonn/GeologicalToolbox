@@ -4,11 +4,14 @@ This module hosts the class Requests, which provides functionality for special (
 .. todo:: - reformat docstrings, especially of setter and getter functions
           - check exception types
 """
+
+import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List
 
 from Exceptions import ListOrderException
 from Resources.Geometries import GeoPoint
+from Resources.Stratigraphy import StratigraphicObject
 from Resources.Wells import Well, WellMarker
 
 
@@ -27,7 +30,7 @@ class Requests:
         pass
 
     @staticmethod
-    def __check_extent(extent):
+    def check_extent(extent):
         # type: (List[float, float, float, float]) -> None
         """
         checks, if the given extent has the right format
@@ -37,6 +40,8 @@ class Requests:
         :return: Nothing
         :raises TypeError: if extent is not a list
         :raises ValueError: if on list element is not compatible to float or number of elements is not 4
+        :raises ListOrderException: if the ordering of the extent list [min_easting, max_easting, min_northing,
+                max_northing] is wrong.
         """
         if not isinstance(extent, List):
             raise TypeError("extent is not an instance of List()!")
@@ -66,32 +71,63 @@ class Requests:
         :type marker_1: WellMarker
         :param marker_2: Second WellMarker
         :type marker_2: WellMarker
-        :param summarise_multiple: Summarise multiple occurrences of marker_1 and marker_2 to a maximum thickness. If
-        this parameter is False (default value) create multiple points.
+        :param summarise_multiple: Summarise multiple occurrences of marker_1 and marker_2 to a maximum thickness. If this parameter is False (default value) create multiple points.
         :type summarise_multiple: bool
-        :param extent: List of an extension rectangle which borders the well distribution. The list has the following order:
-                       [min easting, max easting, min northing, max northing]
+        :param extent: List of an extension rectangle which borders the well distribution. The list has the following order: [min easting, max easting, min northing, max northing]
         :type extent: [float, float, float, float]
         :return: A list of GeoPoints each with a thickness property
         :rtype: [GeoPoint]
         :raises ValueError: if a parameter is not compatible with the required type
+        :raises TypeError: if session is not an instance of SQLAlchemy session
+
+        for further raises see :meth:`Requests.check_extent`
+
+        Query for selecting markers:
+
+        .. code-block:: sql
+            :linenos:
+
+            SELECT wm1.* FROM well_marker wm1
+            JOIN stratigraphy st1
+            ON wm1.horizon_id = st1.id
+            WHERE st1.unit_name IN ("mu", "so")
+            AND EXISTS
+            (
+                SELECT 1 FROM well_marker wm2
+                JOIN stratigraphy st2
+                ON wm2.horizon_id = st2.id
+                WHERE st2.unit_name IN ("mu", "so")
+                AND wm1.well_id = wm2.well_id
+                AND st1.unit_name <> st2.unit_name
+            )
         """
+        if not isinstance(session, Session):
+            raise TypeError("session is not of type SQLAlchemy Session")
+
         summarise = True
         extent = None
-        for i in range(len(*args)):
+        for i in range(len(args)):
             if i == 0:
                 summarise = bool(args[i])
             elif i == 1:
-                Requests.__check_extent(args[i])
+                Requests.check_extent(args[i])
                 extent = args[i]
 
         for key in kwargs:
             if key == 'summarise_multiple':
                 summarise = bool(kwargs[key])
             elif key == 'extent':
-                Requests.__check_extent(kwargs[key])
+                Requests.check_extent(kwargs[key])
                 extent = kwargs[key]
 
+        statement = sq.text("SELECT wm1.* FROM well_marker wm1 JOIN stratigraphy st1 ON wm1.horizon_id = st1.id " +
+                            "WHERE st1.unit_name IN (:marker1, :marker2) AND EXISTS " +
+                            "( SELECT 1 FROM well_marker wm2 JOIN stratigraphy st2 ON wm2.horizon_id = st2.id " +
+                            "WHERE st2.unit_name IN (:marker1, :marker2) AND wm1.well_id = wm2.well_id " +
+                            "AND st1.unit_name <> st2.unit_name)")
+        result = session.query(WellMarker).from_statement(statement).params(marker1=marker_1, marker2=marker_2).all()
+
+        return result
 
     @staticmethod
     def interpolate_geopoints(points, property_name, method):

@@ -27,7 +27,9 @@ class TestWellClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        # self.handler = DBHandler(connection='sqlite:///D:\\data.db', echo=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
+        # self.handler = DBHandler(connection='mysql://stdonn:YWBokMUVYHKoSQ1S@localhost:3306/stdonn')
         self.session = self.handler.get_session()
 
         # add test data to the database
@@ -378,7 +380,7 @@ class TestWellMarkerClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database

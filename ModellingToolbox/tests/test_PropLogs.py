@@ -25,7 +25,7 @@ class TestWellLogValueClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database
@@ -128,7 +128,7 @@ class TestWellLogClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database
@@ -292,7 +292,7 @@ class TestPropertyClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database
@@ -353,3 +353,7 @@ class TestPropertyClass(unittest.TestCase):
         :return: Nothing
         """
         pass
+
+
+if __name__ == '__main__':
+    unittest.main()

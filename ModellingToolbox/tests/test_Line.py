@@ -24,7 +24,7 @@ class TestLineClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 
         # handler = DBHandler(
@@ -362,7 +362,7 @@ class TestLineClass(unittest.TestCase):
                          format(len(lines[3].points), 5))
 
         # test exception handling
-        self.assertRaises(AttributeError, Line.load_all_from_db, "test")
+        self.assertRaises(TypeError, Line.load_all_from_db, "test")
 
         del lines
 
