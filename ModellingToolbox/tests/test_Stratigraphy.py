@@ -18,7 +18,7 @@ class TestStratigraphyClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', debug=False)
+        self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 
         units = [

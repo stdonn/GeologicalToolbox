@@ -19,19 +19,17 @@ class DBHandler(object):
     A class for database access through an SQLAlchemy session.
     """
 
-    def __init__(self, connection='sqlite:///:memory:', debug=False):
-        # type: (str, bool) -> None
+    def __init__(self, connection='sqlite:///:memory:', *args, **kwargs):
+        # type: (str, *object, **object) -> None
         """
-        Initialize a new database connection via SQLAlchemy
+        | Initialize a new database connection via SQLAlchemy
+        | Same initialisation as SQLAlchemy provides. Additional arguments are piped to SQLAlchemy.create_engine(...)
 
         :param connection: Connection uri to a database, format defined by SQLAlchemy
         :type connection: str
-        :param debug: enable debug output for database access (default False)
-        :type debug: bool
-
         :return: Nothing
         """
-        engine = sq.create_engine(connection, echo=debug)
+        engine = sq.create_engine(connection, *args, **kwargs)
         Base.metadata.create_all(engine)
         self.__Session = sessionmaker(bind=engine)
 
