@@ -10,6 +10,7 @@ from Resources.Requests import Requests
 from Resources.Stratigraphy import StratigraphicObject
 from Resources.Wells import WellMarker, Well
 
+
 class TestWellClass(unittest.TestCase):
     """
     a unittest for Well class
@@ -90,8 +91,10 @@ class TestWellClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: if a test fails
         """
-        for i in Requests.well_markers_to_thickness(self.session, "mu", "so", summarise_multiple=True):
-            print i
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=True)
+        for point in result:
+            print("")
+            print(str(point))
 
 
 if __name__ == '__main__':

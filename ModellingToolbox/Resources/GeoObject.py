@@ -70,7 +70,7 @@ class AbstractGeoObject(AbstractDBObject):
         :return: Returns a string representation of the AbstractGeoObject
         :rtype: str
         """
-        text = "{} - {} - {}'\n".format(self.easting, self.northing, self.altitude)
+        text = "{} - {} - {} - ".format(self.easting, self.northing, self.altitude)
         text += AbstractDBObject.__str__(self)
         return text
 
