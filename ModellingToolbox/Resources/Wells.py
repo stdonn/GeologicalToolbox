@@ -55,8 +55,7 @@ class WellMarker(Base, AbstractDBObject):
         :type kwargs: Dict()
 
         :returns: Nothing
-        :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected
-                            type
+        :raises ValueError: Raises ValueError if one of the committed parameters cannot be converted to the expected type
         """
         AbstractDBObject.__init__(self, *args, **kwargs)
         if (type(horizon) is not StratigraphicObject) and (horizon is not None):

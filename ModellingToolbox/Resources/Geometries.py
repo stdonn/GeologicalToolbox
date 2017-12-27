@@ -79,6 +79,7 @@ class GeoPoint(Base, AbstractGeoObject):
         text = "<GeoPoint(id='{}', horizon='{}', line={}, line-position={})>\n".\
             format(self.id, str(self.horizon), self.line_id, self.line_pos)
         text += AbstractGeoObject.__repr__(self)
+        text += "Properties: {}".format(self.properties)
         return text
 
     def __str__(self):
@@ -90,7 +91,14 @@ class GeoPoint(Base, AbstractGeoObject):
         :rtype: str
         """
         text = "[{}] {} - {} - {}\n".format(self.id, str(self.horizon), self.line_id, self.line_pos)
-        text += AbstractGeoObject.__str__(self)
+        text += "AbstractGeoObject: {}\n".format(AbstractGeoObject.__str__(self))
+        text += "Properties\n"
+        if len(self.properties) == 0:
+            text += "  --- None ---"
+        else:
+            for prop in self.properties:
+                text += "  " + str(prop)
+
         return text
 
     @property

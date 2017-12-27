@@ -43,6 +43,17 @@ class AbstractLogPropClass(AbstractDBObject):
 
         AbstractDBObject.__init__(self, *args, **kwargs)
 
+    def __repr__(self):
+        text = "<AbstractLogPropClass property_name={}, property_unit={}\n".\
+            format(self.property_name, self.property_unit)
+        text += AbstractDBObject.__repr__(self)
+        return text
+
+    def __str__(self):
+        text = "{} [{}]\n".format(self.property_name, self.property_unit)
+        text += AbstractDBObject.__str__(self)
+        return text
+
     @property
     def property_name(self):
         # type: () -> str
@@ -382,6 +393,16 @@ class Property(Base, AbstractLogPropClass):
         :type kwargs: Dict()
         """
         AbstractLogPropClass.__init__(self, *args, **kwargs)
+
+    def __repr__(self):
+        text = "<Property(value={})>\n".format(self.value)
+        text += AbstractLogPropClass.__repr__(self)
+        return text
+
+    def __str__(self):
+        text = "{} [{}]: {} - ".format(self.property_name, self.property_unit, self.value)
+        text += AbstractDBObject.__str__(self)
+        return text
 
     @property
     def value(self):

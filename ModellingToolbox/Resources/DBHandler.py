@@ -95,7 +95,7 @@ class AbstractDBObject(object):
         :return: Returns a text-representation of the AbstractDBObject
         :rtype: str
         """
-        return "{} - {}'".format(self.name, self.comment)
+        return "{} - {}".format(self.name, self.comment)
 
     @property
     def comment(self):

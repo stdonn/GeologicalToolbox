@@ -3,7 +3,7 @@
 
 class DatabaseException(Exception):
     """
-    This exception should be raised if an unresolved database issue occurred (e.g. more than one value in a unique
+    This exception should be raised, if an unresolved database issue occurred (e.g. more than one value in a unique
     column
     """
 
@@ -16,7 +16,7 @@ class DatabaseException(Exception):
 
 class WellMarkerDepthException(Exception):
     """
-    Will be raised if a new well marker should be located deeper than the depth of the well
+    Will be raised, if a new well marker should be located deeper than the depth of the well
     """
 
     def __init__(self, msg):
@@ -28,7 +28,19 @@ class WellMarkerDepthException(Exception):
 
 class ListOrderException(Exception):
     """
-    Will be raised if the ordering of a list is wrong (e.g. min values in an extent list after max...)
+    Will be raised, if the ordering of a list is wrong (e.g. min values in an extent list after max...)
+    """
+
+    def __init__(self, msg):
+        self.message = str(msg)
+
+    def __str__(self):
+        return self.message
+
+
+class FaultException(Exception):
+    """
+    Will be raised, if a fault marker causes an interruption
     """
 
     def __init__(self, msg):
