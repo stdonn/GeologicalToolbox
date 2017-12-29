@@ -9,7 +9,7 @@ import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from Exceptions import ListOrderException, FaultException
+from Exceptions import DatabaseException, ListOrderException, FaultException
 from Resources.Geometries import GeoPoint
 from Resources.PropertyLogs import Property
 from Resources.Stratigraphy import StratigraphicObject
@@ -136,6 +136,7 @@ class Requests:
         :rtype: [GeoPoint]
         :raises ValueError: if a parameter is not compatible with the required type
         :raises TypeError: if session is not an instance of SQLAlchemy session
+        :raises DatabaseException: if the database query results in less than 2 marker of a well_id
 
         for further raises see :meth:`Requests.check_extent`
 
@@ -207,7 +208,8 @@ class Requests:
         # generate the resulting list of GeoPoints
         geopoints = list()
         for well_id in sorted_dict:
-
+            if len(sorted_dict[well_id] < 2):
+                raise DatabaseException('Not enough well marker in dictionary')
             if len(sorted_dict[well_id]) == 2:
                 sorted_dict[well_id][0].session = session
                 try:
@@ -216,6 +218,14 @@ class Requests:
                     geopoints.append(point)
                 except FaultException:
                     continue
+
+            # last case: more than 2 values found:
+            if summarise:
+                for i in range(len(sorted_dict[well_id])):
+                    # eventuell find einfügen!?
+                    pass
+                for j in range(len(sorted_dict[well_id]), 0):
+                    pass
 
         return geopoints
 
