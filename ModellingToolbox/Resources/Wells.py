@@ -2,7 +2,7 @@
 """
 This module provides classes for storing drilling data in a database.
 
-.. todo:: - reformat docstrings, espacially of setter and getter functions
+.. todo:: - reformat docstrings, especially of setter and getter functions
           - check exception types
 """
 
