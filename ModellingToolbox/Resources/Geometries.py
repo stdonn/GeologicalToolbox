@@ -92,12 +92,12 @@ class GeoPoint(Base, AbstractGeoObject):
         """
         text = "[{}] {} - {} - {}\n".format(self.id, str(self.horizon), self.line_id, self.line_pos)
         text += "AbstractGeoObject: {}\n".format(AbstractGeoObject.__str__(self))
-        text += "Properties\n"
+        text += "Properties"
         if len(self.properties) == 0:
-            text += "  --- None ---"
+            text += "\n  --- None ---"
         else:
             for prop in self.properties:
-                text += "  " + str(prop)
+                text += "\n  " + str(prop)
 
         return text
 
@@ -182,6 +182,21 @@ class GeoPoint(Base, AbstractGeoObject):
             self.properties.remove(prop)
         except ValueError as e:
             raise ValueError(str(e) + '\nProperty with ID ' + str(prop.id) + ' not found in list!')
+
+    def has_property(self, property_name):
+        # type: (str) -> bool
+        """
+        Returns True, if a property with the name property_name exists for the GeoPoint, else False
+
+        :param property_name: Requested name for the property
+        :type property_name: str
+        :return: Returns True, if a property with the name property_name exists for the GeoPoint, else False
+        :rtype: bool
+        """
+        for prop in self.properties:
+            if prop.property_name == property_name:
+                return True
+        return False
 
     # overwrite loading method
     @classmethod

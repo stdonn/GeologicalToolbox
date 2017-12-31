@@ -7,9 +7,9 @@ This module hosts the class Requests, which provides functionality for special (
 
 import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
-from typing import List
+from typing import List, Tuple
 
-from Exceptions import DatabaseException, ListOrderException, FaultException
+from Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
 from Resources.Geometries import GeoPoint
 from Resources.PropertyLogs import Property
 from Resources.Stratigraphy import StratigraphicObject
@@ -59,8 +59,9 @@ class Requests:
             raise ListOrderException("min northing > max northing")
 
     @staticmethod
-    def _create_thickness_point(sorted_dict, well_id, marker_1, marker_2, use_faulted, fault_name, session):
-        # type: (dict, int, int, int, bool, str, Session) -> GeoPoint
+    def _create_thickness_point(sorted_dict, well_id, marker_1, marker_2, session, use_faulted=False, fault_name='',
+                                add_properties=tuple()):
+        # type: (dict, int, int, int, Session, bool, str, Tuple) -> GeoPoint
         """
         Generate a new GeoPoint with thickness property from 2 well marker
 
@@ -72,15 +73,18 @@ class Requests:
         :type marker_1: int
         :param marker_2: id of marker 2
         :type marker_2: int
+        :param session: current SQLAlchemy session
+        :type session: Session
         :param use_faulted: should faulted sequence be included?
         :type use_faulted: bool
         :param fault_name: name of fault stratigraphic unit
         :type fault_name: str
-        :param session: current SQLAlchemy session
-        :type session: Session
+        :param add_properties: Adds the properties to the GeoPoint. Format for each property: (name, unit, value)
+        :type add_properties: tuple()
         :return: new GeoPoint Object
         :rtype: GeoPoint
         :raises FaultException: if a fault is inside the section and use_faulted is False
+        :raises ValueError: if a property in the add_property tuple has less than 3 entries
         """
 
         min_depth = sorted_dict[well_id][marker_1].depth
@@ -108,6 +112,12 @@ class Requests:
             else:
                 faulted.value = 1
             point.add_property(faulted)
+        for prop in add_properties:
+            if len(prop) < 3:
+                raise ValueError('property tuple has less than 3 entries!')
+            new_property = Property(prop[0], prop[1], session)
+            new_property.value = prop[2]
+            point.add_property(new_property)
         return point
 
     @staticmethod
@@ -116,7 +126,8 @@ class Requests:
         """
         This static method generates a point set including a thickness property derived from the committed well marker
 
-        .. todo:: - Finalise the well_markers_to_thickness(...) function
+        .. todo:: - test the well_markers_to_thickness(...) function
+                  - include the extent feature
 
         :param session: The SQLAlchemy session connected to the database storing the geodata
         :type session: Session
@@ -126,7 +137,7 @@ class Requests:
         :type marker_2: str
         :param summarise_multiple: Summarise multiple occurrences of marker_1 and marker_2 to a maximum thickness. If this parameter is False (default value) create multiple points.
         :type summarise_multiple: bool
-        :param extent: List of an extension rectangle which borders the well distribution. The list has the following order: [min easting, max easting, min northing, max northing]
+        :param extent: extension rectangle as list which borders the well distribution. The list has the following order: [min easting, max easting, min northing, max northing]
         :type extent: [float, float, float, float]
         :param use_faulted: if True, also sections with faults between marker_1 and marker_2 are returned
         :type use_faulted: bool
@@ -134,9 +145,11 @@ class Requests:
         :type fault_name: str
         :return: A list of GeoPoints each with a thickness property
         :rtype: [GeoPoint]
-        :raises ValueError: if a parameter is not compatible with the required type
-        :raises TypeError: if session is not an instance of SQLAlchemy session
+        :raises AttributeError: if marker_1 and marker_2 are equal
         :raises DatabaseException: if the database query results in less than 2 marker of a well_id
+        :raises DatabaseRequestException: if an unexpected query result occurs
+        :raises TypeError: if session is not an instance of SQLAlchemy session
+        :raises ValueError: if a parameter is not compatible with the required type
 
         for further raises see :meth:`Requests.check_extent`
 
@@ -162,6 +175,9 @@ class Requests:
         """
         if not isinstance(session, Session):
             raise TypeError("session is not of type SQLAlchemy Session")
+
+        if marker_1 == marker_2:
+            raise AttributeError('marker_1 and marker_2 cannot be equal!')
 
         summarise = True
         extent = None
@@ -208,24 +224,69 @@ class Requests:
         # generate the resulting list of GeoPoints
         geopoints = list()
         for well_id in sorted_dict:
-            if len(sorted_dict[well_id] < 2):
+            if len(sorted_dict[well_id]) < 2:
                 raise DatabaseException('Not enough well marker in dictionary')
             if len(sorted_dict[well_id]) == 2:
                 sorted_dict[well_id][0].session = session
                 try:
-                    point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, use_faulted, fault_name,
-                                                             session)
+                    point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
+                                                             fault_name)
                     geopoints.append(point)
+                # FaultException -> do nothing except catching the exception
                 except FaultException:
                     continue
+                # don't test anything else for this well_id
+                continue
 
             # last case: more than 2 values found:
             if summarise:
+                first_index = -1
+                last_index = -1
                 for i in range(len(sorted_dict[well_id])):
-                    # eventuell find einfügen!?
-                    pass
-                for j in range(len(sorted_dict[well_id]), 0):
-                    pass
+                    if sorted_dict[well_id][i].horizon.unit_name == marker_1:
+                        first_index = i
+                        break
+                for j in reversed(range(len(sorted_dict[well_id]))):
+                    if sorted_dict[well_id][j].horizon.unit_name == marker_2:
+                        last_index = j
+                        break
+
+                if (first_index == -1) or (last_index == -1):
+                    raise DatabaseRequestException("Didn't find two different markers. Shouldn't be possible. " +
+                                                   "Please excuse this error and forward it to me.")
+
+                # wrong order -> nothing to do...
+                if last_index < first_index:
+                    continue
+
+                try:
+                    sorted_dict[well_id][first_index].session = session
+                    point = Requests._create_thickness_point(sorted_dict, well_id, first_index, last_index, session,
+                                                             use_faulted, fault_name, (('summarised', 'bool', 1),))
+                    geopoints.append(point)
+                # FaultException -> do nothing except catching the exception
+                except FaultException:
+                    continue
+
+                # finished summarise section -> continue to avoid second round without summarise
+                continue
+            # don't summarise
+            first_index = -1
+            for index in range(len(sorted_dict[well_id])):
+                if (first_index == -1) and (sorted_dict[well_id][index].horizon.unit_name == marker_1):
+                    first_index = index
+                elif sorted_dict[well_id][index].horizon.unit_name == marker_2:
+                    try:
+                        sorted_dict[well_id][first_index].session = session
+                        point = Requests._create_thickness_point(sorted_dict, well_id, first_index, index, session,
+                                                                 use_faulted, fault_name,
+                                                                 (('multiple marker', 'bool', 1),))
+                        geopoints.append(point)
+                    # FaultException -> do nothing except catching the exception
+                    except FaultException:
+                        continue
+                    finally:
+                        first_index = -1
 
         return geopoints
 

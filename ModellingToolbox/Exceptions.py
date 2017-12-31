@@ -14,9 +14,21 @@ class DatabaseException(Exception):
         return self.message
 
 
-class WellMarkerDepthException(Exception):
+class DatabaseRequestException(Exception):
     """
-    Will be raised, if a new well marker should be located deeper than the depth of the well
+    This exception should be raised, if an error occurs during a database request (e.g. not the expected result)
+    """
+
+    def __init__(self, msg):
+        self.message = str(msg)
+
+    def __str__(self):
+        return self.message
+
+
+class FaultException(Exception):
+    """
+    Will be raised, if a fault marker causes an interruption
     """
 
     def __init__(self, msg):
@@ -38,9 +50,9 @@ class ListOrderException(Exception):
         return self.message
 
 
-class FaultException(Exception):
+class WellMarkerDepthException(Exception):
     """
-    Will be raised, if a fault marker causes an interruption
+    Will be raised, if a new well marker should be located deeper than the depth of the well
     """
 
     def __init__(self, msg):

@@ -63,11 +63,31 @@ class TestWellClass(unittest.TestCase):
                 'east'      : 3454.34,
                 'north'     : 2340.22,
                 'altitude'  : 342.20,
+                'depth'     : 751.13,
+                'marker'    : ((34, 'mu', 4, ''),
+                               (234, 'so', 3, 'Comment 1'),
+                               (345, 'Fault', 0, 'Comment 2'),
+                               (635, 'mu', 4, 'Comment 3'),
+                               (636, 'Fault', 0, ''),
+                               (645, 'mu', 4, ''),
+                               (665, 'Fault', 0, ''),
+                               (699, 'so', 3, 'Comment 1'))
+            }, {
+                'name'      : 'Well_4',
+                'short_name': 'W4',
+                'comment'   : 'A fourth well',
+                'east'      : 234,
+                'north'     : 5645.45,
+                'altitude'  : 234.63,
                 'depth'     : 645.21,
                 'marker'    : ((34, 'mu', 4, ''),
                                (234, 'so', 3, 'Comment 1'),
                                (345, 'Fault', 0, 'Comment 2'),
-                               (635, 'mu', 4, 'Comment 3'))
+                               (635, 'mu', 4, 'Comment 3'),
+                               (636, 'Fault', 0, ''),
+                               (645, 'mu', 4, ''),
+                               (665, 'Fault', 0, ''),
+                               (699, 'so', 3, 'Comment 1'))
             }
         ]
 
@@ -91,7 +111,7 @@ class TestWellClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: if a test fails
         """
-        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=True)
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=False)
         for point in result:
             print("")
             print(str(point))
