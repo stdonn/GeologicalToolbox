@@ -361,6 +361,8 @@ class TestGeoPointClass(unittest.TestCase):
         self.assertEqual('test prop 2', point.properties[1].property_name)
         self.assertEqual('test unit', point.properties[0].property_unit)
         self.assertEqual('test unit 2', point.properties[1].property_unit)
+        self.assertTrue(point.has_property('test prop 2'))
+        self.assertEqual('test unit 2', point.get_property('test prop 2').property_unit)
 
         prop = point.properties[0]
         point.delete_property(prop)
