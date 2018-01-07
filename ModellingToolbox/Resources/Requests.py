@@ -44,6 +44,9 @@ class Requests:
         :raises ListOrderException: if the ordering of the extent list [min_easting, max_easting, min_northing,
                 max_northing] is wrong.
         """
+        if extent is None:
+            return
+
         if not isinstance(extent, List):
             raise TypeError("extent is not an instance of List()!")
         if len(extent) != 4:
@@ -77,7 +80,7 @@ class Requests:
         :type session: Session
         :param use_faulted: should faulted sequence be included?
         :type use_faulted: bool
-        :param fault_name: name of fault stratigraphic unit
+        :param fault_name: name of fault stratigraphic unit (default: "Fault")
         :type fault_name: str
         :param add_properties: Adds the properties to the GeoPoint. Format for each property: (name, unit, value)
         :type add_properties: tuple()
@@ -101,16 +104,16 @@ class Requests:
         if (faults.count() > 0) and (use_faulted is False):
             raise FaultException("Fault inside section")
 
-        point = sorted_dict[well_id][0].to_geopoint()
+        point = sorted_dict[well_id][marker_1].to_geopoint()
         thickness = Property('thickness', 'm', session)
         thickness.value = max_depth - min_depth
         point.add_property(thickness)
         if use_faulted:
-            faulted = Property('faulted', '', session)
+            faulted = Property('faulted', 'bool', session)
             if faults.count() > 0:
                 faulted.value = 1
             else:
-                faulted.value = 1
+                faulted.value = 0
             point.add_property(faulted)
         for prop in add_properties:
             if len(prop) < 3:
@@ -126,8 +129,7 @@ class Requests:
         """
         This static method generates a point set including a thickness property derived from the committed well marker
 
-        .. todo:: - test the well_markers_to_thickness(...) function
-                  - include the extent feature
+        .. todo:: - test failures and exceptions
 
         :param session: The SQLAlchemy session connected to the database storing the geodata
         :type session: Session
@@ -205,12 +207,33 @@ class Requests:
             elif key == 'fault_name':
                 fault_name = str(kwargs[key])
 
-        statement = sq.text("SELECT wm1.* FROM well_marker wm1 JOIN stratigraphy st1 ON " +
-                            "wm1.horizon_id = st1.id WHERE st1.unit_name IN (:marker1, :marker2) AND EXISTS " +
-                            "( SELECT 1 FROM well_marker wm2 JOIN stratigraphy st2 ON wm2.horizon_id = st2.id " +
-                            "WHERE st2.unit_name IN (:marker1, :marker2) AND wm1.well_id = wm2.well_id " +
-                            "AND st1.unit_name <> st2.unit_name) ORDER BY wm1.well_id,wm1.drill_depth")
-        result = session.query(WellMarker).from_statement(statement).params(marker1=marker_1, marker2=marker_2).all()
+        result = session.query(WellMarker)
+        if extent is None:
+            statement = sq.text("SELECT wm1.* FROM well_marker wm1 " +
+                                "JOIN stratigraphy st1 ON wm1.horizon_id = st1.id " +
+                                "WHERE st1.unit_name IN (:marker1, :marker2) " +
+                                "AND EXISTS " +
+                                "( SELECT 1 FROM well_marker wm2 JOIN stratigraphy st2 ON wm2.horizon_id = st2.id " +
+                                "WHERE st2.unit_name IN (:marker1, :marker2) AND wm1.well_id = wm2.well_id " +
+                                "AND st1.unit_name <> st2.unit_name) ORDER BY wm1.well_id,wm1.drill_depth")
+            result = result.from_statement(statement). \
+                params(marker1=marker_1, marker2=marker_2). \
+                all()
+        else:
+            statement = sq.text("SELECT wm1.* FROM well_marker wm1 " +
+                                "JOIN wells ON wm1.well_id = wells.id " +
+                                "JOIN stratigraphy st1 ON wm1.horizon_id = st1.id " +
+                                "WHERE wells.east BETWEEN :east_min AND :east_max " +
+                                "AND wells.north BETWEEN :north_min AND :north_max " +
+                                "AND st1.unit_name IN (:marker1, :marker2)" +
+                                "AND EXISTS " +
+                                "( SELECT 1 FROM well_marker wm2 JOIN stratigraphy st2 ON wm2.horizon_id = st2.id " +
+                                "WHERE st2.unit_name IN (:marker1, :marker2) AND wm1.well_id = wm2.well_id " +
+                                "AND st1.unit_name <> st2.unit_name) ORDER BY wm1.well_id,wm1.drill_depth")
+            result = result.from_statement(statement). \
+                params(marker1=marker_1, marker2=marker_2, east_min=extent[0], east_max=extent[1], north_min=extent[2],
+                       north_max=extent[3]). \
+                all()
 
         # first: sort by well_id for simpler multiple marker check
         sorted_dict = dict()
@@ -229,9 +252,14 @@ class Requests:
             if len(sorted_dict[well_id]) == 2:
                 sorted_dict[well_id][0].session = session
                 try:
-                    point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
-                                                             fault_name)
-                    geopoints.append(point)
+                    if summarise:
+                        point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
+                                                                 fault_name, (('summarised', 'bool', 0),))
+                        geopoints.append(point)
+                    else:
+                        point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
+                                                                 fault_name, (('multiple marker', 'bool', 0),))
+                        geopoints.append(point)
                 # FaultException -> do nothing except catching the exception
                 except FaultException:
                     continue
@@ -273,9 +301,9 @@ class Requests:
             # don't summarise
             first_index = -1
             for index in range(len(sorted_dict[well_id])):
-                if (first_index == -1) and (sorted_dict[well_id][index].horizon.unit_name == marker_1):
+                if sorted_dict[well_id][index].horizon.unit_name == marker_1:
                     first_index = index
-                elif sorted_dict[well_id][index].horizon.unit_name == marker_2:
+                elif (first_index != -1) and (sorted_dict[well_id][index].horizon.unit_name == marker_2):
                     try:
                         sorted_dict[well_id][first_index].session = session
                         point = Requests._create_thickness_point(sorted_dict, well_id, first_index, index, session,

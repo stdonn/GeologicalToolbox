@@ -188,7 +188,7 @@ class GeoPoint(Base, AbstractGeoObject):
         """
         Returns True, if a property with the name property_name exists for the GeoPoint, else False
 
-        :param property_name: Requested name for the property
+        :param property_name: name of the requested property
         :type property_name: str
         :return: Returns True, if a property with the name property_name exists for the GeoPoint, else False
         :rtype: bool
@@ -197,6 +197,23 @@ class GeoPoint(Base, AbstractGeoObject):
             if prop.property_name == property_name:
                 return True
         return False
+
+    def get_property(self, property_name):
+        # type: (str) -> Property
+        """
+        Returns requested property, if the property with the name property_name exists for the GeoPoint
+
+        :param property_name: name of the requested property
+        :type property_name: str
+        :return: Returns the property
+        :rtype: Property
+        :raises ValueError: if no property with the name exists
+        """
+        property_name = str(property_name)
+        for prop in self.properties:
+            if prop.property_name == property_name:
+                return prop
+        raise ValueError("No property with the name '{}' exists!".format(property_name))
 
     # overwrite loading method
     @classmethod

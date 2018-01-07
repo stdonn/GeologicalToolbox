@@ -81,13 +81,12 @@ class TestWellClass(unittest.TestCase):
                 'altitude'  : 234.63,
                 'depth'     : 645.21,
                 'marker'    : ((34, 'mu', 4, ''),
-                               (234, 'so', 3, 'Comment 1'),
-                               (345, 'Fault', 0, 'Comment 2'),
-                               (635, 'mu', 4, 'Comment 3'),
-                               (636, 'Fault', 0, ''),
-                               (645, 'mu', 4, ''),
-                               (665, 'Fault', 0, ''),
-                               (699, 'so', 3, 'Comment 1'))
+                               (65, 'so', 3, 'Comment 1'),
+                               (70, 'Fault', 0, 'Comment 2'),
+                               (85, 'so', 3, 'Comment 1'),
+                               (105, 'mu', 4, ''),
+                               (123, 'mu', 4, ''),
+                               (201, 'so', 3, 'Comment 1'))
             }
         ]
 
@@ -111,10 +110,125 @@ class TestWellClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: if a test fails
         """
-        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=False)
-        for point in result:
-            print("")
-            print(str(point))
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=False,
+                                                    use_faulted=False, fault_name='Fault', extent=None)
+
+        self.assertEqual(len(result), 4)
+        self.assertTrue(result[0].has_property('thickness'))
+        self.assertFalse(result[0].has_property('faulted'))
+        self.assertFalse(result[0].has_property('summarised'))
+        self.assertEqual(result[0].get_property('thickness').value, 5)
+        self.assertEqual(result[1].get_property('thickness').value, 200)
+        self.assertEqual(result[2].get_property('thickness').value, 31)
+        self.assertEqual(result[3].get_property('thickness').value, 78)
+        self.assertEqual(result[0].easting, 1234.56)
+        self.assertEqual(result[0].northing, 123.45)
+        self.assertEqual(result[0].altitude, 10.5 - 10)
+        self.assertEqual(result[0].name, 'Well_1')
+        self.assertEqual(result[1].name, 'Well_3')
+        self.assertEqual(result[2].name, 'Well_4')
+        self.assertEqual(result[3].name, 'Well_4')
+
+        del result
+
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=False,
+                                                    use_faulted=True, extent=None)
+        self.assertEqual(len(result), 5)
+        self.assertTrue(result[0].has_property('thickness'))
+        self.assertTrue(result[0].has_property('faulted'))
+        self.assertFalse(result[0].has_property('summarised'))
+        self.assertEqual(result[0].get_property('thickness').value, 5)
+        self.assertEqual(result[0].get_property('faulted').value, 0)
+        self.assertEqual(result[1].get_property('thickness').value, 200)
+        self.assertEqual(result[1].get_property('faulted').value, 0)
+        self.assertEqual(result[2].get_property('thickness').value, 54)
+        self.assertEqual(result[2].get_property('faulted').value, 1)
+        self.assertEqual(result[3].get_property('thickness').value, 31)
+        self.assertEqual(result[3].get_property('faulted').value, 0)
+        self.assertEqual(result[4].get_property('thickness').value, 78)
+        self.assertEqual(result[4].get_property('faulted').value, 0)
+        self.assertEqual(result[0].name, 'Well_1')
+        self.assertEqual(result[1].easting, 3454.34)
+        self.assertEqual(result[1].northing, 2340.22)
+        self.assertEqual(result[1].altitude, 342.20 - 34)
+        self.assertEqual(result[1].name, 'Well_3')
+        self.assertEqual(result[2].altitude, 342.20 - 645)
+        self.assertEqual(result[2].name, 'Well_3')
+        self.assertEqual(result[3].name, 'Well_4')
+        self.assertEqual(result[4].name, 'Well_4')
+
+        del result
+
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=True,
+                                                    use_faulted=False, fault_name='Fault', extent=None)
+        self.assertEqual(len(result), 1)
+        self.assertTrue(result[0].has_property('thickness'))
+        self.assertFalse(result[0].has_property('faulted'))
+        self.assertTrue(result[0].has_property('summarised'))
+        self.assertEqual(result[0].get_property('thickness').value, 5)
+        self.assertEqual(result[0].get_property('summarised').value, 0)
+        self.assertEqual(result[0].easting, 1234.56)
+        self.assertEqual(result[0].northing, 123.45)
+        self.assertEqual(result[0].altitude, 10.5 - 10)
+        self.assertEqual(result[0].name, 'Well_1')
+
+        del result
+
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=True,
+                                                    use_faulted=True, extent=None)
+        self.assertEqual(len(result), 3)
+        self.assertTrue(result[0].has_property('thickness'))
+        self.assertTrue(result[0].has_property('faulted'))
+        self.assertTrue(result[0].has_property('summarised'))
+        self.assertEqual(result[0].get_property('thickness').value, 5)
+        self.assertEqual(result[0].get_property('faulted').value, 0)
+        self.assertEqual(result[0].get_property('summarised').value, 0)
+        self.assertEqual(result[1].get_property('thickness').value, 665)
+        self.assertEqual(result[1].get_property('faulted').value, 1)
+        self.assertEqual(result[1].get_property('summarised').value, 1)
+        self.assertEqual(result[2].get_property('thickness').value, 167)
+        self.assertEqual(result[2].get_property('faulted').value, 1)
+        self.assertEqual(result[2].get_property('summarised').value, 1)
+        self.assertEqual(result[0].name, 'Well_1')
+        self.assertEqual(result[1].name, 'Well_3')
+        self.assertEqual(result[2].name, 'Well_4')
+        self.assertEqual(result[2].easting, 234)
+        self.assertEqual(result[2].northing, 5645.45)
+        self.assertEqual(result[2].altitude, 234.63 - 34)
+
+        del result
+
+        extent = [1000, 1500, 0, 3000]  # Well_1 and Well_2, 1 marker from Well_1
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=True,
+                                                    use_faulted=True, extent=extent)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].name, 'Well_1')
+
+        del result
+
+        extent = [1000, 1500, 2000, 3000]  # only Well_2, no marker
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=True,
+                                                    use_faulted=True, extent=extent)
+        self.assertEqual(len(result), 0)
+
+        del result
+
+        extent = [0, 500, 5000, 6000]  # only Well_4
+        result = Requests.well_markers_to_thickness(self.session, 'mu', 'so', summarise_multiple=False,
+                                                    use_faulted=True, extent=extent)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].name, 'Well_4')
+        self.assertTrue(result[0].has_property('thickness'))
+        self.assertEqual(result[0].get_property('thickness').value, 31)
+        self.assertEqual(result[1].name, 'Well_4')
+        self.assertTrue(result[1].has_property('thickness'))
+        self.assertEqual(result[1].get_property('thickness').value, 78)
+
+        del result
+
+        """
+        .. todo:: - test failures and exceptions
+        """
 
 
 if __name__ == '__main__':
