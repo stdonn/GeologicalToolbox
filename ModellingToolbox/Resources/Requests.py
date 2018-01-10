@@ -1,8 +1,5 @@
 """
 This module hosts the class Requests, which provides functionality for special (geo-)database requests.
-
-.. todo:: - reformat docstrings, especially of setter and getter functions
-          - check exception types
 """
 
 import sqlalchemy as sq
@@ -62,8 +59,8 @@ class Requests:
             raise ListOrderException("min northing > max northing")
 
     @staticmethod
-    def _create_thickness_point(sorted_dict, well_id, marker_1, marker_2, session, use_faulted=False, fault_name='',
-                                add_properties=tuple()):
+    def create_thickness_point(sorted_dict, well_id, marker_1, marker_2, session, use_faulted=False, fault_name='',
+                               add_properties=tuple()):
         # type: (dict, int, int, int, Session, bool, str, Tuple) -> GeoPoint
         """
         Generate a new GeoPoint with thickness property from 2 well marker
@@ -128,8 +125,6 @@ class Requests:
         # type: (Session, str, str, *object, **object) -> List[GeoPoint]
         """
         This static method generates a point set including a thickness property derived from the committed well marker
-
-        .. todo:: - test failures and exceptions
 
         :param session: The SQLAlchemy session connected to the database storing the geodata
         :type session: Session
@@ -253,12 +248,12 @@ class Requests:
                 sorted_dict[well_id][0].session = session
                 try:
                     if summarise:
-                        point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
-                                                                 fault_name, (('summarised', 'bool', 0),))
+                        point = Requests.create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
+                                                                fault_name, (('summarised', 'bool', 0),))
                         geopoints.append(point)
                     else:
-                        point = Requests._create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
-                                                                 fault_name, (('multiple marker', 'bool', 0),))
+                        point = Requests.create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
+                                                                fault_name, (('multiple marker', 'bool', 0),))
                         geopoints.append(point)
                 # FaultException -> do nothing except catching the exception
                 except FaultException:
@@ -289,8 +284,8 @@ class Requests:
 
                 try:
                     sorted_dict[well_id][first_index].session = session
-                    point = Requests._create_thickness_point(sorted_dict, well_id, first_index, last_index, session,
-                                                             use_faulted, fault_name, (('summarised', 'bool', 1),))
+                    point = Requests.create_thickness_point(sorted_dict, well_id, first_index, last_index, session,
+                                                            use_faulted, fault_name, (('summarised', 'bool', 1),))
                     geopoints.append(point)
                 # FaultException -> do nothing except catching the exception
                 except FaultException:
@@ -306,9 +301,9 @@ class Requests:
                 elif (first_index != -1) and (sorted_dict[well_id][index].horizon.unit_name == marker_2):
                     try:
                         sorted_dict[well_id][first_index].session = session
-                        point = Requests._create_thickness_point(sorted_dict, well_id, first_index, index, session,
-                                                                 use_faulted, fault_name,
-                                                                 (('multiple marker', 'bool', 1),))
+                        point = Requests.create_thickness_point(sorted_dict, well_id, first_index, index, session,
+                                                                use_faulted, fault_name,
+                                                                (('multiple marker', 'bool', 1),))
                         geopoints.append(point)
                     # FaultException -> do nothing except catching the exception
                     except FaultException:

@@ -226,9 +226,26 @@ class TestWellClass(unittest.TestCase):
 
         del result
 
+        # test failures and exceptions
+
         """
-        .. todo:: - test failures and exceptions
+        :raises AttributeError: if marker_1 and marker_2 are equal
+        :raises DatabaseException: if the database query results in less than 2 marker of a well_id
+        :raises DatabaseRequestException: if an unexpected query result occurs
+        :raises FaultException: if a fault is inside the section and use_faulted is False
+        :raises TypeError: if session is not an instance of SQLAlchemy session
+        :raises ValueError: if a parameter is not compatible with the required type
         """
+        self.assertRaises(AttributeError, Requests.well_markers_to_thickness,
+                          self.session, 'mu', 'mu', summarise_multiple=False, use_faulted=True, extent=None)
+        self.assertRaises(TypeError, Requests.well_markers_to_thickness,
+                          'wrong type', 'mu', 'so', summarise_multiple=False, use_faulted=True, extent=None)
+        self.assertRaises(TypeError, Requests.well_markers_to_thickness,
+                          self.session, 'mu', 'so', summarise_multiple=False, use_faulted=True, extent='ab')
+        self.assertRaises(ValueError, Requests.well_markers_to_thickness,
+                          self.session, 'mu', 'so', summarise_multiple=False, use_faulted=True, extent=[1,2,3])
+        self.assertRaises(ValueError, Requests.well_markers_to_thickness,
+                          self.session, 'mu', 'so', summarise_multiple=False, use_faulted=True, extent=[1, 2, 3, 'ab'])
 
 
 if __name__ == '__main__':
