@@ -1,5 +1,16 @@
 # -*- coding: UTF-8 -*-
 
+class ArgumentError(Exception):
+    """
+    This exception should be raised, if a wrong number of arguments are submitted or an other failure inside the
+    arguments are recognised.
+    """
+    def __init__(self, msg):
+        self.message = str(msg)
+
+    def __str__(self):
+        return self.message
+
 
 class DatabaseException(Exception):
     """
