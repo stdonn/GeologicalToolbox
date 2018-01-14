@@ -6,16 +6,26 @@ An ArcGIS python-script based toolbox for basic data storage and processing of g
 
 ## Installation
 
-The scripts in this ArcGIS-Toolbox need SQLAlchemy, numpy and arcpy modules to work properly. Whereas arcpy and numpy are part of the ArcGIS python installation, SQLAlchemy has to be install manually. I recommend to use pip for the installation. Therefore open a terminal / command line and install SQLAlchemy with following command:
+The scripts in this ArcGIS-Toolbox need SQLAlchemy, numpy and arcpy modules to work properly. Whereas arcpy and numpy are part of the ArcGIS python installation, SQLAlchemy, typing and scipy has to be install manually. I recommend to use pip for the installation. Therefore open a terminal / command line and install SQLAlchemy with following command:
 
   
 ```
 pip install SQLAlchemy
+pip install typing
+pip install scipy
 ```
 
-If the installation doesn't work, try to check for multiple python installations and run pip in the python.exe containing directory of your ArcGIS installation.
+Whereas normally SQLAlchemy and typing are installed without failures, scipy may cause problems, because scipy requires a pre-installation of blast or boost libraries. If this occurs to you, you can look for a binary compilation of the scipy package or try the following code:
 
-After the installation of SQLAlchemy you have to add this toolbox to your ArcToolbox section. Therefore open the ArcToolbox section if it isn't open yet (Geoprocessing -> ArcToolbox), right click on ArcToolbox (the folder on top of the list inside the ArcToolbox section) and select "Add Toolbox". In the following "Add Toolbox" window you have to select the "Modelling-Toolbox.tbx" file in this directory.
+```
+python.exe -m pip install --user numpy scipy matplotlib
+```
+
+If none of the installations work, try to check for multiple python installations and run the pip command with the python.exe inside your python directory of your ArcGIS installation.
+
+Additionally you can find installation hints for scipy on the [scipy website](https://www.scipy.org/install.html).
+
+After the installation of SQLAlchemy you have to add this toolbox to your ArcToolbox section. Therefore open the ArcToolbox section if it isn't open yet (Geoprocessing -> ArcToolbox), right click on ArcToolbox (the folder on top of the list inside the ArcToolbox section) and select "Add Toolbox". In the following "Add Toolbox" window you have to select the "Modelling Toolbox.tbx" file in this directory.
 
 The documentation uses the basicstrap sphinx template package. This can be installed as follows: 
 
