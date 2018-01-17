@@ -4,8 +4,8 @@ This module provides miscellaneous functions and tools, which are not related to
 other modules.
 """
 
-from Exceptions import ArgumentError
-from Resources.DBHandler import DBHandler
+from ModellingToolbox.Exceptions import ArgumentError
+from ModellingToolbox.Resources.DBHandler import DBHandler
 from sqlalchemy.orm.session import Session
 
 # import arcpy

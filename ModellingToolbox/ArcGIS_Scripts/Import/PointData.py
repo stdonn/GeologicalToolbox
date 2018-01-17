@@ -4,8 +4,8 @@ A module controlling the import of point data into a database.
 :raises ArgumentError: if number of Arguments is wrong (at least three)
 """
 
-from Exceptions import ArgumentError
-from Resources.DBHandler import DBHandler
+from ModellingToolbox.Exceptions import ArgumentError
+from ModellingToolbox.Resources.DBHandler import DBHandler
 
 from sqlalchemy.orm.session import Session
 
