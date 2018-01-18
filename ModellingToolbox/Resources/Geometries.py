@@ -11,7 +11,7 @@ from typing import List
 
 from ModellingToolbox.Resources.DBHandler import Base, AbstractDBObject
 from ModellingToolbox.Resources.GeoObject import AbstractGeoObject
-from ModellingToolbox.Resources.PropertyLogs import Property
+from ModellingToolbox.Resources.Property import Property
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
 from ModellingToolbox.Resources.constants import float_precision
 

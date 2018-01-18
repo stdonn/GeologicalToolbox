@@ -4,12 +4,12 @@ A module controlling the import of point data into a database.
 :raises ArgumentError: if number of Arguments is wrong (at least three)
 """
 
+from sqlalchemy.orm.session import Session
+
 from ModellingToolbox.Exceptions import ArgumentError
 from ModellingToolbox.Resources.DBHandler import DBHandler
 from ModellingToolbox.Resources.Geometries import GeoPoint
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
-
-from sqlalchemy.orm.session import Session
 
 import arcpy
 import os

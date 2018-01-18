@@ -8,8 +8,8 @@ import unittest
 
 from ModellingToolbox.Exceptions import WellMarkerDepthException
 from ModellingToolbox.Resources.DBHandler import DBHandler
-from ModellingToolbox.Resources.PropertyLogs import WellLog, WellLogValue
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
+from ModellingToolbox.Resources.WellLogs import WellLog, WellLogValue
 from ModellingToolbox.Resources.Wells import WellMarker, Well
 from ModellingToolbox.Resources.constants import float_precision
 

@@ -14,7 +14,7 @@ from typing import List
 from ModellingToolbox.Exceptions import DatabaseException, WellMarkerDepthException
 from ModellingToolbox.Resources.GeoObject import AbstractGeoObject
 from ModellingToolbox.Resources.Geometries import GeoPoint
-from ModellingToolbox.Resources.PropertyLogs import WellLog
+from ModellingToolbox.Resources.WellLogs import WellLog
 from ModellingToolbox.Resources.DBHandler import Base, AbstractDBObject
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
 

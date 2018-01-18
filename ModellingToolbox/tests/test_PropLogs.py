@@ -6,9 +6,10 @@ This is a test module for the Resources.PropertyLogs-Module classes using unitte
 import unittest
 
 from ModellingToolbox.Resources.DBHandler import DBHandler
-from ModellingToolbox.Resources.Geometries import GeoPoint, Line
-from ModellingToolbox.Resources.PropertyLogs import Property, WellLog, WellLogValue
+from ModellingToolbox.Resources.Geometries import GeoPoint
+from ModellingToolbox.Resources.Property import Property
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
+from ModellingToolbox.Resources.WellLogs import WellLog, WellLogValue
 from ModellingToolbox.Resources.Wells import Well
 
 
