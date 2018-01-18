@@ -8,9 +8,9 @@ from typing import List, Tuple
 
 from ModellingToolbox.Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
 from ModellingToolbox.Resources.Geometries import GeoPoint
-from ModellingToolbox.Resources.PropertyLogs import Property
+from ModellingToolbox.Resources.Property import Property
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
-from ModellingToolbox.Resources.Wells import Well, WellMarker
+from ModellingToolbox.Resources.Wells import WellMarker
 
 
 class Requests:

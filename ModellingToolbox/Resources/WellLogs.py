@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
-This module provides classes for storing property and log information in wells and points (and therefore also in lines).
-Properties for points are the same as logs, except there is only one value, not a list of values.
+This module provides a class for storing logging information of wells. The logging class is derived from the
+AbstractLogClass.
 
 .. todo:: - reformat docstrings, espacially of setter and getter functions
           - check exception types
@@ -11,100 +11,8 @@ import sqlalchemy as sq
 from sqlalchemy.orm import relationship
 from typing import List
 
+from ModellingToolbox.Resources.AbstractLog import AbstractLogClass
 from ModellingToolbox.Resources.DBHandler import Base, AbstractDBObject
-
-
-class AbstractLogPropClass(AbstractDBObject):
-    """
-    This class is the base for storing logging information or properties. This class should be treated as abstract, no
-    object should be created directly!
-    """
-
-    # define table_columns
-    prop_name = sq.Column(sq.VARCHAR(50), default='')
-    prop_unit = sq.Column(sq.VARCHAR(100), default='')
-
-    def __init__(self, property_name, property_unit, *args, **kwargs):
-        # type: (str, str, *object, **object) -> None
-        """
-        Initialises the class
-
-        :param property_name: name of the log or property
-        :type property_name: str
-
-        :param property_unit: unit of the log values or properties
-        :type property_unit: str
-
-        :returns: Nothing
-        """
-
-        self.property_name = property_name
-        self.property_unit = property_unit
-
-        AbstractDBObject.__init__(self, *args, **kwargs)
-
-    def __repr__(self):
-        text = "<AbstractLogPropClass property_name={}, property_unit={}\n".\
-            format(self.property_name, self.property_unit)
-        text += AbstractDBObject.__repr__(self)
-        return text
-
-    def __str__(self):
-        text = "{} [{}]\n".format(self.property_name, self.property_unit)
-        text += AbstractDBObject.__str__(self)
-        return text
-
-    @property
-    def property_name(self):
-        # type: () -> str
-        """
-        Returns the name of the property
-
-        :return: Returns the name of the property
-        """
-        return str(self.prop_name)
-
-    @property_name.setter
-    def property_name(self, name):
-        # type: (str) -> None
-        """
-        Set a new property name with a maximum length of 50 characters
-
-        :param name: new property name
-        :type name: str
-
-        :return: Nothing
-        """
-        name = str(name)
-        if len(name) > 100:
-            name = name[:100]
-        self.prop_name = name
-
-    @property
-    def property_unit(self):
-        # type: () -> unicode
-        """
-        Returns the unit of the property
-
-        :return: Returns the unit of the property
-        """
-        return unicode(self.prop_unit)
-
-    @property_unit.setter
-    def property_unit(self, unit):
-        # type: (str) -> None
-        """
-        Set a new unit for the property with a maximum length of 100 characters
-
-        :param unit: new unit for the property
-        :type unit: str
-
-        :return: Nothing
-        """
-        unit = unicode(unit)
-        if len(unit) > 100:
-            unit = unit[:100]
-        self.prop_unit = unit
 
 
 class WellLogValue(Base, AbstractDBObject):
@@ -222,7 +130,7 @@ class WellLogValue(Base, AbstractDBObject):
         self.log_value = float(log_value)
 
 
-class WellLog(Base, AbstractLogPropClass):
+class WellLog(Base, AbstractLogClass):
     """
     This class represents logging information for wells
     """
@@ -241,13 +149,13 @@ class WellLog(Base, AbstractLogPropClass):
         """
         Initialise the class
 
-        :param args: parameters for AbstractLogPropClass initialisation
+        :param args: parameters for AbstractLogClass initialisation
         :type args: List()
 
-        :param kwargs: parameters for AbstractLogPropClass initialisation
+        :param kwargs: parameters for AbstractLogClass initialisation
         :type kwargs: Dict()
         """
-        AbstractLogPropClass.__init__(self, *args, **kwargs)
+        AbstractLogClass.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         # type: () -> str
@@ -368,62 +276,3 @@ class WellLog(Base, AbstractLogPropClass):
             self.log_values.remove(value)
         except ValueError as e:
             raise ValueError(str(e) + '\nWellLogValue with ID ' + str(value.id) + ' not found in value list!')
-
-
-class Property(Base, AbstractLogPropClass):
-    """
-    This class represents logging information for wells
-    """
-    # define db table name and columns
-    __tablename__ = 'properties'
-
-    id = sq.Column(sq.INTEGER, sq.Sequence('properties_id_seq'), primary_key=True)
-    point_id = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'), default=-1)
-    prop_value = sq.Column(sq.FLOAT, default=0)
-
-    def __init__(self, *args, **kwargs):
-        # type: (*object, **object) -> None
-        """
-        Initialise the class
-
-        :param args: parameters for AbstractLogPropClass initialisation
-        :type args: List()
-
-        :param kwargs: parameters for AbstractLogPropClass initialisation
-        :type kwargs: Dict()
-        """
-        AbstractLogPropClass.__init__(self, *args, **kwargs)
-
-    def __repr__(self):
-        text = "<Property(value={})>\n".format(self.value)
-        text += AbstractLogPropClass.__repr__(self)
-        return text
-
-    def __str__(self):
-        text = "{} [{}]: {} - ".format(self.property_name, self.property_unit, self.value)
-        text += AbstractDBObject.__str__(self)
-        return text
-
-    @property
-    def value(self):
-        # type: () -> float
-        """
-        Returns the value of the property
-
-        :return: Returns the value of the property
-        """
-        return float(self.prop_value)
-
-    @value.setter
-    def value(self, prop_value):
-        # type: (float) -> None
-        """
-        Sets a new value for the property
-
-        :param prop_value: new value
-        :type prop_value: float
-
-        :return: Nothing
-        :raises ValueError: Raises ValueError if prop_value is not type float or cannot be converted to it
-        """
-        self.prop_value = float(prop_value)

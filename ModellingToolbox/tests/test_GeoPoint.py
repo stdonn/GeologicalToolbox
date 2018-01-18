@@ -8,7 +8,7 @@ import unittest
 
 from ModellingToolbox.Resources.DBHandler import DBHandler
 from ModellingToolbox.Resources.Geometries import GeoPoint, Line
-from ModellingToolbox.Resources.PropertyLogs import Property
+from ModellingToolbox.Resources.Property import Property
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
 from ModellingToolbox.Resources.constants import float_precision
 
