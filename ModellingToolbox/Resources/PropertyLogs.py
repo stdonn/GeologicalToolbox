@@ -11,7 +11,7 @@ import sqlalchemy as sq
 from sqlalchemy.orm import relationship
 from typing import List
 
-from Resources.DBHandler import Base, AbstractDBObject
+from ModellingToolbox.Resources.DBHandler import Base, AbstractDBObject
 
 
 class AbstractLogPropClass(AbstractDBObject):
