@@ -9,11 +9,11 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from Resources.DBHandler import Base, AbstractDBObject
-from Resources.GeoObject import AbstractGeoObject
-from Resources.PropertyLogs import Property
-from Resources.Stratigraphy import StratigraphicObject
-from Resources.constants import float_precision
+from ModellingToolbox.Resources.DBHandler import Base, AbstractDBObject
+from ModellingToolbox.Resources.GeoObject import AbstractGeoObject
+from ModellingToolbox.Resources.PropertyLogs import Property
+from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
+from ModellingToolbox.Resources.constants import float_precision
 
 
 class GeoPoint(Base, AbstractGeoObject):

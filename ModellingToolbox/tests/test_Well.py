@@ -6,12 +6,12 @@ This is a test module for the Resources.Geometries.Well and WellMarker classes u
 import math
 import unittest
 
-from Exceptions import WellMarkerDepthException
-from Resources.DBHandler import DBHandler
-from Resources.PropertyLogs import WellLog, WellLogValue
-from Resources.Stratigraphy import StratigraphicObject
-from Resources.Wells import WellMarker, Well
-from Resources.constants import float_precision
+from ModellingToolbox.Exceptions import WellMarkerDepthException
+from ModellingToolbox.Resources.DBHandler import DBHandler
+from ModellingToolbox.Resources.PropertyLogs import WellLog, WellLogValue
+from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
+from ModellingToolbox.Resources.Wells import WellMarker, Well
+from ModellingToolbox.Resources.constants import float_precision
 
 
 class TestWellClass(unittest.TestCase):
