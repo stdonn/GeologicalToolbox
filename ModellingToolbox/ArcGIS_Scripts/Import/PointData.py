@@ -81,7 +81,7 @@ class PointImport:
             strat = None
             if result['strat'] is not None:
                 strat = StratigraphicObject.init_stratigraphy(self.session, result['strat'], result['age'], False)
-            point = GeoPoint(strat, result['altitude'] is not None, result['easting'], result['northing'],
+            point = GeoPoint(strat, result['altitude'] is not None, '', result['easting'], result['northing'],
                              result['altitude'], self.session, result['point_set'], result['comment'])
             point.save_to_db()
 
