@@ -181,6 +181,20 @@ class AbstractDBObject(object):
                     'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
                     'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
 
+    @classmethod
+    def delete_from_db(cls, obj, session):
+        # type: (object, Session) -> None
+        """
+        Deletes an object from the database
+        :param obj: object to delete
+        :type obj; object
+        :param session: SQLAlchemy Session handling the connection to the database
+        :type session: Session
+        :return: Nothing
+        """
+        session.delete(obj)
+        session.commit()
+
     # load points from db
     @classmethod
     def load_all_from_db(cls, session):
