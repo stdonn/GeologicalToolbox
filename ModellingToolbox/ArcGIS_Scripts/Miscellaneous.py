@@ -6,11 +6,13 @@ other modules.
 
 from ModellingToolbox.Exceptions import ArgumentError
 from ModellingToolbox.Resources.DBHandler import DBHandler
-from ModellingToolbox.Resources.Geometries import GeoPoint
-
+from ModellingToolbox.Resources.Geometries import GeoPoint, Line
+from ModellingToolbox.Resources.Property import Property
+from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
+from ModellingToolbox.Resources.WellLogs import WellLog, WellLogValue
+from ModellingToolbox.Resources.Wells import Well, WellMarker
 from sqlalchemy.orm.session import Session
 
-# import arcpy
 import os
 import sys
 
@@ -42,11 +44,8 @@ if __name__ == '__main__':
     session = handler.get_session()
 
     if method == 'createDB':
-        # add temporary point
-        point = GeoPoint(None, False, '', 0, 0, 0, session, '', '')
-        point.save_to_db()
-        GeoPoint.delete_from_db(point, session)
         # we have a handler, so database file is created, enough for ArcGIS -> Exit
+        session.close_all()
         sys.exit()
 
     # noinspection PyTypeChecker

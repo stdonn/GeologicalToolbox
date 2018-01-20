@@ -18,13 +18,14 @@ class TestGeoPointClass(unittest.TestCase):
     This is a unittest class for the Resources.Geometries.GeoPoint class
     """
     def setUp(self):
-        # type: () -> None
+        # type: () -> Nonetmp.sqlite
         """
         Initialise a temporary database connection for all test cases and fill the database with test data
 
         :return: None
         """
         # initialise a in-memory sqlite database
+        # self.handler = DBHandler(connection='sqlite:///C:\\Users\\steph\\PycharmProjects\\Modelling-Toolbox\\tmp.sqlite', echo=False)
         self.handler = DBHandler(connection='sqlite://', echo=False)
         self.session = self.handler.get_session()
 

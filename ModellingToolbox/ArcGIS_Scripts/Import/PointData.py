@@ -11,7 +11,8 @@ from ModellingToolbox.Resources.DBHandler import DBHandler
 from ModellingToolbox.Resources.Geometries import GeoPoint
 from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
 
-import arcpy
+from arcpy import AddWarning
+
 import os
 import sys
 
@@ -50,13 +51,13 @@ class PointImport:
         point_data = args[0]
         separator = args[8]
         columns = {
-            'easting'   : int(args[1]) - 1,
-            'northing'  : int(args[2]) - 1,
-            'altitude'  : int(args[3]) - 1,
-            'strat'     : int(args[4]) - 1,
-            'age'       : int(args[5]) - 1,
-            'points_set': int(args[6]) - 1,
-            'comment'   : int(args[7]) - 1
+            'easting'  : int(args[1]) - 1,
+            'northing' : int(args[2]) - 1,
+            'altitude' : int(args[3]) - 1,
+            'strat'    : int(args[4]) - 1,
+            'age'      : int(args[5]) - 1,
+            'point_set': int(args[6]) - 1,
+            'comment'  : int(args[7]) - 1
         }
 
         for key in columns:
@@ -69,6 +70,7 @@ class PointImport:
         point_file = open(point_data, "r")
 
         for line in point_file:
+            line = line.rstrip()
             line = line.split(separator)
 
             result = dict()
@@ -79,11 +81,17 @@ class PointImport:
                     result[col] = None
 
             strat = None
-            if result['strat'] is not None:
-                strat = StratigraphicObject.init_stratigraphy(self.session, result['strat'], result['age'], False)
-            point = GeoPoint(strat, result['altitude'] is not None, '', result['easting'], result['northing'],
-                             result['altitude'], self.session, result['point_set'], result['comment'])
-            point.save_to_db()
+            try:
+                if result['strat'] is not None:
+                    strat = StratigraphicObject.init_stratigraphy(self.session, result['strat'], result['age'], False)
+                point = GeoPoint(strat, result['altitude'] is not None, '', result['easting'], result['northing'],
+                                 result['altitude'], self.session, result['point_set'], result['comment'])
+
+                point.save_to_db()
+            except ValueError:
+                AddWarning('Cannot convert line:\n{}'.format(str(line)))
+                for key in result:
+                    AddWarning("result['{}']:\t{}".format(key, result[key]))
 
         point_file.close()
 
@@ -98,10 +106,10 @@ if __name__ == '__main__':
 
     method = sys.argv[1]
     db = os.path.normpath(sys.argv[2])
-    handler = DBHandler(connection='sqlite:///' + db, echo=False)
+    handler = DBHandler(connection='sqlite:///' + db + '.sqlite', echo=False)
     session = handler.get_session()
     # noinspection PyTypeChecker
-    misc = PointImport(session)
+    point_data = PointImport(session)
 
     if method == 'import_from_file':
-        misc.import_from_file(sys.argv[4:])
+        point_data.import_from_file(sys.argv[4:])
