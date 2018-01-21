@@ -3,50 +3,50 @@ The ModellingToolbox API reference
 
 Exceptions defined for the API
 ------------------------------
-.. automodule:: Exceptions
+.. automodule:: ModellingToolbox.Exceptions
    :members:
 
-Members of the 'Resources' package
-----------------------------------
-.. automodule:: Resources
+Members of the 'ModellingToolbox.Resources' package
+---------------------------------------------------
+.. automodule:: ModellingToolbox.Resources
    :members:
 
-Constants defined in the 'Resources' package
---------------------------------------------
-.. automodule:: Resources.constants
+Constants defined in the 'ModellingToolbox.Resources' package
+-------------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.constants
    :members:
 
-Members of the 'Resources.DBHandler' module
--------------------------------------------
-.. automodule:: Resources.DBHandler
+Members of the 'ModellingToolbox.Resources.DBHandler' module
+------------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.DBHandler
    :members:
 
-Members of the 'Resources.Geometries' module
---------------------------------------------
-.. automodule:: Resources.Geometries
+Members of the 'ModellingToolbox.Resources.Geometries' module
+-------------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.Geometries
    :members:
 
-Members of the 'Resources.GeoObject' module
--------------------------------------------
-.. automodule:: Resources.GeoObject
+Members of the 'ModellingToolbox.Resources.GeoObject' module
+------------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.GeoObject
    :members:
 
-Members of the 'Resources.PropertyLogs' module
-----------------------------------------------
-.. automodule:: Resources.PropertyLogs
+Members of the 'ModellingToolbox.Resources.PropertyLogs' module
+---------------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.PropertyLogs
    :members:
 
-Members of the 'Resources.Requests' module
-------------------------------------------
-.. automodule:: Resources.Requests
+Members of the 'ModellingToolbox.Resources.Requests' module
+-----------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.Requests
    :members:
 
-Members of the 'Resources.Stratigraphy' module
-----------------------------------------------
-.. automodule:: Resources.Stratigraphy
+Members of the 'ModellingToolbox.Resources.Stratigraphy' module
+---------------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.Stratigraphy
    :members:
 
-Members of the 'Resources.Wells' module
----------------------------------------
-.. automodule:: Resources.Wells
+Members of the 'ModellingToolbox.Resources.Wells' module
+--------------------------------------------------------
+.. automodule:: ModellingToolbox.Resources.Wells
    :members:

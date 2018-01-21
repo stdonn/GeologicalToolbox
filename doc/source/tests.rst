@@ -1,28 +1,28 @@
 The ModellingToolbox API reference
 ==================================
 
-Unittest for the 'Resources.GeoPoint' class
--------------------------------------------
-.. automodule:: tests.test_GeoPoint
+Unittest for the 'ModellingToolbox.Resources.GeoPoint' class
+------------------------------------------------------------
+.. automodule:: ModellingToolbox.tests.test_GeoPoint
    :members:
 
-Unittest for the 'Resources.Line' class
----------------------------------------
-.. automodule:: tests.test_Line
+Unittest for the 'ModellingToolbox.Resources.Line' class
+--------------------------------------------------------
+.. automodule:: ModellingToolbox.tests.test_Line
    :members:
 
-Unittest for the 'Resources.PropertyLogs' module
-------------------------------------------------
-.. automodule:: tests.test_PropLogs
+Unittest for the 'ModellingToolbox.Resources.PropertyLogs' module
+-----------------------------------------------------------------
+.. automodule:: ModellingToolbox.tests.test_PropLogs
    :members:
 
-Unittest for the 'Resources.StratigraphicObject' module
--------------------------------------------------------
-.. automodule:: tests.test_Stratigraphy
+Unittest for the 'ModellingToolbox.Resources.StratigraphicObject' module
+------------------------------------------------------------------------
+.. automodule:: ModellingToolbox.tests.test_Stratigraphy
    :members:
 
-Unittest for the 'Resources.Wells' module
------------------------------------------
-.. automodule:: tests.test_Well
+Unittest for the 'ModellingToolbox.Resources.Wells' module
+----------------------------------------------------------
+.. automodule:: ModellingToolbox.tests.test_Well
    :members:
 
