@@ -7,7 +7,7 @@ import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from ModellingToolbox.Resources.DBHandler import AbstractDBObject
+from GeologicalToolbox.Resources.DBHandler import AbstractDBObject
 
 
 class AbstractGeoObject(AbstractDBObject):

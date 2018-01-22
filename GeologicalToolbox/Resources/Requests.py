@@ -6,11 +6,11 @@ import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List, Tuple
 
-from ModellingToolbox.Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
-from ModellingToolbox.Resources.Geometries import GeoPoint
-from ModellingToolbox.Resources.Property import Property
-from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
-from ModellingToolbox.Resources.Wells import WellMarker
+from GeologicalToolbox.Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
+from GeologicalToolbox.Resources.Geometries import GeoPoint
+from GeologicalToolbox.Resources.Property import Property
+from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.Resources.Wells import WellMarker
 
 
 class Requests:

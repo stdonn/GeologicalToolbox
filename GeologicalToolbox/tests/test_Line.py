@@ -7,9 +7,9 @@ import unittest
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from ModellingToolbox.Resources.DBHandler import DBHandler
-from ModellingToolbox.Resources.Geometries import GeoPoint, Line
-from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.Resources.DBHandler import DBHandler
+from GeologicalToolbox.Resources.Geometries import GeoPoint, Line
+from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
 
 
 class TestLineClass(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestLineClass(unittest.TestCase):
         self.session = self.handler.get_session()
 
         # handler = DBHandler(
-        # 		connection='sqlite:////Users/stephan/Documents/work/Dissertation/GIS/Modelling-Toolbox/data.db',
+        # 		connection='sqlite:////Users/stephan/Documents/data.db',
         # 		debug=False)
         # handler = DBHandler(connection='sqlite:///D:\\data.db', debug=False)
 
