@@ -1,11 +1,11 @@
-.. Modelling Toolbox documentation master file, created by
+.. Geological Toolbox documentation master file, created by
    sphinx-quickstart on Tue Dec 12 10:29:22 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-======================================================
-Welcome to the documentation of the Modelling Toolbox!
-======================================================
+=======================================================
+Welcome to the documentation of the Geological Toolbox!
+=======================================================
 
 .. toctree::
    :maxdepth: 2

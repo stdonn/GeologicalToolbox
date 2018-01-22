@@ -8,8 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from ModellingToolbox.Exceptions import DatabaseException
-from ModellingToolbox.Resources.DBHandler import Base
+from GeologicalToolbox.Exceptions import DatabaseException
+from GeologicalToolbox.Resources.DBHandler import Base
 
 
 class StratigraphicObject(Base):

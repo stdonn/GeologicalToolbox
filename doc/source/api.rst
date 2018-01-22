@@ -3,50 +3,50 @@ The ModellingToolbox API reference
 
 Exceptions defined for the API
 ------------------------------
-.. automodule:: ModellingToolbox.Exceptions
+.. automodule:: GeologicalToolbox.Exceptions
    :members:
 
-Members of the 'ModellingToolbox.Resources' package
----------------------------------------------------
-.. automodule:: ModellingToolbox.Resources
+Members of the 'GeologicalToolbox.Resources' package
+----------------------------------------------------
+.. automodule:: GeologicalToolbox.Resources
    :members:
 
-Constants defined in the 'ModellingToolbox.Resources' package
+Constants defined in the 'GeologicalToolbox.Resources' package
+--------------------------------------------------------------
+.. automodule:: GeologicalToolbox.Resources.constants
+   :members:
+
+Members of the 'GeologicalToolbox.Resources.DBHandler' module
 -------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.constants
+.. automodule:: GeologicalToolbox.Resources.DBHandler
    :members:
 
-Members of the 'ModellingToolbox.Resources.DBHandler' module
-------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.DBHandler
+Members of the 'GeologicalToolbox.Resources.Geometries' module
+--------------------------------------------------------------
+.. automodule:: GeologicalToolbox.Resources.Geometries
    :members:
 
-Members of the 'ModellingToolbox.Resources.Geometries' module
+Members of the 'GeologicalToolbox.Resources.GeoObject' module
 -------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.Geometries
+.. automodule:: GeologicalToolbox.Resources.GeoObject
    :members:
 
-Members of the 'ModellingToolbox.Resources.GeoObject' module
+Members of the 'GeologicalToolbox.Resources.PropertyLogs' module
+----------------------------------------------------------------
+.. automodule:: GeologicalToolbox.Resources.PropertyLogs
+   :members:
+
+Members of the 'GeologicalToolbox.Resources.Requests' module
 ------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.GeoObject
+.. automodule:: GeologicalToolbox.Resources.Requests
    :members:
 
-Members of the 'ModellingToolbox.Resources.PropertyLogs' module
----------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.PropertyLogs
+Members of the 'GeologicalToolbox.Resources.Stratigraphy' module
+----------------------------------------------------------------
+.. automodule:: GeologicalToolbox.Resources.Stratigraphy
    :members:
 
-Members of the 'ModellingToolbox.Resources.Requests' module
------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.Requests
-   :members:
-
-Members of the 'ModellingToolbox.Resources.Stratigraphy' module
----------------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.Stratigraphy
-   :members:
-
-Members of the 'ModellingToolbox.Resources.Wells' module
---------------------------------------------------------
-.. automodule:: ModellingToolbox.Resources.Wells
+Members of the 'GeologicalToolbox.Resources.Wells' module
+---------------------------------------------------------
+.. automodule:: GeologicalToolbox.Resources.Wells
    :members:

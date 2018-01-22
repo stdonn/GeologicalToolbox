@@ -11,8 +11,8 @@ import sqlalchemy as sq
 from sqlalchemy.orm import relationship
 from typing import List
 
-from ModellingToolbox.Resources.AbstractLog import AbstractLogClass
-from ModellingToolbox.Resources.DBHandler import Base, AbstractDBObject
+from GeologicalToolbox.Resources.AbstractLog import AbstractLogClass
+from GeologicalToolbox.Resources.DBHandler import Base, AbstractDBObject
 
 
 class WellLogValue(Base, AbstractDBObject):

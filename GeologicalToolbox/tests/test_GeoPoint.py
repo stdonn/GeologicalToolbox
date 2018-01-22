@@ -6,11 +6,11 @@ This is a test module for the Resources.Geometries.GeoPoint class using unittest
 import math
 import unittest
 
-from ModellingToolbox.Resources.DBHandler import DBHandler
-from ModellingToolbox.Resources.Geometries import GeoPoint, Line
-from ModellingToolbox.Resources.Property import Property
-from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
-from ModellingToolbox.Resources.constants import float_precision
+from GeologicalToolbox.Resources.DBHandler import DBHandler
+from GeologicalToolbox.Resources.Geometries import GeoPoint, Line
+from GeologicalToolbox.Resources.Property import Property
+from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.Resources.constants import float_precision
 
 
 class TestGeoPointClass(unittest.TestCase):

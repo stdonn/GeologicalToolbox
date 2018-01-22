@@ -5,10 +5,10 @@ This is a test module for the Resources.Geometries.Well and WellMarker classes u
 
 import unittest
 
-from ModellingToolbox.Resources.DBHandler import DBHandler
-from ModellingToolbox.Resources.Requests import Requests
-from ModellingToolbox.Resources.Stratigraphy import StratigraphicObject
-from ModellingToolbox.Resources.Wells import WellMarker, Well
+from GeologicalToolbox.Resources.DBHandler import DBHandler
+from GeologicalToolbox.Resources.Requests import Requests
+from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.Resources.Wells import WellMarker, Well
 
 
 class TestWellClass(unittest.TestCase):
