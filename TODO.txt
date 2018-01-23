@@ -1,8 +1,0 @@
-TODO:
-
-Line:
-- possibly: integrate has_z
-
-COMMENTS:
-
-- Doubled lines can exists in the DB.
