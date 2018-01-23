@@ -7,10 +7,10 @@ from sqlalchemy.orm.session import Session
 from typing import List, Tuple
 
 from GeologicalToolbox.Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
-from GeologicalToolbox.Resources.Geometries import GeoPoint
-from GeologicalToolbox.Resources.Property import Property
-from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
-from GeologicalToolbox.Resources.Wells import WellMarker
+from GeologicalToolbox.Geometries import GeoPoint
+from GeologicalToolbox.Properties import Property
+from GeologicalToolbox.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.Wells import WellMarker
 
 
 class Requests:

@@ -5,12 +5,12 @@ This is a test module for the Resources.PropertyLogs-Module classes using unitte
 
 import unittest
 
-from GeologicalToolbox.Resources.DBHandler import DBHandler
-from GeologicalToolbox.Resources.Geometries import GeoPoint
-from GeologicalToolbox.Resources.Property import Property
-from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
-from GeologicalToolbox.Resources.WellLogs import WellLog, WellLogValue
-from GeologicalToolbox.Resources.Wells import Well
+from GeologicalToolbox.DBHandler import DBHandler
+from GeologicalToolbox.Geometries import GeoPoint
+from GeologicalToolbox.Properties import Property
+from GeologicalToolbox.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.WellLogs import WellLog, WellLogValue
+from GeologicalToolbox.Wells import Well
 
 
 class TestWellLogValueClass(unittest.TestCase):

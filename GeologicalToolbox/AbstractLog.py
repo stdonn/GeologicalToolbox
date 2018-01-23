@@ -8,7 +8,7 @@ This module provides an abstract base class for storing logging or property info
 
 import sqlalchemy as sq
 
-from GeologicalToolbox.Resources.DBHandler import AbstractDBObject
+from GeologicalToolbox.DBHandler import AbstractDBObject
 
 
 class AbstractLogClass(AbstractDBObject):

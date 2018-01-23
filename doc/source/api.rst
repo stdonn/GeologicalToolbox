@@ -1,52 +1,62 @@
-The ModellingToolbox API reference
-==================================
+The GeologicalToolbox API reference
+===================================
+
+Members of the 'GeologicalToolbox' package
+------------------------------------------
+.. automodule:: GeologicalToolbox
+   :members:
+
+Members of the 'GeologicalToolbox.AbstractLog' module
+-----------------------------------------------------
+.. automodule:: GeologicalToolbox.AbstractLog
+   :members:
+
+Constants defined in the 'GeologicalToolbox' package
+----------------------------------------------------
+.. automodule:: GeologicalToolbox.Constants
+   :members:
+
+Members of the 'GeologicalToolbox.DBHandler' module
+---------------------------------------------------
+.. automodule:: GeologicalToolbox.DBHandler
+   :members:
 
 Exceptions defined for the API
 ------------------------------
 .. automodule:: GeologicalToolbox.Exceptions
    :members:
 
-Members of the 'GeologicalToolbox.Resources' package
+Members of the 'GeologicalToolbox.Geometries' module
 ----------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources
+.. automodule:: GeologicalToolbox.Geometries
    :members:
 
-Constants defined in the 'GeologicalToolbox.Resources' package
---------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.constants
+Members of the 'GeologicalToolbox.GeoObject' module
+---------------------------------------------------
+.. automodule:: GeologicalToolbox.GeoObject
    :members:
 
-Members of the 'GeologicalToolbox.Resources.DBHandler' module
--------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.DBHandler
+Members of the 'GeologicalToolbox.Properties' module
+----------------------------------------------------
+.. automodule:: GeologicalToolbox.Properties
    :members:
 
-Members of the 'GeologicalToolbox.Resources.Geometries' module
---------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.Geometries
+Members of the 'GeologicalToolbox.Requests' module
+--------------------------------------------------
+.. automodule:: GeologicalToolbox.Requests
    :members:
 
-Members of the 'GeologicalToolbox.Resources.GeoObject' module
--------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.GeoObject
+Members of the 'GeologicalToolbox.Stratigraphy' module
+------------------------------------------------------
+.. automodule:: GeologicalToolbox.Stratigraphy
    :members:
 
-Members of the 'GeologicalToolbox.Resources.PropertyLogs' module
-----------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.PropertyLogs
+Members of the 'GeologicalToolbox.WellLogs' module
+--------------------------------------------------
+.. automodule:: GeologicalToolbox.WellLogs
    :members:
 
-Members of the 'GeologicalToolbox.Resources.Requests' module
-------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.Requests
-   :members:
-
-Members of the 'GeologicalToolbox.Resources.Stratigraphy' module
-----------------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.Stratigraphy
-   :members:
-
-Members of the 'GeologicalToolbox.Resources.Wells' module
----------------------------------------------------------
-.. automodule:: GeologicalToolbox.Resources.Wells
+Members of the 'GeologicalToolbox.Wells' module
+-----------------------------------------------
+.. automodule:: GeologicalToolbox.Wells
    :members:

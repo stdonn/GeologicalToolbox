@@ -181,7 +181,8 @@ class AbstractDBObject(object):
                     'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
                     'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
         finally:
-            self.__session.close()
+            pass
+            # self.__session.close()
 
     @classmethod
     def delete_from_db(cls, obj, session):

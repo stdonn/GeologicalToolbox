@@ -12,11 +12,11 @@ from sqlalchemy.orm.session import Session
 from typing import List
 
 from GeologicalToolbox.Exceptions import DatabaseException, WellMarkerDepthException
-from GeologicalToolbox.Resources.GeoObject import AbstractGeoObject
-from GeologicalToolbox.Resources.Geometries import GeoPoint
-from GeologicalToolbox.Resources.WellLogs import WellLog
-from GeologicalToolbox.Resources.DBHandler import Base, AbstractDBObject
-from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.GeoObject import AbstractGeoObject
+from GeologicalToolbox.Geometries import GeoPoint
+from GeologicalToolbox.WellLogs import WellLog
+from GeologicalToolbox.DBHandler import Base, AbstractDBObject
+from GeologicalToolbox.Stratigraphy import StratigraphicObject
 
 
 class WellMarker(Base, AbstractDBObject):

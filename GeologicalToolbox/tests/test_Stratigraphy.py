@@ -5,8 +5,8 @@ This is a test module for the Resources.StratigraphicObject.StratigraphicObject 
 
 import unittest
 
-from GeologicalToolbox.Resources.DBHandler import DBHandler
-from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.DBHandler import DBHandler
+from GeologicalToolbox.Stratigraphy import StratigraphicObject
 
 
 class TestStratigraphyClass(unittest.TestCase):

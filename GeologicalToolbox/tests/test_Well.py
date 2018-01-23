@@ -7,11 +7,11 @@ import math
 import unittest
 
 from GeologicalToolbox.Exceptions import WellMarkerDepthException
-from GeologicalToolbox.Resources.DBHandler import DBHandler
-from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
-from GeologicalToolbox.Resources.WellLogs import WellLog, WellLogValue
-from GeologicalToolbox.Resources.Wells import WellMarker, Well
-from GeologicalToolbox.Resources.constants import float_precision
+from GeologicalToolbox.DBHandler import DBHandler
+from GeologicalToolbox.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.WellLogs import WellLog, WellLogValue
+from GeologicalToolbox.Wells import WellMarker, Well
+from GeologicalToolbox.Constants import float_precision
 
 
 class TestWellClass(unittest.TestCase):

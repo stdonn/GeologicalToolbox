@@ -7,9 +7,9 @@ import unittest
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from GeologicalToolbox.Resources.DBHandler import DBHandler
-from GeologicalToolbox.Resources.Geometries import GeoPoint, Line
-from GeologicalToolbox.Resources.Stratigraphy import StratigraphicObject
+from GeologicalToolbox.DBHandler import DBHandler
+from GeologicalToolbox.Geometries import GeoPoint, Line
+from GeologicalToolbox.Stratigraphy import StratigraphicObject
 
 
 class TestLineClass(unittest.TestCase):

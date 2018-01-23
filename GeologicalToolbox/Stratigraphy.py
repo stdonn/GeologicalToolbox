@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 from typing import List
 
 from GeologicalToolbox.Exceptions import DatabaseException
-from GeologicalToolbox.Resources.DBHandler import Base
+from GeologicalToolbox.DBHandler import Base
 
 
 class StratigraphicObject(Base):
