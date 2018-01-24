@@ -7,6 +7,7 @@ This module provides an abstract base class for storing logging or property info
 """
 
 import sqlalchemy as sq
+import sys
 
 from GeologicalToolbox.DBHandler import AbstractDBObject
 
@@ -85,7 +86,10 @@ class AbstractLogClass(AbstractDBObject):
 
         :return: Returns the unit of the property
         """
-        return unicode(self.prop_unit)
+        if sys.version_info[0] == 2:
+            return unicode(self.prop_unit)
+        else:
+            return self.prop_unit
 
     @property_unit.setter
     def property_unit(self, unit):
@@ -98,7 +102,9 @@ class AbstractLogClass(AbstractDBObject):
 
         :return: Nothing
         """
-        unit = unicode(unit)
+        if sys.version_info[0] == 2:
+            unit = unicode(unit)
+
         if len(unit) > 100:
             unit = unit[:100]
         self.prop_unit = unit

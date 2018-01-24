@@ -5,6 +5,7 @@ This module hosts the class Requests, which provides functionality for special (
 import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List, Tuple
+import sys
 
 from GeologicalToolbox.Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
 from GeologicalToolbox.Geometries import GeoPoint
@@ -52,7 +53,12 @@ class Requests:
             try:
                 extent[i] = float(extent[i])
             except ValueError as e:
-                raise ValueError('At least on extent element cannot be converted to float!\n' + e.message)
+                if sys.version_info[0] == 2:
+                    raise ValueError('At least on extent element cannot be converted to float!\n' + e.message)
+                elif sys.version_info[0] == 3:
+                    raise ValueError('At least on extent element cannot be converted to float!\n{}'.format(e))
+                else:
+                    raise ValueError('At least on extent element cannot be converted to float!')
         if extent[0] > extent[1]:
             raise ListOrderException("min easting > max easting")
         if extent[2] > extent[3]:

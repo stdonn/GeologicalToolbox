@@ -3,6 +3,7 @@
 This is a test module for the Resources.Geometries.Line class using unittest
 """
 
+import sys
 import unittest
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -16,6 +17,7 @@ class TestLineClass(unittest.TestCase):
     """
     This is a unittest class for the Resources.Geometries.Line class
     """
+
     def setUp(self):
         # type: () -> None
         """
@@ -35,49 +37,49 @@ class TestLineClass(unittest.TestCase):
         # add test data to the database
         self.lines = [
             {
-                'closed' : False,
+                'closed': False,
                 'horizon': 'mu',
-                'age'    : 3,
-                'update' : False,
-                'points' : ((1204067.0548148106, 634617.5980860253),
-                            (1204067.0548148106, 620742.1035724243),
-                            (1215167.4504256917, 620742.1035724243),
-                            (1215167.4504256917, 634617.5980860253),
-                            (1204067.0548148106, 634617.5980860253)),
-                'name'   : 'Line_1'
+                'age': 3,
+                'update': False,
+                'points': ((1204067.0548148106, 634617.5980860253),
+                           (1204067.0548148106, 620742.1035724243),
+                           (1215167.4504256917, 620742.1035724243),
+                           (1215167.4504256917, 634617.5980860253),
+                           (1204067.0548148106, 634617.5980860253)),
+                'name': 'Line_1'
             }, {
-                'closed' : True,
+                'closed': True,
                 'horizon': 'so',
-                'age'    : 2,
-                'update' : True,
-                'points' : ((1179553.6811741155, 647105.5431482664),
-                            (1179553.6811741155, 626292.3013778647),
-                            (1194354.20865529, 626292.3013778647),
-                            (1194354.20865529, 647105.5431482664)),
-                'name'   : 'Line_2'
+                'age': 2,
+                'update': True,
+                'points': ((1179553.6811741155, 647105.5431482664),
+                           (1179553.6811741155, 626292.3013778647),
+                           (1194354.20865529, 626292.3013778647),
+                           (1194354.20865529, 647105.5431482664)),
+                'name': 'Line_2'
             }, {
-                'closed' : False,
+                'closed': False,
                 'horizon': 'mm',
-                'age'    : 4,
-                'update' : True,
-                'points' : ((1179091.1646903288, 712782.8838459781),
-                            (1161053.0218226474, 667456.2684348812),
-                            (1214704.933941905, 641092.8288590391),
-                            (1228580.428455506, 682719.3123998424),
-                            (1218405.0658121984, 721108.1805541387)),
-                'name'   : 'Line_3'
+                'age': 4,
+                'update': True,
+                'points': ((1179091.1646903288, 712782.8838459781),
+                           (1161053.0218226474, 667456.2684348812),
+                           (1214704.933941905, 641092.8288590391),
+                           (1228580.428455506, 682719.3123998424),
+                           (1218405.0658121984, 721108.1805541387)),
+                'name': 'Line_3'
             }, {
-                'closed' : False,
+                'closed': False,
                 'horizon': 'mo',
-                'age'    : 5,
-                'update' : True,
-                'points' : ((1149490.1097279799, 691044.6091080031),
-                            (1149490.1097279799, 648030.5761158396),
-                            (1191579.1097525698, 648030.5761158396),
-                            (1149490.1097279799, 648030.5761158396),
-                            (1191579.1097525698, 691044.6091080031),
-                            (1149490.1097279799, 691044.6091080031)),
-                'name'   : 'Line_2'
+                'age': 5,
+                'update': True,
+                'points': ((1149490.1097279799, 691044.6091080031),
+                           (1149490.1097279799, 648030.5761158396),
+                           (1191579.1097525698, 648030.5761158396),
+                           (1149490.1097279799, 648030.5761158396),
+                           (1191579.1097525698, 691044.6091080031),
+                           (1149490.1097279799, 691044.6091080031)),
+                'name': 'Line_2'
             }
         ]
 
@@ -86,7 +88,8 @@ class TestLineClass(unittest.TestCase):
             for point in line['points']:
                 points.append(GeoPoint(None, False, '', point[0], point[1], 0, self.session, line['name'], ''))
             new_line = Line(line['closed'],
-                            StratigraphicObject.init_stratigraphy(self.session, line['horizon'], line['age'], line['update']),
+                            StratigraphicObject.init_stratigraphy(self.session, line['horizon'], line['age'],
+                                                                  line['update']),
                             points, self.session, line['name'], '')
             new_line.save_to_db()
 
@@ -120,8 +123,12 @@ class TestLineClass(unittest.TestCase):
         self.assertEqual(count_lines, len(self.lines),
                          "Number of lines {} doesn't match the number of stored database lines {}!". \
                          format(count_lines, len(self.lines)))
-        self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
-                              format(stored_horizons, horizons))
+        if sys.version_info[0] == 2:
+            self.assertItemsEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
+                                  format(stored_horizons, horizons))
+        else:
+            self.assertCountEqual(horizons, stored_horizons, "Horizons doesn't match.\nDatabase: {}\nShould be: {}". \
+                                  format(stored_horizons, horizons))
         self.assertEqual(len(lines[0].points), 4, "Number of points of the line with ID 1 should be {}, but is {}". \
                          format(4, len(lines[0].points)))
         self.assertTrue(lines[0].is_closed, "line with ID 1 should be closed...")
@@ -143,7 +150,8 @@ class TestLineClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        insert_point = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
+        insert_point = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800,
+                                0,
                                 self.session)
         line_query = self.session.query(Line).filter_by(id=1)
         count = line_query.count()
@@ -196,13 +204,17 @@ class TestLineClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        insert_point_1 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800, 0,
+        insert_point_1 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204200, 620800,
+                                  0,
                                   self.session)
-        insert_point_2 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204500, 621200, 0,
+        insert_point_2 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204500, 621200,
+                                  0,
                                   self.session)
-        insert_point_3 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
+        insert_point_3 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000,
+                                  0,
                                   self.session)
-        insert_point_4 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000, 0,
+        insert_point_4 = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu'), False, '', 1204700, 621000,
+                                  0,
                                   self.session)
 
         points = [insert_point_1, insert_point_2, insert_point_3, insert_point_4]
