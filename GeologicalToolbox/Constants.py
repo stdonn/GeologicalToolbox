@@ -3,7 +3,7 @@
 This module defines constants which are used in the API.
 """
 
-project_version = ['0', '1', '1', 'b1']
+project_version = ['0', '1', '2', 'b1']
 """
 Current project version
 """
