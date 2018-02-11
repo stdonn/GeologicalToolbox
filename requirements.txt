@@ -1,0 +1,5 @@
+# requirements for GeologicalToolbox by Stephan Donndorf
+SQLAlchemy > 1.2.0
+typing
+Sphinx
+sphinxjp.themes.basicstrap
