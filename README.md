@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stdonn/GeologicalToolbox.svg?branch=master)](https://travis-ci.org/stdonn/GeologicalToolbox)
+
 # Geological Toolbox
 
 ## General Description
