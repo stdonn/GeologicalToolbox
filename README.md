@@ -3,7 +3,6 @@
 ![PyPI - Status](https://img.shields.io/pypi/status/GeologicalToolbox.svg)
 ![Python Version](https://img.shields.io/pypi/pyversions/GeologicalToolbox.svg)
 ![License](https://img.shields.io/pypi/l/GeologicalToolbox.svg)
-![Wheel](https://img.shields.io/pypi/l/GeologicalToolbox.svg)
 ![PyPI - Format](https://img.shields.io/pypi/format/GeologicalToolbox.svg)
 
 
