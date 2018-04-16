@@ -1,4 +1,11 @@
-[![Build Status](https://travis-ci.org/stdonn/GeologicalToolbox.svg?branch=master)](https://travis-ci.org/stdonn/GeologicalToolbox)
+![PyPI](https://img.shields.io/pypi/v/GeologicalToolbox.svg)
+![Build Status](https://travis-ci.org/stdonn/GeologicalToolbox.svg?branch=master)
+![PyPI - Status](https://img.shields.io/pypi/status/GeologicalToolbox.svg)
+![Python Version](https://img.shields.io/pypi/pyversions/GeologicalToolbox.svg)
+![License](https://img.shields.io/pypi/l/GeologicalToolbox.svg)
+![Wheel](https://img.shields.io/pypi/l/GeologicalToolbox.svg)
+![PyPI - Format](https://img.shields.io/pypi/format/GeologicalToolbox.svg)
+
 
 # Geological Toolbox
 
