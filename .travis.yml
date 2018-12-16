@@ -1,16 +1,21 @@
 language: python
 python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7-dev"
-  # PyPy versions
-  - "pypy3.5"
-# command to install dependencies
+- '2.7'
+- '3.3'
+- '3.4'
+- '3.5'
+- '3.6'
+- '3.7'
+- pypy3.5
 install:
-  - pip install -r requirements.txt
-# command to run tests
+- pip install -r requirements.txt
 script:
-  - python -m unittest discover
+- python -m unittest discover
+deploy:
+  provider: pypi
+  user: stdonn
+  password:
+    secure: h0Hzqol/5m09Pzn2qKayuUCwL1wDh4jgj+GdVYxaOJMXcjEFFzM0iBbQ2Lvf6bbkDOS4gz8tP7Y4XD7IRmKu0YxoMpR0dBuPf5YCcKzvQeGLwVEKmrD1tgDEkzN4dy7vTJspfu5CRzA3Cz+XiMLjzEknywtXZi+PbGq6aJTq71JF7bAco1O8cZYUVzurwBMqoU0Pr/JYx7fYqQW8Q6cNQ79bKTWnW8YgxsBsCxD/UjmWVA2ERh2uZ8OuRl6mIzS41qq7JLqNPzzYe1VuB+BSlgolA3+umaMjqc9DyeZDIjCEWVKR8FFdeH2D7tuv4ZH4ZTzNEMe/mzoC1a5prE7Fz/hSycL3o97KtB2GlZAzo79oHM2xNu9GftMQkSA4mkXZTYVO9UAq2xrcOD9gONBZG0PTeLxyt00DTWFZ40UsbLyFzat8SQM1r4DQYFZTpGIyOlfDGaEXzJYauF0KlYu+vbP/PmNY0f2ZDSRMqWJGjPkbF+YWwUZWJ6Gw9Y756cGMhubGh/xJFxeGFRSUhHOQtdBmHW10l8N27+5MloAKwSDhv3Hbd+K1yJxnAZ3MWlVTfuB5oqbmklD2EFZl17zv6jZ+3ygKkBU8ka2mPpjRWDGtAHrzFNWjVCzCWtPiFGsvb+ClPmha3Duta1b+iZ3sSGTY2KNhhh13WuxScJa2Bvw=
+  on:
+    tags: true
+  skip_existing: true
