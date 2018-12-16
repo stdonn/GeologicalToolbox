@@ -1,9 +1,11 @@
-# coding=utf-8
+# -*- coding: UTF-8 -*-
 """
 This module defines constants which are used in the API.
 """
 
-project_version = ['0', '1', '2', 'b1']
+from ._version import __version__
+
+project_version = __version__.split('.')
 """
 Current project version
 """
