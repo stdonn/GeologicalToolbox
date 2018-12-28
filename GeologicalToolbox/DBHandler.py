@@ -42,6 +42,14 @@ class DBHandler(object):
         """
         return self.__Session()
 
+    def close_session(self):
+        # type: () -> None
+        """
+        Close the actual session
+        :return: Nothing
+        """
+        self.__Session.close()
+
 
 # class AbstractDBObject(object):
 class AbstractDBObject(object):

@@ -20,7 +20,7 @@ class TestGeoPointClass(unittest.TestCase):
     """
 
     def setUp(self):
-        # type: () -> Nonetmp.sqlite
+        # type: () -> None
         """
         Initialise a temporary database connection for all test cases and fill the database with test data
 
