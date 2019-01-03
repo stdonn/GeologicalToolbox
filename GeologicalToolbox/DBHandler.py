@@ -32,7 +32,12 @@ class DBHandler(object):
         self.__connection = connection
         self.__args = args
         self.__kwargs = kwargs
-        self.__Session = None
+
+        engine = sq.create_engine(self.__connection, *self.__args, **self.__kwargs)
+        Base.metadata.create_all(engine)
+        self.__sessionmaker = sessionmaker(bind=engine)
+        self.__last_session = None
+
         self.create_new_session()
 
     def create_new_session(self):
@@ -41,32 +46,28 @@ class DBHandler(object):
         Creates and returns a new session object
         :return: returns a newly created session object
         """
-
-        engine = sq.create_engine(self.__connection, *self.__args, **self.__kwargs)
-        Base.metadata.create_all(engine)
-        self.__Session = sessionmaker(bind=engine)
-        return self.__Session
+        self.__last_session = self.__sessionmaker()
+        return self.__last_session
 
     def get_session(self):
         # type: () -> Session
         """
         Returns the session object for the current database connection
         :return: Returns the session object for the current database connection
-        :raises IntegrityError: if session object is not initialized or closed
         """
-        if self.__Session is not None:
-            return self.__Session()
+        if self.__last_session is None:
+            return self.create_new_session()
         else:
-            raise IntegrityError("Session object is not initialized! Run create_new_session()!")
+            return self.__last_session
 
-    def close_session(self):
+    def close_last_session(self):
         # type: () -> None
         """
         Close the actual session
         :return: Nothing
         """
-        self.__Session.close()
-        self.__Session = None
+        self.__last_session.close()
+        self.__last_session = None
 
 
 # class AbstractDBObject(object):

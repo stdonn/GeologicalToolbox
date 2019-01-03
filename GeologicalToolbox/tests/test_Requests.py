@@ -247,6 +247,15 @@ class TestWellClass(unittest.TestCase):
         self.assertRaises(ValueError, Requests.well_markers_to_thickness,
                           self.session, 'mu', 'so', summarise_multiple=False, use_faulted=True, extent=[1, 2, 3, 'ab'])
 
+    def tearDown(self):
+        # type: () -> None
+        """
+        Close session after testruns
+
+        :return: Nothing
+        """
+        self.handler.close_last_session()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -349,11 +349,11 @@ class TestPropertyClass(unittest.TestCase):
     def tearDown(self):
         # type: () -> None
         """
-        Empty function, nothing to shutdown after the testing process
+        Close session after testruns
 
         :return: Nothing
         """
-        pass
+        self.handler.close_last_session()
 
 
 if __name__ == '__main__':

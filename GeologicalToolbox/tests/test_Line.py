@@ -458,14 +458,14 @@ class TestLineClass(unittest.TestCase):
         self.assertEqual(len(line_with_name), 3, "Wrong Number of lines with line name 'Line_2' ({}). Should be {}". \
                          format(len(line_with_name), 3))
 
-        def tearDown(self):
-            # type: () -> None
-            """
-            Empty function, nothing to shutdown after the testing process
+    def tearDown(self):
+        # type: () -> None
+        """
+        Close session after testruns
 
-            :return: Nothing
-            """
-            pass
+        :return: Nothing
+        """
+        self.handler.close_last_session()
 
     if __name__ == '__main__':
         unittest.main()
