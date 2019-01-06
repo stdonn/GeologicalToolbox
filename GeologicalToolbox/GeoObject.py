@@ -19,7 +19,7 @@ class AbstractGeoObject(AbstractDBObject):
     east = sq.Column(sq.FLOAT)
     north = sq.Column(sq.FLOAT)
     alt = sq.Column(sq.FLOAT)
-    reference = sq.Column(sq.TEXT(1000), default='')
+    reference = sq.Column(sq.TEXT, default='')
 
     def __init__(self, reference_system, easting, northing, altitude, *args, **kwargs):
         # type: (str, float, float, float, *object, **object) -> None
