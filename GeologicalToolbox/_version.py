@@ -3,4 +3,4 @@
 Version File for GeologicalToolbox-Module
 """
 
-__version__ = "0.1.4.b3"
+__version__ = "0.1.5.b1"
