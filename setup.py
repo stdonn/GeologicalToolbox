@@ -96,8 +96,7 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'SQLAlchemy>=1.2',
-        'typing'
+        'SQLAlchemy>=1.2'
     ],  # Optional
 
     # List additional groups of dependencies here (e.g. development
@@ -109,7 +108,10 @@ setup(
     # Similar to `install_requires` above, these must be valid existing
     # projects.
     extras_require={  # Optional
-        'dev': ['Sphinx', 'sphinxjp.themes.basicstrap'],
+        ':python_version < "3.5"': [
+            'typing'
+        ],
+        'dev': ['Sphinx', 'sphinxjp.themes.basicstrap']
         # 'test': ['coverage'],
     },
 
