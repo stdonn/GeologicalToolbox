@@ -24,7 +24,7 @@ For further information on installing packages with pip and PyPI see [Installing
 
 ## System Requirements
 
-This toolbox was tested with Python version 2.7 and 3.7.
+This toolbox was tested with Python version 3.5 to 3.8-dev.
 
 This toolbox requires [SQLAlchemy](https://www.sqlalchemy.org/) and [typing](https://pypi.org/project/typing/). The documentation uses [Sphinx](https://pypi.org/project/Sphinx/) and the [basicstrap template package](https://pypi.org/project/sphinxjp.themes.basicstrap/). More information to configure the documentation theme can be found on the [theme homepage](https://pythonhosted.org/sphinxjp.themes.basicstrap/index.html).
 

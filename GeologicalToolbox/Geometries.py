@@ -42,7 +42,7 @@ class GeoPoint(Base, AbstractGeoObject):
 
     # add Property relation
     # order by property name
-    properties: List[Property] = relationship("Property", order_by=Property.prop_name, backref="point",
+    properties = relationship("Property", order_by=Property.prop_name, backref="point",
                                               primaryjoin="GeoPoint.id==Property.point_id",
                                               cascade="all, delete, delete-orphan")
 

@@ -319,8 +319,7 @@ class TestPropertyClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        # noinspection PyTypeChecker
-        point: GeoPoint = GeoPoint.load_all_from_db(self.session)[0]
+        point = GeoPoint.load_all_from_db(self.session)[0]
         self.assertEqual(3, len(point.properties))
         self.assertEqual("test prop", point.properties[0].property_name)
         self.assertEqual("test prop 2", point.properties[1].property_name)
@@ -340,8 +339,7 @@ class TestPropertyClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises Assertion Error when a test fails
         """
-        # noinspection PyTypeChecker
-        point: GeoPoint = GeoPoint.load_all_from_db(self.session)[0]
+        point = GeoPoint.load_all_from_db(self.session)[0]
         point.properties[0].property_value = 342
         point.properties[1].property_value = "345.34"
         point.properties[2].property_value = "Test"
@@ -356,8 +354,7 @@ class TestPropertyClass(unittest.TestCase):
 
         del point
 
-        # noinspection PyTypeChecker
-        point: GeoPoint = GeoPoint.load_all_from_db(self.session)[0]
+        point = GeoPoint.load_all_from_db(self.session)[0]
         self.assertEqual(342, point.properties[0].property_value)
         self.assertEqual(345.34, point.properties[1].property_value)
         self.assertEqual(None, point.properties[2].property_value) # type changed to PropertyTypes.FLOAT

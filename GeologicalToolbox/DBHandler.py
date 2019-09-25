@@ -28,16 +28,14 @@ class DBHandler(object):
     A class for database access through an SQLAlchemy session.
     """
 
-    def __init__(self, connection="sqlite:///:memory:", test=False, *args, **kwargs):
-        # type: (str, bool, *object, **object) -> None
+    def __init__(self, connection="sqlite:///:memory:", *args, **kwargs):
+        # type: (str, *object, **object) -> None
         """
         | Initialize a new database connection via SQLAlchemy
         | Same initialisation as SQLAlchemy provides. Additional arguments are piped to SQLAlchemy.create_engine(...)
 
         :param connection: Connection uri to a database, format defined by SQLAlchemy
         :type connection: str
-        :param test: specify if this is a test case. If True, don't auto run alembic database migration
-        :type test: bool
         :return: Nothing
         """
         self.__connection = connection
@@ -49,7 +47,7 @@ class DBHandler(object):
         self.__config = "alembic.ini"
 
         in_memory = self.__connection in ["sqlite://", "sqlite:///:memory:"]
-        if not (test or in_memory or self.check_current_head()):
+        if not (in_memory or self.check_current_head()):
             self.start_db_migration()
 
         if in_memory:
