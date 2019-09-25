@@ -4,12 +4,21 @@ This module provides a class for database access through an SQLAlchemy session a
 related classes.
 """
 
+import inspect
+import os
 import sqlalchemy as sq
+
+from alembic import command, script
+from alembic.config import main as alembic_main, Config
+from alembic.runtime import migration
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
 from typing import List
+
+from GeologicalToolbox.Exceptions import DatabaseRequestException
 
 Base = declarative_base()
 
@@ -19,26 +28,60 @@ class DBHandler(object):
     A class for database access through an SQLAlchemy session.
     """
 
-    def __init__(self, connection='sqlite:///:memory:', *args, **kwargs):
-        # type: (str, *object, **object) -> None
+    def __init__(self, connection="sqlite:///:memory:", test=False, *args, **kwargs):
+        # type: (str, bool, *object, **object) -> None
         """
         | Initialize a new database connection via SQLAlchemy
         | Same initialisation as SQLAlchemy provides. Additional arguments are piped to SQLAlchemy.create_engine(...)
 
         :param connection: Connection uri to a database, format defined by SQLAlchemy
         :type connection: str
+        :param test: specify if this is a test case. If True, don't auto run alembic database migration
+        :type test: bool
         :return: Nothing
         """
         self.__connection = connection
         self.__args = args
         self.__kwargs = kwargs
 
-        engine = sq.create_engine(self.__connection, *self.__args, **self.__kwargs)
-        Base.metadata.create_all(engine)
-        self.__sessionmaker = sessionmaker(bind=engine)
+        self.__engine = sq.create_engine(self.__connection, *self.__args, **self.__kwargs)
         self.__last_session = None
+        self.__config = "alembic.ini"
 
+        in_memory = self.__connection in ["sqlite://", "sqlite:///:memory:"]
+        if not (test or in_memory or self.check_current_head()):
+            self.start_db_migration()
+
+        if in_memory:
+            Base.metadata.create_all(self.__engine)
+
+        self.__sessionmaker = sessionmaker(bind=self.__engine)
         self.create_new_session()
+
+    def initialize_migration(self):
+        """
+        Add migration information to a newly created database
+        :return: Nothing
+        """
+        alembic_cfg = Config(self.__config)
+        command.stamp(alembic_cfg, "head")
+
+    def check_current_head(self):
+        local_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # script directory
+        alembic_cfg = Config(os.path.abspath(os.path.join(local_dir, "alembic.ini")))
+        directory = script.ScriptDirectory.from_config(alembic_cfg)
+        with self.__engine.begin() as connection:
+            context = migration.MigrationContext.configure(connection)
+            return set(context.get_current_heads()) == set(directory.get_heads())
+
+    def start_db_migration(self):
+        self.close_last_session()
+        alembic_args = [
+            "--raiseerr",
+            "-x", "db_url={}".format(self.__connection),
+            "upgrade", "head"
+        ]
+        alembic_main(argv=alembic_args)
 
     def create_new_session(self):
         # type: () -> Session
@@ -66,8 +109,9 @@ class DBHandler(object):
         Close the actual session
         :return: Nothing
         """
-        self.__last_session.close()
-        self.__last_session = None
+        if self.__last_session is not None:
+            self.__last_session.close()
+            self.__last_session = None
 
 
 # class AbstractDBObject(object):
@@ -77,6 +121,7 @@ class AbstractDBObject(object):
     created directly!
     """
 
+    id = None
     name_col = sq.Column(sq.VARCHAR(100), default="")
     comment_col = sq.Column(sq.VARCHAR(100), default="")
 
@@ -96,7 +141,7 @@ class AbstractDBObject(object):
         """
         if not isinstance(session, Session):
             raise TypeError("'session' value is not of type SQLAlchemy Session!\n{} - {}".format(str(type(session)),
-                                                                                                  str(Session)))
+                                                                                                 str(Session)))
 
         self.__session = session
         self.comment = comment
@@ -205,8 +250,8 @@ class AbstractDBObject(object):
             # Failure during database processing? -> rollback changes and raise error again
             self.__session.rollback()
             raise IntegrityError(
-                    'Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- ' +
-                    'Rolling back changes...'.format(e.statement), e.params, e.orig, e.connection_invalidated)
+                "Cannot commit changes in geopoints table, Integrity Error (double unique values?) -- {} -- " +
+                "Rolling back changes...".format(e.statement), e.params, e.orig, e.connection_invalidated)
         finally:
             pass
             # self.__session.close()
@@ -229,7 +274,7 @@ class AbstractDBObject(object):
     # load points from db
     @classmethod
     def load_all_from_db(cls, session):
-        # type: (Session) -> List[cls]
+        # type: (Session) -> List[AbstractDBObject]
         """
         Returns all well marker in the database connected to the SQLAlchemy Session session
 
@@ -249,31 +294,34 @@ class AbstractDBObject(object):
         return result
 
     @classmethod
-    def load_by_id_from_db(cls, id, session):
-        # type: (int, Session) -> cls
+    def load_by_id_from_db(cls, _id, session):
+        # type: (int, Session) -> AbstractDBObject
         """
         Returns the line with the given id in the database connected to the SQLAlchemy Session session
 
-        :param id: Only the object with this id will be returned (has to be 1, unique value)
-        :type id: int
+        :param _id: Only the object with this id will be returned (has to be 1, unique value)
+        :type _id: int
         :param session: represents the database connection as SQLAlchemy Session
         :type session: Session
         :return: a single line representing the result of the database query
         :rtype: Line
-        :raises NoResultFound: Raises NoResultFound if no line was found with this id
+        :raises DatabaseRequestException: Raises DatabaseRequestException if no line was found with this id
         :raises IntegrityError: Raises IntegrityError if more than one line is found (more than one unique value)
         :raises TypeError: if session is not of type SQLAlchemy Session
         """
         if not isinstance(session, Session):
             raise TypeError("'session' is not of type SQLAlchemy Session!")
 
-        result = session.query(cls).filter(cls.id == id).one()
-        result.session = session
-        return result
+        try:
+            result = session.query(cls).filter(cls.id == _id).one()
+            result.session = session
+            return result
+        except NoResultFound:
+            raise DatabaseRequestException("No result found for ID {}".format(_id))
 
     @classmethod
     def load_by_name_from_db(cls, name, session):
-        # type: (str, Session) -> List[cls]
+        # type: (str, Session) -> List[AbstractDBObject]
         """
         Returns all DBObjects with the given name in the database connected to the SQLAlchemy Session session
 

@@ -19,8 +19,8 @@ class AbstractLogClass(AbstractDBObject):
     """
 
     # define table_columns
-    prop_name = sq.Column(sq.VARCHAR(50), default='')
-    prop_unit = sq.Column(sq.VARCHAR(100), default='')
+    prop_name = sq.Column(sq.VARCHAR(50), default="")
+    prop_unit = sq.Column(sq.VARCHAR(100), default="")
 
     def __init__(self, property_name, property_unit, *args, **kwargs):
         # type: (str, str, *object, **object) -> None
@@ -80,14 +80,14 @@ class AbstractLogClass(AbstractDBObject):
 
     @property
     def property_unit(self):
-        # type: () -> unicode
+        # type: () -> str
         """
         Returns the unit of the property
 
         :return: Returns the unit of the property
         """
         if sys.version_info[0] == 2:
-            return unicode(self.prop_unit)
+            return self.prop_unit
         else:
             return self.prop_unit
 
@@ -103,7 +103,7 @@ class AbstractLogClass(AbstractDBObject):
         :return: Nothing
         """
         if sys.version_info[0] == 2:
-            unit = unicode(unit)
+            unit = unit
 
         if len(unit) > 100:
             unit = unit[:100]

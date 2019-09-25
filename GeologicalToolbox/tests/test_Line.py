@@ -9,6 +9,7 @@ import unittest
 from sqlalchemy.orm.exc import NoResultFound
 
 from GeologicalToolbox.DBHandler import DBHandler
+from GeologicalToolbox.Exceptions import DatabaseRequestException
 from GeologicalToolbox.Geometries import GeoPoint, Line
 from GeologicalToolbox.Stratigraphy import StratigraphicObject
 
@@ -389,7 +390,7 @@ class TestLineClass(unittest.TestCase):
                          format(8, line.points[-1].id))
 
         # test exception handling
-        self.assertRaises(NoResultFound, Line.load_by_id_from_db, 25, self.session)
+        self.assertRaises(DatabaseRequestException, Line.load_by_id_from_db, 25, self.session)
 
         del line
 

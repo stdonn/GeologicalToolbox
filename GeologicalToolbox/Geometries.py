@@ -32,18 +32,19 @@ class GeoPoint(Base, AbstractGeoObject):
     # define relationship to stratigraphic table
     hor = relationship("StratigraphicObject")
 
-    line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=-1)
+    line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=None, nullable=True)
     line_pos = sq.Column(sq.INTEGER, default=-1)
 
     # make the points unique -> coordinates + horizon + belongs to one line?
-    sq.UniqueConstraint(AbstractGeoObject.east, AbstractGeoObject.north, AbstractGeoObject.alt, horizon_id, line_id,
-                        line_pos, name='u_point_constraint')
+    sq.UniqueConstraint(AbstractGeoObject.east, AbstractGeoObject.north, AbstractGeoObject.alt, horizon_id,
+                        AbstractGeoObject.name_col, line_id, line_pos, name="u_point_constraint")
     sq.Index('geopoint_coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
 
     # add Property relation
     # order by property name
-    properties = relationship("Property", order_by=Property.prop_name, backref="point",
-                              primaryjoin='GeoPoint.id==Property.point_id', cascade="all, delete, delete-orphan")
+    properties: List[Property] = relationship("Property", order_by=Property.prop_name, backref="point",
+                                              primaryjoin="GeoPoint.id==Property.point_id",
+                                              cascade="all, delete, delete-orphan")
 
     def __init__(self, horizon, has_z, *args, **kwargs):
         # type: (StratigraphicObject, bool, *object, **object) -> None
@@ -76,7 +77,7 @@ class GeoPoint(Base, AbstractGeoObject):
         :return: Returns a text-representation of the point
         :rtype: str
         """
-        text = "<GeoPoint(id='{}', horizon='{}', line={}, line-position={})>\n".\
+        text = "<GeoPoint(id='{}', horizon='{}', line={}, line-position={})>\n". \
             format(self.id, str(self.horizon), self.line_id, self.line_pos)
         text += AbstractGeoObject.__repr__(self)
         text += "Properties: {}".format(self.properties)
@@ -93,9 +94,11 @@ class GeoPoint(Base, AbstractGeoObject):
         text = "[{}] {} - {} - {}\n".format(self.id, str(self.horizon), self.line_id, self.line_pos)
         text += "AbstractGeoObject: {}\n".format(AbstractGeoObject.__str__(self))
         text += "Properties"
+        # noinspection PyTypeChecker
         if len(self.properties) == 0:
             text += "\n  --- None ---"
         else:
+            # noinspection PyTypeChecker
             for prop in self.properties:
                 text += "\n  " + str(prop)
 
@@ -119,7 +122,7 @@ class GeoPoint(Base, AbstractGeoObject):
         see getter
         """
         if (value is not None) and (type(value) is not StratigraphicObject):
-            raise TypeError('type of commited value ({}) is not StratigraphicObject!'.format(type(value)))
+            raise TypeError('type of committed value ({}) is not StratigraphicObject!'.format(type(value)))
 
         if value is None:
             self.hor = None
@@ -193,6 +196,7 @@ class GeoPoint(Base, AbstractGeoObject):
         :return: Returns True, if a property with the name property_name exists for the GeoPoint, else False
         :rtype: bool
         """
+        # noinspection PyTypeChecker
         for prop in self.properties:
             if prop.property_name == property_name:
                 return True
@@ -210,6 +214,7 @@ class GeoPoint(Base, AbstractGeoObject):
         :raises ValueError: if no property with the name exists
         """
         property_name = str(property_name)
+        # noinspection PyTypeChecker
         for prop in self.properties:
             if prop.property_name == property_name:
                 return prop
@@ -232,8 +237,9 @@ class GeoPoint(Base, AbstractGeoObject):
         if not isinstance(session, Session):
             raise TypeError("'session' is not of type SQLAlchemy Session!")
 
+        # filter((GeoPoint.line_id is None) or (GeoPoint.line_id == -1) or (GeoPoint.line_id == "")). \
         result = session.query(GeoPoint). \
-            filter(GeoPoint.line_id == -1). \
+            filter(sq.or_(GeoPoint.line_id == None, GeoPoint.line_id == -1)). \
             order_by(cls.id).all()
         for point in result:
             point.session = session
@@ -257,7 +263,10 @@ class GeoPoint(Base, AbstractGeoObject):
         if not isinstance(session, Session):
             raise TypeError("'session' is not of type SQLAlchemy Session!")
 
-        result = session.query(cls).filter(cls.line_id == -1).filter(cls.name_col == name).order_by(cls.id).all()
+        result = session.query(GeoPoint). \
+            filter(sq.or_(GeoPoint.line_id == None, GeoPoint.line_id == -1)). \
+            filter(cls.name_col == name). \
+            order_by(cls.id).all()
         for obj in result:
             obj.session = session
         return result
@@ -294,7 +303,7 @@ class GeoPoint(Base, AbstractGeoObject):
 
         result = session.query(GeoPoint).filter(sq.between(GeoPoint.east, min_easting, max_easting)). \
             filter(sq.between(GeoPoint.north, min_northing, max_northing)). \
-            filter(GeoPoint.line_id == -1). \
+            filter(sq.or_(GeoPoint.line_id == None, GeoPoint.line_id == -1)). \
             order_by(cls.id).all()
         for point in result:
             point.session = session
@@ -316,6 +325,9 @@ class Line(Base, AbstractDBObject):
     # set stratigraphy of the line
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
     hor = relationship("StratigraphicObject")
+
+    # make the lines unique -> line name
+    sq.UniqueConstraint(AbstractGeoObject.name_col, name="u_line_constraint")
 
     # add GeoPoint relation, important is the ordering by line_pos value
     # collection_class function automatically reorders this value in case of insertion or deletion of points
@@ -355,6 +367,9 @@ class Line(Base, AbstractDBObject):
 
         # call base class constructor
         AbstractDBObject.__init__(self, *args, **kwargs)
+
+        if self.name_col == "":
+            self.name_col = "line_{}".format(self.id)
 
     def __repr__(self):
         # type: () -> str

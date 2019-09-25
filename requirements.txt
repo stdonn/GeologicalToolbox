@@ -1,5 +1,6 @@
 # requirements for GeologicalToolbox by Stephan Donndorf
-SQLAlchemy > 1.2.0
+SQLAlchemy >= 1.2.0
+alembic >= 1.2.0
 typing; python_version < '3.5'
 Sphinx
 sphinxjp.themes.basicstrap

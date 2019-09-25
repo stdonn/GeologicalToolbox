@@ -7,7 +7,7 @@ import unittest
 
 from GeologicalToolbox.DBHandler import DBHandler
 from GeologicalToolbox.Geometries import GeoPoint
-from GeologicalToolbox.Properties import Property
+from GeologicalToolbox.Properties import Property, PropertyTypes
 from GeologicalToolbox.Stratigraphy import StratigraphicObject
 from GeologicalToolbox.WellLogs import WellLog, WellLogValue
 from GeologicalToolbox.Wells import Well
@@ -32,19 +32,19 @@ class TestWellLogValueClass(unittest.TestCase):
         # add test data to the database
         self.log_values = [
             {
-                'depth'  : 200,
-                'value'  : 123,
-                'name'   : 'log name',
+                'depth': 200,
+                'value': 123,
+                'name': 'log name',
                 'comment': 'unknown'
             }, {
-                'depth'  : 200.324,
-                'value'  : 12.5455,
-                'name'   : 'log name 2',
+                'depth': 200.324,
+                'value': 12.5455,
+                'name': 'log name 2',
                 'comment': 'unknown'
             }, {
-                'depth'  : '2345.54',
-                'value'  : '641.54',
-                'name'   : '',
+                'depth': '2345.54',
+                'value': '641.54',
+                'name': '',
                 'comment': ''
             }
         ]
@@ -134,13 +134,13 @@ class TestWellLogClass(unittest.TestCase):
 
         # add test data to the database
         self.well = {
-            'name'      : 'Well_1',
+            'name': 'Well_1',
             'short_name': 'W1',
-            'reference' : 'none',
-            'east'      : 1234.56,
-            'north'     : 123.45,
-            'altitude'  : 10.5,
-            'depth'     : 555,
+            'reference': 'none',
+            'east': 1234.56,
+            'north': 123.45,
+            'altitude': 10.5,
+            'depth': 555,
             'log_values': ((10, 4, '', ''),
                            (15, '45.4', 'name 1', 'Comment 1'),
                            (16, 34.3, '', ''),
@@ -297,13 +297,18 @@ class TestPropertyClass(unittest.TestCase):
         self.session = self.handler.get_session()
 
         # add test data to the database
-        point = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, 'mu', 1), True, '', 1, 2, 3, self.session, 'test',
-                         '')
+        point = GeoPoint(StratigraphicObject.init_stratigraphy(self.session, "mu", 1), True, "", 1, 2, 3, self.session,
+                         "test", "")
         point.save_to_db()
 
-        prop = Property('test prop', 'test unit', self.session)
+        prop = Property("test prop", "test unit", self.session)
+        prop.property_type = PropertyTypes.INT
         point.add_property(prop)
-        prop = Property('test prop 2', 'test unit 2', self.session)
+        prop = Property("test prop 2", "test unit 2", self.session)
+        prop.property_type = PropertyTypes.FLOAT
+        point.add_property(prop)
+        prop = Property("test prop 3", "test unit 3", self.session)
+        prop.property_type = PropertyTypes.STRING
         point.add_property(prop)
 
     def test_init(self):
@@ -314,12 +319,18 @@ class TestPropertyClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises AssertionError if a test fails
         """
-        point = GeoPoint.load_all_from_db(self.session)[0]
-        self.assertEqual(2, len(point.properties))
-        self.assertEqual('test prop', point.properties[0].property_name)
-        self.assertEqual('test prop 2', point.properties[1].property_name)
-        self.assertEqual('test unit', point.properties[0].property_unit)
-        self.assertEqual('test unit 2', point.properties[1].property_unit)
+        # noinspection PyTypeChecker
+        point: GeoPoint = GeoPoint.load_all_from_db(self.session)[0]
+        self.assertEqual(3, len(point.properties))
+        self.assertEqual("test prop", point.properties[0].property_name)
+        self.assertEqual("test prop 2", point.properties[1].property_name)
+        self.assertEqual("test prop 3", point.properties[2].property_name)
+        self.assertEqual("test unit", point.properties[0].property_unit)
+        self.assertEqual("test unit 2", point.properties[1].property_unit)
+        self.assertEqual("test unit 3", point.properties[2].property_unit)
+        self.assertEqual(PropertyTypes.INT, point.properties[0].property_type)
+        self.assertEqual(PropertyTypes.FLOAT, point.properties[1].property_type)
+        self.assertEqual(PropertyTypes.STRING, point.properties[2].property_type)
 
     def test_setter_and_getter(self):
         # type: () -> None
@@ -329,22 +340,31 @@ class TestPropertyClass(unittest.TestCase):
         :return: Nothing
         :raises AssertionError: Raises Assertion Error when a test fails
         """
-        point = GeoPoint.load_all_from_db(self.session)[0]
-        point.properties[0].value = 342.234
-        point.properties[1].value = "345.34"
+        # noinspection PyTypeChecker
+        point: GeoPoint = GeoPoint.load_all_from_db(self.session)[0]
+        point.properties[0].property_value = 342
+        point.properties[1].property_value = "345.34"
+        point.properties[2].property_value = "Test"
         point.properties[1].name = "some text information"
         point.properties[1].comment = "unused"
+        point.properties[2].property_type = PropertyTypes.FLOAT
 
         with self.assertRaises(ValueError):
-            point.properties[0].value = "string"
+            point.properties[0].property_value = "string"
+        with self.assertRaises(ValueError):
+            point.properties[0].property_value = 234.34
 
         del point
 
-        point = GeoPoint.load_all_from_db(self.session)[0]
-        self.assertEqual(342.234, point.properties[0].value)
-        self.assertEqual(345.34, point.properties[1].value)
-        self.assertEqual('some text information', point.properties[1].name)
-        self.assertEqual('unused', point.properties[1].comment)
+        # noinspection PyTypeChecker
+        point: GeoPoint = GeoPoint.load_all_from_db(self.session)[0]
+        self.assertEqual(342, point.properties[0].property_value)
+        self.assertEqual(345.34, point.properties[1].property_value)
+        self.assertEqual(None, point.properties[2].property_value) # type changed to PropertyTypes.FLOAT
+        point.properties[2].property_type = PropertyTypes.STRING
+        self.assertEqual("Test", point.properties[2].property_value)
+        self.assertEqual("some text information", point.properties[1].name)
+        self.assertEqual("unused", point.properties[1].comment)
 
     def tearDown(self):
         # type: () -> None

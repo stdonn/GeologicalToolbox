@@ -12,35 +12,37 @@ from codecs import open
 from os import path
 
 here = path.abspath(path.dirname(__file__))
-status = 'Development Status :: '
-if project_version[3][0] == 'a':
-    status += '3 - Alpha'
-elif project_version[3][0] == 'b':
-    status += '4 - Beta'
-elif project_version[3][0] in ('rc', ''):
-    status += '5 - Production/Stable'
-# elif project_version[1] == '0' and project_version[3][0] == 'rc':
-#     status += '6 - Mature'
+status = "Development Status :: "
+if project_version[3].startswith("a"):
+    status += "3 - Alpha"
+elif project_version[3].startswith("b"):
+    status += "4 - Beta"
+elif project_version[3].startswith("rc") or project_version[3].startswith(""):
+    status += "5 - Production/Stable"
+# elif project_version[1] == "0" and project_version[3].startswith("rc"):
+#     status += "6 - Mature"
 else:
-    status += '1 - Planning'
+    status += "1 - Planning"
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
+long_description_content_type = "text/markdown"
 
 setup(
     # $ pip install GeologicalToolbox
     #
     # PyPI: https://pypi.org/project/GeologicalToolbox/
 
-    name='GeologicalToolbox',
-    version='.'.join(project_version),
-    description='A python module for processing and storing geological data.',
+    name="GeologicalToolbox",
+    version=".".join(project_version),
+    description="A python module for processing and storing geological data.",
     long_description=long_description,  # Optional
-    url='https://github.com/stdonn/GeologicalToolbox',  # Optional
-    author='Stephan Donndorf',  # Optional
-    author_email='stephan@donndorf.info',  # Optional
-    license='MIT',
+    long_description_content_type=long_description_content_type,
+    url="https://github.com/stdonn/GeologicalToolbox",  # Optional
+    author="Stephan Donndorf",  # Optional
+    author_email="stephan@donndorf.info",  # Optional
+    license="MIT",
 
     # Classifiers help users find your project by categorizing it.
     #
@@ -50,33 +52,29 @@ setup(
     classifiers=[
         status,
         # Indicate who your project is intended for
-        'Intended Audience :: Developers',
-        'Intended Audience :: Other Audience',
-        'Intended Audience :: Science/Research',
+        "Intended Audience :: Developers",
+        "Intended Audience :: Other Audience",
+        "Intended Audience :: Science/Research",
 
         # Pick your license as you wish
-        'License :: OSI Approved :: MIT License',
+        "License :: OSI Approved :: MIT License",
 
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
 
         # other classifiers
-        'Natural Language :: English',
-        'Topic :: Database :: Front-Ends',
-        'Topic :: Documentation :: Sphinx',
-        'Topic :: Scientific/Engineering :: GIS',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        "Natural Language :: English",
+        "Topic :: Database :: Front-Ends",
+        "Topic :: Documentation :: Sphinx",
+        "Topic :: Scientific/Engineering :: GIS",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules"
     ],
 
-    keywords='Geology Modelling SQLAlchemy',  # Optional
+    keywords="Geology Modelling SQLAlchemy",  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
@@ -87,16 +85,17 @@ setup(
     #
     #   py_modules=["my_module"],
     #
-    packages=find_packages(exclude=['venv', 'doc']),  # Required
+    packages=find_packages(exclude=["venv", "doc"]),  # Required
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
     # installed, so they must be valid existing projects.
     #
-    # For an analysis of "install_requires" vs pip's requirements files see:
+    # For an analysis of "install_requires" vs pip"s requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'SQLAlchemy>=1.2'
+        "SQLAlchemy>=1.2",
+        "alembic>=1.2"
     ],  # Optional
 
     # List additional groups of dependencies here (e.g. development
@@ -108,12 +107,12 @@ setup(
     # Similar to `install_requires` above, these must be valid existing
     # projects.
     extras_require={  # Optional
-        ':python_version < "3.5"': [
-            'typing'
+        ":python_version < '3.5'": [
+            "typing"
         ],
-        'dev': ['Sphinx', 'sphinxjp.themes.basicstrap']
-        # 'test': ['coverage'],
+        "dev": ["Sphinx", "sphinxjp.themes.basicstrap"]
+        # "test": ["coverage"],
     },
 
-    python_requires='>=2.6, !=3.0.*, !=3.1.*, !=3.2.*'
+    python_requires=">=3.4"
 )
