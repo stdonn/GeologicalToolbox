@@ -6,7 +6,7 @@ The setuptools base setup module. Necessary for the PyPI upload.
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # load version
-from GeologicalToolbox.Constants import project_version
+from geological_toolbox.constants import project_version
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -83,7 +83,8 @@ setup(
     #
     #   py_modules=["my_module"],
     #
-    packages=find_packages(exclude=["venv", "doc"]),  # Required
+    packages=["geological_toolbox"],  # Required
+    package_data={"geological_toolbox": ["alembic.ini", "alembic/*"]},
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is

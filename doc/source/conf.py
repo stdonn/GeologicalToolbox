@@ -18,10 +18,9 @@
 #
 import os
 import sys
-from GeologicalToolbox.Constants import project_version
+from geological_toolbox.constants import project_version
 
-sys.path.insert(0, os.path.abspath('../GeologicalToolbox'))
-
+sys.path.insert(0, os.path.abspath('../geological_toolbox'))
 
 # -- General configuration ------------------------------------------------
 
@@ -33,10 +32,11 @@ sys.path.insert(0, os.path.abspath('../GeologicalToolbox'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.todo',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.githubpages',
-    'sphinxjp.themes.basicstrap']
+              'sphinx.ext.autosectionlabel',
+              'sphinx.ext.todo',
+              'sphinx.ext.imgmath',
+              'sphinx.ext.githubpages',
+              'sphinxjp.themes.basicstrap']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -52,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Geological Toolbox'
-copyright = u'2018, Stephan Donndorf'
+copyright = u'2019, Stephan Donndorf'
 author = u'Stephan Donndorf'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -82,7 +82,6 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -90,6 +89,7 @@ todo_include_todos = True
 #
 # html_theme = 'alabaster'
 html_theme = 'basicstrap'
+# html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -124,12 +124,10 @@ html_sidebars = {
     ]
 }
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'GeologicalToolboxdoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -159,7 +157,6 @@ latex_documents = [
      u'Stephan Donndorf', 'manual'),
 ]
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -168,7 +165,6 @@ man_pages = [
     (master_doc, 'geologicaltoolbox', u'Geological Toolbox Documentation',
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -180,8 +176,6 @@ texinfo_documents = [
      author, 'GeologicalToolbox', 'A python module for processing and storing geological data.',
      'Miscellaneous'),
 ]
-
-
 
 # -- Options for Epub output ----------------------------------------------
 
@@ -203,9 +197,11 @@ epub_identifier = 'stephan@donndorf.info'
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+
 # add custom style information
 def setup(app):
     app.add_stylesheet('css/custom.css')  # may also be an URL
+
 
 # Others
 numfig = True

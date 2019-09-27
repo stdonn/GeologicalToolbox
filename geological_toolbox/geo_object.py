@@ -1,19 +1,28 @@
 # -*- coding: UTF-8 -*-
 """
-This module hosts the basic AbstractGeoObject class. This class inherits all basic function for GeoObjects
+This module hosts the basic AbstractGeoObject class. In declares all basic functions for a GeoObjects
 """
 
 import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from GeologicalToolbox.DBHandler import AbstractDBObject
+from geological_toolbox.db_handler import AbstractDBObject
 
 
 class AbstractGeoObject(AbstractDBObject):
     """
     This is a base class which stores central GeoObject data. This class should be treated as abstract, no object
     should be created directly!
+
+    :param reference_system: Stores the spatial reference information in a string format (e.g. WKT). This parameter will
+           not be verified!
+    :param easting: easting coordinate of the object
+    :param northing: northing coordinate of the object
+    :param altitude: height above sea level of the object or None
+    :param args: parameters for AbstractDBObject initialisation
+    :param kwargs: parameters for AbstractDBObject initialisation
+    :return: nothing
     """
 
     east = sq.Column(sq.FLOAT)
@@ -21,25 +30,10 @@ class AbstractGeoObject(AbstractDBObject):
     alt = sq.Column(sq.FLOAT)
     reference = sq.Column(sq.TEXT, default='')
 
-    def __init__(self, reference_system, easting, northing, altitude, *args, **kwargs):
-        # type: (str, float, float, float, *object, **object) -> None
+    def __init__(self, reference_system: str, easting: float, northing: float, altitude: float,
+                 *args, **kwargs) -> None:
         """
         Initialise the AbstractGeoObject
-
-        :param reference_system: Stores the spatial reference information in WKT format. This parameter is not checked
-                                 for correctness!
-        :type reference_system: str
-        :param easting: easting coordinate of the object
-        :type easting: float
-        :param northing: northing coordinate of the object
-        :type northing: float
-        :param altitude: height above sea level of the object or None
-        :type altitude: float or None
-        :param args: parameters for AbstractDBObject initialisation
-        :type args: List()
-        :param kwargs: parameters for AbstractDBObject initialisation
-        :type kwargs: Dict()
-        :return: nothing
         """
 
         self.reference_system = reference_system
@@ -50,126 +44,95 @@ class AbstractGeoObject(AbstractDBObject):
         # call constructor of base class
         AbstractDBObject.__init__(self, *args, **kwargs)
 
-    def __repr__(self):
-        # type: () -> str
-        """
-        Returns a string representation of the AbstractGeoObject
-
-        :return: Returns a string representation of the AbstractGeoObject
-        :rtype: str
-        """
-        text = "<AbstractGeoObject(east='{}', north='{}', alt='{}')>\n".format(self.easting, self.northing, self.altitude)
+    def __repr__(self) -> str:
+        text = "<AbstractGeoObject(east='{}', north='{}', alt='{}')>\n".format(self.easting, self.northing,
+                                                                               self.altitude)
         text += AbstractDBObject.__repr__(self)
         return text
 
-    def __str__(self):
-        # type: () -> str
-        """
-        Returns a string representation of the AbstractGeoObject
-
-        :return: Returns a string representation of the AbstractGeoObject
-        :rtype: str
-        """
+    def __str__(self) -> str:
         text = "{} - {} - {} - ".format(self.easting, self.northing, self.altitude)
         text += AbstractDBObject.__str__(self)
         return text
 
     # define setter and getter for columns and local data
     @property
-    def easting(self):
-        # type: () -> float
+    def easting(self) -> float:
         """
         The easting value of the object
 
-        :type: float
         :raises ValueError: if value is not compatible to type float
         """
         return float(self.east)
 
     @easting.setter
-    def easting(self, value):
-        # type: (float) -> None
+    def easting(self, value: float) -> None:
         """
         see getter
         """
         self.east = float(value)
 
     @property
-    def northing(self):
-        # type: () -> float
+    def northing(self) -> float:
         """
         The northing value of the object
 
-        :type: float
         :raises ValueError: if value is not compatible to type float
         """
         return float(self.north)
 
     @northing.setter
-    def northing(self, value):
-        # type: (float) -> None
+    def northing(self, value: float) -> None:
         """
         see getter
         """
         self.north = float(value)
 
     @property
-    def altitude(self):
-        # type: () -> float
+    def altitude(self) -> float:
         """
         The height above sea level of the object
 
-        :type: float
         :raises ValueError: if value is not compatible to type float
         """
         return float(self.alt)
 
     @altitude.setter
-    def altitude(self, value):
-        # type: (float) -> None
+    def altitude(self, value: float) -> None:
         """
         see getter
         """
         self.alt = float(value)
 
     @property
-    def reference_system(self):
-        # type: () -> str
+    def reference_system(self) -> str:
         """
-        The reference system in WKT format
-        ATTENTION: The reference system is not checked!
+        The reference system in string format (e.g. WKT)
+        ATTENTION: The reference system won't be verified
 
         :return: Returns the current reference system
-        :type: str
         """
         return self.reference
 
     @reference_system.setter
-    def reference_system(self, reference):
-        # type: (str) -> None
+    def reference_system(self, reference: str) -> None:
         """
         see getter
         """
         self.reference = str(reference)
 
     @classmethod
-    def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-        # type: (Session, float, float, float, float) -> List[cls]
+    def load_in_extent_from_db(cls, session: Session, min_easting: float, max_easting: float, min_northing: float,
+                               max_northing: float) -> List["AbstractGeoObject"]:
         """
-        Returns all points inside the given extent in the database connected to the SQLAlchemy Session session
+        Returns all objects inside the given extent in the database connected to the SQLAlchemy Session session.
 
-        :param min_easting: minimal easting of extent
-        :type min_easting: float
-        :param max_easting: maximal easting of extent
-        :type max_easting: float
-        :param min_northing: minimal northing of extent
-        :type min_northing: float
-        :param max_northing: maximal northing of extent
-        :type max_northing: float
         :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
-        :return: a list of points representing the result of the database query
-        :rtype: List[cls]
+        :param min_easting: minimal easting of extent
+        :param max_easting: maximal easting of extent
+        :param min_northing: minimal northing of extent
+        :param max_northing: maximal northing of extent
+        :return: a list of objects representing the result of the database query
         :raises ValueError: if one of the extension values is not compatible to type float
         :raises TypeError: if session is not of type SQLAlchemy Session
         """

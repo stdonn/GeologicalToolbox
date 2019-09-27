@@ -1,28 +1,28 @@
-The GeologicalToolbox API reference
-===================================
+The GeologicalToolbox API test documentation
+============================================
 
-Unittest for the 'GeologicalToolbox.GeoPoint' class
----------------------------------------------------
-.. automodule:: GeologicalToolbox.tests.test_GeoPoint
+Unittests for the 'geological_toolbox.GeoPoint' class
+-----------------------------------------------------
+.. automodule:: geological_toolbox.tests.test_GeoPoint
    :members:
 
-Unittest for the 'GeologicalToolbox.Line' class
------------------------------------------------
-.. automodule:: GeologicalToolbox.tests.test_Line
-   :members:
-
-Unittest for the 'GeologicalToolbox.PropertyLogs' module
---------------------------------------------------------
-.. automodule:: GeologicalToolbox.tests.test_PropLogs
-   :members:
-
-Unittest for the 'GeologicalToolbox.StratigraphicObject' module
----------------------------------------------------------------
-.. automodule:: GeologicalToolbox.tests.test_Stratigraphy
-   :members:
-
-Unittest for the 'GeologicalToolbox.Wells' module
+Unittests for the 'geological_toolbox.Line' class
 -------------------------------------------------
-.. automodule:: GeologicalToolbox.tests.test_Well
+.. automodule:: geological_toolbox.tests.test_Line
+   :members:
+
+Unittests for the 'geological_toolbox.PropertyLogs' module
+----------------------------------------------------------
+.. automodule:: geological_toolbox.tests.test_PropLogs
+   :members:
+
+Unittests for the 'geological_toolbox.StratigraphicObject' module
+-----------------------------------------------------------------
+.. automodule:: geological_toolbox.tests.test_Stratigraphy
+   :members:
+
+Unittests for the 'geological_toolbox.Wells' module
+---------------------------------------------------
+.. automodule:: geological_toolbox.tests.test_Well
    :members:
 

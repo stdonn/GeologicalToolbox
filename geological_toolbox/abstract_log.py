@@ -1,39 +1,31 @@
 # -*- coding: UTF-8 -*-
 """
 This module provides an abstract base class for storing logging or property information.
-
-.. todo:: - reformat docstrings, espacially of setter and getter functions
-          - check exception types
 """
 
 import sqlalchemy as sq
 import sys
 
-from GeologicalToolbox.DBHandler import AbstractDBObject
+from geological_toolbox.db_handler import AbstractDBObject
 
 
 class AbstractLogClass(AbstractDBObject):
     """
-    This class is the base for storing logging information or properties. This class should be treated as abstract, no
+    This class is the base for storing logging information or properties. It should be treated as abstract, no
     object should be created directly!
+
+    :param property_name: name of the log or property
+    :param property_unit: unit of the log values or properties
+    :return: Nothing
     """
 
     # define table_columns
     prop_name = sq.Column(sq.VARCHAR(50), default="")
     prop_unit = sq.Column(sq.VARCHAR(100), default="")
 
-    def __init__(self, property_name, property_unit, *args, **kwargs):
-        # type: (str, str, *object, **object) -> None
+    def __init__(self, property_name: str, property_unit: str, *args, **kwargs) -> None:
         """
         Initialises the class
-
-        :param property_name: name of the log or property
-        :type property_name: str
-
-        :param property_unit: unit of the log values or properties
-        :type property_unit: str
-
-        :returns: Nothing
         """
 
         self.property_name = property_name
@@ -53,24 +45,20 @@ class AbstractLogClass(AbstractDBObject):
         return text
 
     @property
-    def property_name(self):
-        # type: () -> str
+    def property_name(self) -> str:
         """
-        Returns the name of the property
+        name of the property
 
-        :return: Returns the name of the property
+        :return: the name of the property
         """
         return str(self.prop_name)
 
     @property_name.setter
-    def property_name(self, name):
-        # type: (str) -> None
+    def property_name(self, name: str) -> None:
         """
-        Set a new property name with a maximum length of 50 characters
+        name of the property
 
         :param name: new property name
-        :type name: str
-
         :return: Nothing
         """
         name = str(name)
@@ -79,12 +67,11 @@ class AbstractLogClass(AbstractDBObject):
         self.prop_name = name
 
     @property
-    def property_unit(self):
-        # type: () -> str
+    def property_unit(self) -> str:
         """
-        Returns the unit of the property
+        property unit as string
 
-        :return: Returns the unit of the property
+        :return: the unit of the property
         """
         if sys.version_info[0] == 2:
             return self.prop_unit
@@ -92,14 +79,11 @@ class AbstractLogClass(AbstractDBObject):
             return self.prop_unit
 
     @property_unit.setter
-    def property_unit(self, unit):
-        # type: (str) -> None
+    def property_unit(self, unit: str) -> None:
         """
-        Set a new unit for the property with a maximum length of 100 characters
+        property unit as string
 
-        :param unit: new unit for the property
-        :type unit: str
-
+        :param unit: property unit as string
         :return: Nothing
         """
         if sys.version_info[0] == 2:

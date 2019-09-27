@@ -5,13 +5,13 @@ This module hosts the class Requests, which provides functionality for special (
 import sqlalchemy as sq
 from sqlalchemy.orm.session import Session
 from typing import List, Tuple
-import sys
 
-from GeologicalToolbox.Exceptions import DatabaseException, DatabaseRequestException, FaultException, ListOrderException
-from GeologicalToolbox.Geometries import GeoPoint
-from GeologicalToolbox.Properties import Property
-from GeologicalToolbox.Stratigraphy import StratigraphicObject
-from GeologicalToolbox.Wells import WellMarker
+from geological_toolbox.exceptions import DatabaseException, DatabaseRequestException, FaultException, \
+    ListOrderException
+from geological_toolbox.geometries import GeoPoint
+from geological_toolbox.properties import Property, PropertyTypes
+from geological_toolbox.stratigraphy import StratigraphicObject
+from geological_toolbox.wells import WellMarker
 
 
 class Requests:
@@ -29,8 +29,7 @@ class Requests:
         pass
 
     @staticmethod
-    def check_extent(extent):
-        # type: (List[float, float, float, float]) -> None
+    def check_extent(extent: List[float]) -> None:
         """
         checks, if the given extent has the right format
 
@@ -53,42 +52,28 @@ class Requests:
             try:
                 extent[i] = float(extent[i])
             except ValueError as e:
-                if sys.version_info[0] == 2:
-                    raise ValueError('At least on extent element cannot be converted to float!\n' + e.message)
-                elif sys.version_info[0] == 3:
-                    raise ValueError('At least on extent element cannot be converted to float!\n{}'.format(e))
-                else:
-                    raise ValueError('At least on extent element cannot be converted to float!')
+                raise ValueError('At least on extent element cannot be converted to float!\n{}'.format(e))
         if extent[0] > extent[1]:
             raise ListOrderException("min easting > max easting")
         if extent[2] > extent[3]:
             raise ListOrderException("min northing > max northing")
 
     @staticmethod
-    def create_thickness_point(sorted_dict, well_id, marker_1, marker_2, session, use_faulted=False, fault_name='',
-                               add_properties=tuple()):
-        # type: (dict, int, int, int, Session, bool, str, Tuple) -> GeoPoint
+    def create_thickness_point(sorted_dict: dict, well_id: int, marker_1: int, marker_2: int, session: Session,
+                               use_faulted: bool = False, fault_name: str = '',
+                               add_properties: Tuple = tuple()) -> GeoPoint:
         """
         Generate a new GeoPoint with thickness property from 2 well marker
 
         :param sorted_dict: dictionary containing well_id / WellMarker data
-        :type sorted_dict: dict()
         :param well_id: current well_id
-        :type well_id: int
         :param marker_1: id of marker 1
-        :type marker_1: int
         :param marker_2: id of marker 2
-        :type marker_2: int
         :param session: current SQLAlchemy session
-        :type session: Session
         :param use_faulted: should faulted sequence be included?
-        :type use_faulted: bool
         :param fault_name: name of fault stratigraphic unit (default: "Fault")
-        :type fault_name: str
-        :param add_properties: Adds the properties to the GeoPoint. Format for each property: (name, unit, value)
-        :type add_properties: tuple()
+        :param add_properties: Adds the properties to the GeoPoint. Format for each property: (value, type, name, unit)
         :return: new GeoPoint Object
-        :rtype: GeoPoint
         :raises FaultException: if a fault is inside the section and use_faulted is False
         :raises ValueError: if a property in the add_property tuple has less than 3 entries
         """
@@ -108,46 +93,35 @@ class Requests:
             raise FaultException("Fault inside section")
 
         point = sorted_dict[well_id][marker_1].to_geopoint()
-        thickness = Property('thickness', 'm', session)
-        thickness.value = max_depth - min_depth
+        thickness = Property(max_depth - min_depth, PropertyTypes.FLOAT, "thickness", "m", session)
         point.add_property(thickness)
         if use_faulted:
-            faulted = Property('faulted', 'bool', session)
-            if faults.count() > 0:
-                faulted.value = 1
-            else:
-                faulted.value = 0
+            faulted = Property(faults.count(), PropertyTypes.INT, "faulted", "count", session)
             point.add_property(faulted)
         for prop in add_properties:
-            if len(prop) < 3:
-                raise ValueError('property tuple has less than 3 entries!')
-            new_property = Property(prop[0], prop[1], session)
-            new_property.value = prop[2]
+            if len(prop) < 4:
+                raise ValueError('property tuple has less than 4 entries!')
+            new_property = Property(prop[0], PropertyTypes[prop[1]], prop[2], prop[3], session)
             point.add_property(new_property)
         return point
 
     @staticmethod
-    def well_markers_to_thickness(session, marker_1, marker_2, *args, **kwargs):
-        # type: (Session, str, str, *object, **object) -> List[GeoPoint]
+    def well_markers_to_thickness(session: Session, marker_1: str, marker_2: str, summarise_multiple: bool = False,
+                                  extent: Tuple[int, int, int, int] or None = None, use_faulted: bool = False,
+                                  fault_name: str = "Fault") -> List[GeoPoint]:
         """
-        This static method generates a point set including a thickness property derived from the committed well marker
+        Static method for generating a point set including a thickness property derived from the committed well marker
 
         :param session: The SQLAlchemy session connected to the database storing the geodata
-        :type session: Session
         :param marker_1: First WellMarker unit name
-        :type marker_1: str
         :param marker_2: Second WellMarker unit name
-        :type marker_2: str
-        :param summarise_multiple: Summarise multiple occurrences of marker_1 and marker_2 to a maximum thickness. If this parameter is False (default value) create multiple points.
-        :type summarise_multiple: bool
-        :param extent: extension rectangle as list which borders the well distribution. The list has the following order: [min easting, max easting, min northing, max northing]
-        :type extent: [float, float, float, float]
+        :param summarise_multiple: Summarise multiple occurrences of marker_1 and marker_2 to a maximum thickness.
+               If this parameter is False (default value) create multiple points.
+        :param extent: extension rectangle as list which borders the well distribution. The list has the following
+               order: (min easting, max easting, min northing, max northing)
         :param use_faulted: if True, also sections with faults between marker_1 and marker_2 are returned
-        :type use_faulted: bool
-        :param fault_name: unit name of fault marker (standard: 'Fault')
-        :type fault_name: str
+        :param fault_name: unit name of fault marker (default: 'Fault')
         :return: A list of GeoPoints each with a thickness property
-        :rtype: [GeoPoint]
         :raises AttributeError: if marker_1 and marker_2 are equal
         :raises DatabaseException: if the database query results in less than 2 marker of a well_id
         :raises DatabaseRequestException: if an unexpected query result occurs
@@ -182,31 +156,8 @@ class Requests:
         if marker_1 == marker_2:
             raise AttributeError('marker_1 and marker_2 cannot be equal!')
 
-        summarise = True
-        extent = None
-        use_faulted = False
-        fault_name = 'Fault'
-        for i in range(len(args)):
-            if i == 0:
-                summarise = bool(args[i])
-            elif i == 1:
-                Requests.check_extent(args[i])
-                extent = args[i]
-            elif i == 2:
-                use_faulted = bool(args[i])
-            elif i == 3:
-                fault_name = str(args[i])
-
-        for key in kwargs:
-            if key == 'summarise_multiple':
-                summarise = bool(kwargs[key])
-            elif key == 'extent':
-                Requests.check_extent(kwargs[key])
-                extent = kwargs[key]
-            elif key == 'use_faulted':
-                use_faulted = bool(kwargs[key])
-            elif key == 'fault_name':
-                fault_name = str(kwargs[key])
+        if extent is not None:
+            Requests.check_extent(extent)
 
         result = session.query(WellMarker)
         if extent is None:
@@ -253,13 +204,15 @@ class Requests:
             if len(sorted_dict[well_id]) == 2:
                 sorted_dict[well_id][0].session = session
                 try:
-                    if summarise:
-                        point = Requests.create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
-                                                                fault_name, (('summarised', 'bool', 0),))
+                    if summarise_multiple:
+                        point = Requests.create_thickness_point(
+                            sorted_dict, well_id, 0, 1, session, use_faulted, fault_name,
+                            ((0, "INT", 'summarised', 'bool'),))
                         geopoints.append(point)
                     else:
-                        point = Requests.create_thickness_point(sorted_dict, well_id, 0, 1, session, use_faulted,
-                                                                fault_name, (('multiple marker', 'bool', 0),))
+                        point = Requests.create_thickness_point(
+                            sorted_dict, well_id, 0, 1, session, use_faulted, fault_name,
+                            ((0, "INT", 'multiple marker', 'bool'),))
                         geopoints.append(point)
                 # FaultException -> do nothing except catching the exception
                 except FaultException:
@@ -268,7 +221,7 @@ class Requests:
                 continue
 
             # last case: more than 2 values found:
-            if summarise:
+            if summarise_multiple:
                 first_index = -1
                 last_index = -1
                 for i in range(len(sorted_dict[well_id])):
@@ -290,8 +243,9 @@ class Requests:
 
                 try:
                     sorted_dict[well_id][first_index].session = session
-                    point = Requests.create_thickness_point(sorted_dict, well_id, first_index, last_index, session,
-                                                            use_faulted, fault_name, (('summarised', 'bool', 1),))
+                    point = Requests.create_thickness_point(
+                        sorted_dict, well_id, first_index, last_index, session, use_faulted, fault_name,
+                        ((1, "INT", "summarised", "bool"),))
                     geopoints.append(point)
                 # FaultException -> do nothing except catching the exception
                 except FaultException:
@@ -307,9 +261,9 @@ class Requests:
                 elif (first_index != -1) and (sorted_dict[well_id][index].horizon.unit_name == marker_2):
                     try:
                         sorted_dict[well_id][first_index].session = session
-                        point = Requests.create_thickness_point(sorted_dict, well_id, first_index, index, session,
-                                                                use_faulted, fault_name,
-                                                                (('multiple marker', 'bool', 1),))
+                        point = Requests.create_thickness_point(
+                            sorted_dict, well_id, first_index, index, session, use_faulted, fault_name,
+                            ((1, "INT", "multiple marker", "bool"),))
                         geopoints.append(point)
                     # FaultException -> do nothing except catching the exception
                     except FaultException:
@@ -320,8 +274,7 @@ class Requests:
         return geopoints
 
     @staticmethod
-    def interpolate_geopoints(points, property_name, method):
-        # type: (List[GeoPoint], str, str) -> None
+    def interpolate_geopoints(points: GeoPoint, property_name: str, method: str) -> None:
         """
         Interpolate the property values of the given GeoPoints using the interpolation method 'method'
 
@@ -330,14 +283,8 @@ class Requests:
                   - define return statement
 
         :param points: List of GeoPoints as interpolation base
-        :type points: List[GeoPoint]
-
         :param property_name: Name of the property to interpolate
-        :type property_name: str
-
         :param method: Interpolation method
-        :type method: str
-
         :return: Currently Nothing
         :raises TypeError: if on of the points is not of type GeoPoint
 

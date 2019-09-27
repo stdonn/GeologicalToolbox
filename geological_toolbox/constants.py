@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
-This module defines constants which are used in the API.
+Definition of package wide constants.
 """
 
 from ._version import __version__

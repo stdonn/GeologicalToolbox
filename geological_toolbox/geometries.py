@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
-This module provides basic geometries (points and lines) for storing geological data in database.
+Module providing basic geometries (points and lines) for storing geological data in a database.
 """
 
 import sqlalchemy as sq
@@ -9,18 +9,23 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 from typing import List
 
-from GeologicalToolbox.DBHandler import Base, AbstractDBObject
-from GeologicalToolbox.GeoObject import AbstractGeoObject
-from GeologicalToolbox.Properties import Property
-from GeologicalToolbox.Stratigraphy import StratigraphicObject
-from GeologicalToolbox.Constants import float_precision
+from geological_toolbox.db_handler import Base, AbstractDBObject
+from geological_toolbox.geo_object import AbstractGeoObject
+from geological_toolbox.properties import Property
+from geological_toolbox.stratigraphy import StratigraphicObject
+from geological_toolbox.constants import float_precision
 
 
 class GeoPoint(Base, AbstractGeoObject):
     """
-    Class GeoPoint
-
     Represents a geological point feature, e.g. for storing line nodes or geological outcrops in a database.
+
+    :param horizon: stratigraphic object of the point feature
+    :param has_z: Is altitude stored as z value?
+    :param args: parameters for AbstractGeoObject initialisation
+    :param kwargs: parameters for AbstractGeoObject initialisation
+    :return: Nothing
+    :raises ValueError: if has_z is not compatible to type bool
     """
     # define db table name and columns
     __tablename__ = 'geopoints'
@@ -43,54 +48,27 @@ class GeoPoint(Base, AbstractGeoObject):
     # add Property relation
     # order by property name
     properties = relationship("Property", order_by=Property.prop_name, backref="point",
-                                              primaryjoin="GeoPoint.id==Property.point_id",
-                                              cascade="all, delete, delete-orphan")
+                              primaryjoin="GeoPoint.id==Property.point_id",
+                              cascade="all, delete, delete-orphan")
 
-    def __init__(self, horizon, has_z, *args, **kwargs):
-        # type: (StratigraphicObject, bool, *object, **object) -> None
+    def __init__(self, horizon: StratigraphicObject or None, has_z: bool, *args, **kwargs) -> None:
         """
         Creates a new GeoPoint
-
-        :param horizon: stratigraphy of the point
-        :type horizon: StratigraphicObject
-        :param has_z: Is altitude stored as z value?
-        :type has_z: bool
-        :param args: parameters for AbstractGeoObject initialisation
-        :type args: List()
-        :param kwargs: parameters for AbstractGeoObject initialisation
-        :type kwargs: Dict()
-        :return: Nothing
-        :raises ValueError: if has_z is not compatible to type bool
         """
-
         self.has_z = bool(has_z)
         self.horizon = horizon
 
         # call base class constructor
         AbstractGeoObject.__init__(self, *args, **kwargs)
 
-    def __repr__(self):
-        # type: () -> str
-        """
-        Returns a text-representation of the point
-
-        :return: Returns a text-representation of the point
-        :rtype: str
-        """
+    def __repr__(self) -> str:
         text = "<GeoPoint(id='{}', horizon='{}', line={}, line-position={})>\n". \
             format(self.id, str(self.horizon), self.line_id, self.line_pos)
         text += AbstractGeoObject.__repr__(self)
         text += "Properties: {}".format(self.properties)
         return text
 
-    def __str__(self):
-        # type: () -> str
-        """
-        Returns a text-representation of the point
-
-        :return: Returns a text-representation of the point
-        :rtype: str
-        """
+    def __str__(self) -> str:
         text = "[{}] {} - {} - {}\n".format(self.id, str(self.horizon), self.line_id, self.line_pos)
         text += "AbstractGeoObject: {}\n".format(AbstractGeoObject.__str__(self))
         text += "Properties"
@@ -105,19 +83,16 @@ class GeoPoint(Base, AbstractGeoObject):
         return text
 
     @property
-    def horizon(self):
-        # type: () -> StratigraphicObject
+    def horizon(self) -> StratigraphicObject:
         """
-        The stratigraphy of the point object
+        stratigraphic object of the point feature
 
-        :type: StratigraphicObject or None
-        :raises TypeError: if value is not of type Stratigraphy
+        :raises TypeError: if value is not of type StratigraphicObject or None
         """
         return self.hor
 
     @horizon.setter
-    def horizon(self, value):
-        # type: (StratigraphicObject) -> None
+    def horizon(self, value: StratigraphicObject or None) -> None:
         """
         see getter
         """
@@ -131,33 +106,30 @@ class GeoPoint(Base, AbstractGeoObject):
             self.hor = value
 
     # delete z-dimension and information from point
-    def del_z(self):
-        # type: () -> None
+    def del_z(self) -> None:
         """
-        removes the z-value from the point
+        removes the z-value from the point, :attr:`~GeoObject.AbstractGeoObject.altitude` value will be set to 0
 
         :return: Nothing
         """
         self.alt = 0
         self.has_z = False
 
-    def use_z(self):
-        # type: () -> None
+    def use_z(self) -> None:
         """
-        uses the altitude value as z coordinate
+        uses the altitude value as z coordinate. Attention: please set the :attr:`ÃbstractGeoObject.altitude` property,
+        if not it defaults to 0.
 
         :return: Nothing
         """
         self.has_z = True
 
     # add and remove property information form point
-    def add_property(self, prop):
-        # type: (Property) -> None
+    def add_property(self, prop: Property) -> None:
         """
         Adds a new property to the point
 
         :param prop: new point property
-        :type prop: Property
         :return: Nothing
         :raises TypeError: if log is not of type Property
         """
@@ -166,14 +138,11 @@ class GeoPoint(Base, AbstractGeoObject):
 
         self.properties.append(prop)
 
-    def delete_property(self, prop):
-        # type: (Property) -> None
+    def delete_property(self, prop: Property) -> None:
         """
         Deletes a property from the point
 
         :param prop: property to delete
-        :type prop: Property
-
         :return: Nothing
         :raises TypeError: if log is not of type Property
         :raises ValueError: if log is not part of self.properties
@@ -186,15 +155,12 @@ class GeoPoint(Base, AbstractGeoObject):
         except ValueError as e:
             raise ValueError(str(e) + '\nProperty with ID ' + str(prop.id) + ' not found in list!')
 
-    def has_property(self, property_name):
-        # type: (str) -> bool
+    def has_property(self, property_name: str) -> bool:
         """
         Returns True, if a property with the name property_name exists for the GeoPoint, else False
 
         :param property_name: name of the requested property
-        :type property_name: str
-        :return: Returns True, if a property with the name property_name exists for the GeoPoint, else False
-        :rtype: bool
+        :return: True, if a property with the name property_name exists for the GeoPoint, else False
         """
         # noinspection PyTypeChecker
         for prop in self.properties:
@@ -202,15 +168,12 @@ class GeoPoint(Base, AbstractGeoObject):
                 return True
         return False
 
-    def get_property(self, property_name):
-        # type: (str) -> Property
+    def get_property(self, property_name: str) -> Property:
         """
         Returns requested property, if the property with the name property_name exists for the GeoPoint
 
         :param property_name: name of the requested property
-        :type property_name: str
         :return: Returns the property
-        :rtype: Property
         :raises ValueError: if no property with the name exists
         """
         property_name = str(property_name)
@@ -222,16 +185,15 @@ class GeoPoint(Base, AbstractGeoObject):
 
     # overwrite loading method
     @classmethod
-    def load_all_without_lines_from_db(cls, session):
-        # type: (Session) -> List[Line]
+    def load_all_without_lines_from_db(cls, session: Session) -> List["GeoPoint"]:
         """
         Returns all points in the database connected to the SQLAlchemy Session session, which are not part of a line.
-        This function is similar the AbstractGeoObject.load_all_from_db(...) function.
+        This function is similar the
+        :meth:`AbstractDBObject.load_all_from_db()<geological_toolbox.db_handler.AbstractDBObject.load_all_from_db>`
+        function.
 
         :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
         :return: a list of points representing the result of the database query
-        :rtype: List[GeoPoint]
         :raises TypeError: if session is not of type SQLAlchemy Session
         """
         if not isinstance(session, Session):
@@ -246,18 +208,16 @@ class GeoPoint(Base, AbstractGeoObject):
         return result
 
     @classmethod
-    def load_by_name_without_lines_from_db(cls, name, session):
-        # type: (str, Session) -> List[GeoPoint]
+    def load_by_name_without_lines_from_db(cls, name: str, session: Session) -> List["GeoPoint"]:
         """
         Returns all GeoPoints with the given name in the database connected to the SQLAlchemy Session session, which
-        don't belong to a line
+        are not part of a line. This function is similar the
+        :meth:`AbstractDBObject.load_by_name_from_db()<geological_toolbox.db_handler.AbstractDBObject.load_by_name_from_db>`
+        function.
 
         :param name: Only GeoPoints with this name will be returned
-        :type name: str
         :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
         :return: a list of GeoPoints representing the result of the database query
-        :rtype: List[GeoPoints]
         :raises TypeError: if session is not of type SQLAlchemy Session
         """
         if not isinstance(session, Session):
@@ -272,24 +232,20 @@ class GeoPoint(Base, AbstractGeoObject):
         return result
 
     @classmethod
-    def load_in_extent_without_lines_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-        # type: (Session, float, float, float, float) -> List[Line]
+    def load_in_extent_without_lines_from_db(cls, session: Session, min_easting: float, max_easting: float,
+                                             min_northing: float, max_northing: float) -> List["GeoPoint"]:
         """
         Returns all points inside the given extent in the database connected to the SQLAlchemy Session session, which
-        are not part of a line. This function is similar the AbstractGeoObject.load_in_extent_from_db(...) function.
+        are not part of a line. This function is similar the
+        :meth:`AbstractGeoObject.load_in_extent_from_db()<geological_toolbox.geo_object.AbstractGeoObject.load_in_extent_from_db>`
+        function.
 
         :param min_easting: minimal easting of extent
-        :type min_easting: float
         :param max_easting: maximal easting of extent
-        :type max_easting: float
         :param min_northing: minimal northing of extent
-        :type min_northing: float
         :param max_northing: maximal northing of extent
-        :type max_northing: float
         :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
         :return: a list of points representing the result of the database query
-        :rtype: List[GeoPoint]
         :raises ValueError: if one of the extension values is not compatible to type float
         :raises TypeError: if session is not of type SQLAlchemy Session
         """
@@ -315,7 +271,16 @@ class Line(Base, AbstractDBObject):
     Class Line
 
     Represents a geological line feature, e.g. for storing faults or horizon surface expressions.
+
+    :param closed: True if the line should be closed, else False
+    :param horizon: StratigraphicObject
+    :param points: list of points which represents the lines nodes
+    :param args: parameters for AbstractDBObject initialisation
+    :param kwargs: parameters for AbstractDBObject initialisation
+    :return: Nothing
+    :raises ValueError: Raises ValueError if one of the types cannot be converted
     """
+
     # define db table name and columns
     __tablename__ = 'lines'
 
@@ -335,23 +300,9 @@ class Line(Base, AbstractDBObject):
                           backref="line", primaryjoin='Line.id==GeoPoint.line_id',
                           cascade="all, delete, delete-orphan")
 
-    def __init__(self, closed, horizon, points, *args, **kwargs):
-        # type: (bool, StratigraphicObject, List[GeoPoint], *object, **object) -> None
+    def __init__(self, closed: bool, horizon: StratigraphicObject, points: List[GeoPoint], *args, **kwargs) -> None:
         """
         Create a new line.
-
-        :param closed: True if the line should be closed, else False
-        :type closed: bool
-        :param horizon: Stratigraphy to which the line belongs
-        :type horizon: StratigraphicObject
-        :param points: list of points which represents the lines nodes
-        :type points: List[GeoPoint]
-        :param args: parameters for AbstractDBObject initialisation
-        :type args: List()
-        :param kwargs: parameters for AbstractDBObject initialisation
-        :type kwargs: Dict()
-        :return: Nothing
-        :raises ValueError: Raises ValueError if one of the types cannot be converted
         """
         for pnt in points:
             if type(pnt) is not GeoPoint:
@@ -371,27 +322,13 @@ class Line(Base, AbstractDBObject):
         if self.name_col == "":
             self.name_col = "line_{}".format(self.id)
 
-    def __repr__(self):
-        # type: () -> str
-        """
-        Returns a text-representation of the line
-
-        :return: Returns a text-representation of the line
-        :rtype: str
-        """
+    def __repr__(self) -> str:
         text = "<Line(id='{}', closed='{}', horizon='{}'\n)>".format(self.id, self.closed, str(self.horizon))
         text += AbstractDBObject.__repr__(self)
         text += "\npoints=\n" + str(self.points)
         return text
 
-    def __str__(self):
-        # type: () -> str
-        """
-        Returns a text-representation of the line
-
-        :return: Returns a text-representation of the line
-        :rtype: str
-        """
+    def __str__(self) -> str:
         text = "[{}] {} - {}\n".format(self.id, "closed" if self.closed else "not closed", str(self.horizon))
         text += AbstractDBObject.__str__(self)
         text += "\npoints:\n"
@@ -402,19 +339,16 @@ class Line(Base, AbstractDBObject):
         return text
 
     @property
-    def is_closed(self):
-        # type: () -> bool
+    def is_closed(self) -> bool:
         """
         True if the line is closed else False
 
-        :type: bool
         :raises ValueError: if value is not compatible to type bool
         """
         return self.closed
 
     @is_closed.setter
-    def is_closed(self, value):
-        # type: (bool) -> None
+    def is_closed(self, value: bool) -> None:
         """
         see getter
         """
@@ -422,19 +356,16 @@ class Line(Base, AbstractDBObject):
         self.closed = bool(value)
 
     @property
-    def horizon(self):
-        # type: () -> StratigraphicObject
+    def horizon(self) -> StratigraphicObject:
         """
         The stratigraphy of the line object
 
-        :type: StratigraphicObject
         :raises TypeError: Raises TypeError if value is not of type Stratigraphy
         """
         return self.hor
 
     @horizon.setter
-    def horizon(self, value):
-        # type: (StratigraphicObject) -> None
+    def horizon(self, value: StratigraphicObject) -> None:
         """
         see getter
         """
@@ -450,15 +381,12 @@ class Line(Base, AbstractDBObject):
         # check stratigraphy
         self.__check_line()
 
-    def insert_point(self, point, position):
-        # type: (GeoPoint, int) -> None
+    def insert_point(self, point: GeoPoint, position: int) -> None:
         """
-        Insert a point in the line at the committed index.
+        Insert a point at the committed index.
 
         :param point: point to be inserted in the line
-        :type point: GeoPoint
-        :param position: Index, where points should be inserted in the line
-        :type position: int
+        :param position: Index, where points should be inserted in the line (starting with 0)
         :return: Nothing
         :raises TypeError: Raises TypeError if point is not of type GeoPoint
         :raises ValueError: Raises ValueError if position is not of type int or cannot be converted to int
@@ -473,15 +401,12 @@ class Line(Base, AbstractDBObject):
         self.__remove_doubled_points()
         self.__check_line()
 
-    def insert_points(self, points, position):
-        # type: (List[GeoPoint], int) -> None
+    def insert_points(self, points: List[GeoPoint], position: int) -> None:
         """
-        Insert a points in the line at the committed index.
+        Insert a list of points at the committed index.
 
-        :param points: List of points to be inserted in the line
-        :type points: List[GeoPoint]
-        :param position: Index, where points should be inserted in the line
-        :type position: int
+        :param points: List of points
+        :param position: Index, where points should be inserted
         :return: Nothing
         :raises TypeError: Raises TypeError if one of the points is not of type GeoPoint
         :raises ValueError: Raises ValueError if position is not of type int or cannot be converted to int
@@ -502,26 +427,21 @@ class Line(Base, AbstractDBObject):
         self.__remove_doubled_points()
         self.__check_line()
 
-    def get_point_index(self, point):
-        # type: (GeoPoint) -> int
+    def get_point_index(self, point: GeoPoint) -> int:
         """
         Returns the index of the given point in the line
 
         :param point: point which has to be looked up
-        :type point: GeoPoint
-        :return: Index of the point in the line
-        :rtype: int
+        :return: Index in the line
         :raises ValueError: Raises ValueError if committed point is not part of the line
         """
         return self.points.index(point)
 
-    def delete_point(self, point):
-        # type: (GeoPoint) -> None
+    def delete_point(self, point: GeoPoint) -> None:
         """
         Deletes the point from the line
 
         :param point: GeoPoint object which should be deleted
-        :type point: GeoPoint
         :return: Nothing
         :raises TypeError: Raises TypeError if point is not of type GeoPoint
         :raises ValueError: Raises ValueError the point is not part of the line
@@ -538,17 +458,13 @@ class Line(Base, AbstractDBObject):
         self.__remove_doubled_points()
         self.__check_line()
 
-    def delete_point_by_coordinates(self, easting, northing, altitude=0):
-        # type: (float, float, float) -> None
+    def delete_point_by_coordinates(self, easting: float, northing: float, altitude: float = 0) -> None:
         """
         Deletes a point with the given coordinates from the line
 
         :param easting: easting value of the point to be deleted
-        :type easting: float
         :param northing: northing value of the point to be deleted
-        :type northing: float
         :param altitude: altitude value of the point to be deleted (only necessary if point has z-values!)
-        :type altitude: float
         :return: Nothing
         :raises ValueError: Raises ValueError if one parameter is not compatible to type float or no point can be found
         """
@@ -572,8 +488,7 @@ class Line(Base, AbstractDBObject):
 
         raise ValueError('Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude))
 
-    def __check_line(self):
-        # type: () -> None
+    def __check_line(self) -> None:
         """
         Checks the line for inconsistencies.
         Current checks:
@@ -584,8 +499,7 @@ class Line(Base, AbstractDBObject):
         for point in self.points:
             point.horizon = self.horizon
 
-    def __remove_doubled_points(self):
-        # type: () -> None
+    def __remove_doubled_points(self) -> None:
         """
         remove points with the same coordinates, if they follow up each other in the points list.
 
@@ -614,24 +528,20 @@ class Line(Base, AbstractDBObject):
         self.points.reorder()
 
     @classmethod
-    def load_in_extent_from_db(cls, session, min_easting, max_easting, min_northing, max_northing):
-        # type: (Session, float, float, float, float) -> List[Line]
+    def load_in_extent_from_db(cls, session: Session, min_easting: float, max_easting: float, min_northing: float,
+                               max_northing: float) -> List["Line"]:
         """
         Returns all lines with at least on point inside the given extent in the database connected to the SQLAlchemy
-        Session session. This function overloads the AbstractGeoObject.load_in_extent_from_db(...) function.
+        Session session. Overloads the
+        :meth:`AbstractGeoObject.load_in_extent_from_db()<geological_toolbox.geo_object.AbstractGeoObject.load_in_extent_from_db>`
+        function.
 
         :param min_easting: minimal easting of extent
-        :type min_easting: float
         :param max_easting: maximal easting of extent
-        :type max_easting: float
         :param min_northing: minimal northing of extent
-        :type min_northing: float
         :param max_northing: maximal northing of extent
-        :type max_northing: float
         :param session: represents the database connection as SQLAlchemy Session
-        :type session: Session
         :return: a list of lines representing the result of the database query
-        :rtype: List[Line]
         :raises ValueError: if one of the extension values is not compatible to type float
         :raises TypeError: if session is not of type SQLAlchemy Session
         """

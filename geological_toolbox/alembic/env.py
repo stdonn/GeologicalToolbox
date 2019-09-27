@@ -14,7 +14,7 @@ from sqlalchemy import pool
 local_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # script directory
 lib_path = os.path.abspath(os.path.join(local_dir, ".."))
 sys.path.append(lib_path)
-DBObjects_mod = SourceFileLoader("DatabaseObjects", os.path.join(lib_path, "DatabaseObjects.py")).load_module()
+DBObjects_mod = SourceFileLoader("DatabaseObjects", os.path.join(lib_path, "database_objects.py")).load_module()
 
 config = context.config
 

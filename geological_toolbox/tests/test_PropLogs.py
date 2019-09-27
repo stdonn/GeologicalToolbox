@@ -5,12 +5,12 @@ This is a test module for the Resources.PropertyLogs-Module classes using unitte
 
 import unittest
 
-from GeologicalToolbox.DBHandler import DBHandler
-from GeologicalToolbox.Geometries import GeoPoint
-from GeologicalToolbox.Properties import Property, PropertyTypes
-from GeologicalToolbox.Stratigraphy import StratigraphicObject
-from GeologicalToolbox.WellLogs import WellLog, WellLogValue
-from GeologicalToolbox.Wells import Well
+from geological_toolbox.db_handler import DBHandler
+from geological_toolbox.geometries import GeoPoint
+from geological_toolbox.properties import Property, PropertyTypes
+from geological_toolbox.stratigraphy import StratigraphicObject
+from geological_toolbox.well_logs import WellLog, WellLogValue
+from geological_toolbox.wells import Well
 
 
 class TestWellLogValueClass(unittest.TestCase):
@@ -26,31 +26,31 @@ class TestWellLogValueClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', echo=False)
+        self.handler = DBHandler(connection="sqlite://", echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database
         self.log_values = [
             {
-                'depth': 200,
-                'value': 123,
-                'name': 'log name',
-                'comment': 'unknown'
+                "depth": 200,
+                "value": 123,
+                "name": "log name",
+                "comment": "unknown"
             }, {
-                'depth': 200.324,
-                'value': 12.5455,
-                'name': 'log name 2',
-                'comment': 'unknown'
+                "depth": 200.324,
+                "value": 12.5455,
+                "name": "log name 2",
+                "comment": "unknown"
             }, {
-                'depth': '2345.54',
-                'value': '641.54',
-                'name': '',
-                'comment': ''
+                "depth": "2345.54",
+                "value": "641.54",
+                "name": "",
+                "comment": ""
             }
         ]
 
         for value in self.log_values:
-            well_log_value = WellLogValue(value['depth'], value['value'], self.session, value['name'], value['comment'])
+            well_log_value = WellLogValue(value["depth"], value["value"], self.session, value["name"], value["comment"])
             well_log_value.save_to_db()
 
     def test_WellLogValue_init(self):
@@ -65,10 +65,10 @@ class TestWellLogValueClass(unittest.TestCase):
         self.assertEqual(len(log_values), 3)
         self.assertEqual(log_values[0].depth, 200)
         self.assertEqual(log_values[1].value, 12.5455)
-        self.assertEqual(log_values[1].name, 'log name 2')
+        self.assertEqual(log_values[1].name, "log name 2")
         self.assertEqual(log_values[2].depth, 2345.54)
         self.assertEqual(log_values[2].value, 641.54)
-        self.assertEqual(log_values[0].comment, 'unknown')
+        self.assertEqual(log_values[0].comment, "unknown")
 
     def test_setter_and_getter(self):
         # type: () -> None
@@ -129,35 +129,35 @@ class TestWellLogClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', echo=False)
+        self.handler = DBHandler(connection="sqlite://", echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database
         self.well = {
-            'name': 'Well_1',
-            'short_name': 'W1',
-            'reference': 'none',
-            'east': 1234.56,
-            'north': 123.45,
-            'altitude': 10.5,
-            'depth': 555,
-            'log_values': ((10, 4, '', ''),
-                           (15, '45.4', 'name 1', 'Comment 1'),
-                           (16, 34.3, '', ''),
-                           (17, 234, '', 'Comment 2'),
-                           (5, '34.4', '', 'Comment 3'))
+            "well_name": "Well_1",
+            "short_name": "W1",
+            "reference": "none",
+            "east": 1234.56,
+            "north": 123.45,
+            "altitude": 10.5,
+            "depth": 555,
+            "log_values": ((10, 4, "", ""),
+                           (15, "45.4", "name 1", "Comment 1"),
+                           (16, 34.3, "", ""),
+                           (17, 234, "", "Comment 2"),
+                           (5, "34.4", "", "Comment 3"))
         }
 
-        well = Well(self.well['name'], self.well['short_name'], self.well['depth'], self.well['reference'],
-                    self.well['east'], self.well['north'], self.well['altitude'], self.session, '', '')
+        well = Well(self.well["well_name"], self.well["short_name"], self.well["depth"], self.well["reference"],
+                    self.well["east"], self.well["north"], self.well["altitude"], self.session, "", "")
         well.save_to_db()
 
-        logging = WellLog('logging', 'unit name', self.session, '', '')
+        logging = WellLog("logging", "unit name", self.session, "", "")
         logging.save_to_db()
 
         well.add_log(logging)
 
-        for value in self.well['log_values']:
+        for value in self.well["log_values"]:
             logging.insert_log_value(WellLogValue(value[0], value[1], self.session, value[2], value[3]))
 
     def test_WellLogValue_init(self):
@@ -172,10 +172,10 @@ class TestWellLogClass(unittest.TestCase):
         self.assertEqual(len(logging.log_values), 5)
         self.assertEqual(logging.log_values[0].depth, 5)
         self.assertEqual(logging.log_values[1].value, 4)
-        self.assertEqual(logging.log_values[2].name, 'name 1')
+        self.assertEqual(logging.log_values[2].name, "name 1")
         self.assertEqual(logging.log_values[2].depth, 15)
         self.assertEqual(logging.log_values[2].value, 45.4)
-        self.assertEqual(logging.log_values[4].comment, 'Comment 2')
+        self.assertEqual(logging.log_values[4].comment, "Comment 2")
 
     def test_setter_and_getter(self):
         # type: () -> None
@@ -191,21 +191,21 @@ class TestWellLogClass(unittest.TestCase):
         logging = logging[0]
         self.assertEqual(logging.log_values[0].depth, 5)
         self.assertEqual(logging.log_values[1].value, 4)
-        self.assertEqual(logging.log_values[2].name, 'name 1')
-        self.assertEqual(logging.log_values[4].comment, 'Comment 2')
-        self.assertEqual(logging.property_name, 'logging')
-        self.assertEqual(logging.property_unit, 'unit name')
+        self.assertEqual(logging.log_values[2].name, "name 1")
+        self.assertEqual(logging.log_values[4].comment, "Comment 2")
+        self.assertEqual(logging.property_name, "logging")
+        self.assertEqual(logging.property_unit, "unit name")
 
-        logging.property_name = 'new log name'
-        logging.property_unit = u'km²'
+        logging.property_name = "new log name"
+        logging.property_unit = u"km²"
 
         del logging
 
         logging = WellLog.load_all_from_db(self.session)[0]
-        self.assertEqual(logging.property_name, 'new log name')
-        self.assertEqual(logging.property_unit, u'km²')
+        self.assertEqual(logging.property_name, "new log name")
+        self.assertEqual(logging.property_unit, u"km²")
 
-        longname = 4 * 'abcdefghijklmnopqrstuvwxyz'
+        longname = 4 * "abcdefghijklmnopqrstuvwxyz"
         logging.property_name = longname
         logging.property_unit = longname
 
@@ -224,8 +224,8 @@ class TestWellLogClass(unittest.TestCase):
         :raises AssertionError: Raises AssertionError if a test fails
         """
         logging = WellLog.load_all_from_db(self.session)[0]
-        logging.insert_log_value(WellLogValue(14.3, 1234, self.session, '', ''))
-        self.assertRaises(ValueError, logging.insert_log_value, WellLogValue(556, 1234, self.session, '', ''))
+        logging.insert_log_value(WellLogValue(14.3, 1234, self.session, "", ""))
+        self.assertRaises(ValueError, logging.insert_log_value, WellLogValue(556, 1234, self.session, "", ""))
 
         del logging
 
@@ -234,20 +234,22 @@ class TestWellLogClass(unittest.TestCase):
         self.assertEqual(14.3, logging.log_values[2].depth)
         self.assertEqual(1234, logging.get_value_by_depth(14.3).value)
         self.assertRaises(ValueError, logging.get_value_by_depth, 13)
-        self.assertRaises(ValueError, logging.get_value_by_depth, 'test')
-        self.assertRaises(TypeError, logging.insert_log_value, 'abcde')
+        self.assertRaises(ValueError, logging.get_value_by_depth, "test")
+        self.assertRaises(TypeError, logging.insert_log_value, "abcde")
 
+        # noinspection PyTypeChecker
         logvalues = [
-            WellLogValue(123, 4152, self.session, '', ''),
-            WellLogValue(156.34, 3456, self.session, '', ''),
-            WellLogValue(16.2, 34.43, self.session, '', ''),
-            WellLogValue(15.8, '234.2', self.session, '', '')
+            WellLogValue(123, 4152, self.session, "", ""),
+            WellLogValue(156.34, 3456, self.session, "", ""),
+            WellLogValue(16.2, 34.43, self.session, "", ""),
+            WellLogValue(15.8, "234.2", self.session, "", "")
         ]
 
         logging.insert_multiple_log_values(logvalues)
-        self.assertRaises(TypeError, logging.insert_multiple_log_values, logvalues.append('abcde'))
+        # noinspection PyTypeChecker
+        self.assertRaises(TypeError, logging.insert_multiple_log_values, logvalues.append("abcde"))
         logvalues.pop()
-        logvalues.append(WellLogValue(1234, 345, self.session, '', ''))
+        logvalues.append(WellLogValue(1234, 345, self.session, "", ""))
         self.assertRaises(ValueError, logging.insert_multiple_log_values, logvalues)
 
         del logging
@@ -293,7 +295,7 @@ class TestPropertyClass(unittest.TestCase):
         :return: None
         """
         # initialise a in-memory sqlite database
-        self.handler = DBHandler(connection='sqlite://', echo=False)
+        self.handler = DBHandler(connection="sqlite://", echo=False)
         self.session = self.handler.get_session()
 
         # add test data to the database
@@ -301,15 +303,9 @@ class TestPropertyClass(unittest.TestCase):
                          "test", "")
         point.save_to_db()
 
-        prop = Property("test prop", "test unit", self.session)
-        prop.property_type = PropertyTypes.INT
-        point.add_property(prop)
-        prop = Property("test prop 2", "test unit 2", self.session)
-        prop.property_type = PropertyTypes.FLOAT
-        point.add_property(prop)
-        prop = Property("test prop 3", "test unit 3", self.session)
-        prop.property_type = PropertyTypes.STRING
-        point.add_property(prop)
+        point.add_property(Property(0, PropertyTypes.INT, "test prop", "test unit", self.session))
+        point.add_property(Property(0, PropertyTypes.FLOAT, "test prop 2", "test unit 2", self.session))
+        point.add_property(Property(0, PropertyTypes.STRING, "test prop 3", "test unit 3", self.session))
 
     def test_init(self):
         # type: () -> None
@@ -357,7 +353,7 @@ class TestPropertyClass(unittest.TestCase):
         point = GeoPoint.load_all_from_db(self.session)[0]
         self.assertEqual(342, point.properties[0].property_value)
         self.assertEqual(345.34, point.properties[1].property_value)
-        self.assertEqual(None, point.properties[2].property_value) # type changed to PropertyTypes.FLOAT
+        self.assertEqual(None, point.properties[2].property_value)  # type changed to PropertyTypes.FLOAT
         point.properties[2].property_type = PropertyTypes.STRING
         self.assertEqual("Test", point.properties[2].property_value)
         self.assertEqual("some text information", point.properties[1].name)
@@ -373,5 +369,5 @@ class TestPropertyClass(unittest.TestCase):
         self.handler.close_last_session()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
