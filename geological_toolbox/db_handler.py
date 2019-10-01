@@ -8,8 +8,8 @@ import inspect
 import os
 import sqlalchemy as sq
 
-from alembic import script
-from alembic.config import main as alembic_main, Config
+from alembic import command, script
+from alembic.config import Config
 from alembic.runtime import migration
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
@@ -63,6 +63,14 @@ class DBHandler(object):
         """
         local_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # script directory
         alembic_cfg = Config(os.path.abspath(os.path.join(local_dir, "alembic.ini")))
+
+        # Alembic has problems, when called inside a library,
+        # therefore we change the current folder with its absolute path
+        alembic_cfg.set_main_option(
+            "script_location",
+            os.path.abspath(os.path.join(local_dir, alembic_cfg.get_main_option("script_location", "alembic")))
+        )
+
         directory = script.ScriptDirectory.from_config(alembic_cfg)
         with self.__engine.begin() as connection:
             context = migration.MigrationContext.configure(connection)
@@ -76,12 +84,18 @@ class DBHandler(object):
         :return: Nothing
         """
         self.close_last_session()
-        alembic_args = [
-            "--raiseerr",
-            "-x", "db_url={}".format(self.__connection),
-            "upgrade", "head"
-        ]
-        alembic_main(argv=alembic_args)
+
+        local_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # script directory
+        alembic_cfg = Config(os.path.abspath(os.path.join(local_dir, "alembic.ini")))
+
+        # Alembic has problems, when called inside a library,
+        # therefore we change the current alembic folder with its absolute path
+        alembic_cfg.set_main_option(
+            "script_location",
+            os.path.abspath(os.path.join(local_dir, alembic_cfg.get_main_option("script_location", "alembic")))
+        )
+        alembic_cfg.set_main_option("sqlalchemy.url", self.__connection)
+        command.upgrade(alembic_cfg, "head")
 
     def create_new_session(self) -> Session:
         """
