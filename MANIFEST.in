@@ -1,6 +1,2 @@
 include LICENSE
 include README.md
-
-# include documentation
-recursive-include doc/build/html *
-recursive-include doc/build/man *
