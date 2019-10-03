@@ -291,9 +291,6 @@ class Line(Base, AbstractDBObject):
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
     hor = relationship("StratigraphicObject")
 
-    # make the lines unique -> line name
-    sq.UniqueConstraint(AbstractGeoObject.name_col, name="u_line_constraint")
-
     # add GeoPoint relation, important is the ordering by line_pos value
     # collection_class function automatically reorders this value in case of insertion or deletion of points
     points = relationship("GeoPoint", order_by=GeoPoint.line_pos, collection_class=ordering_list('line_pos'),
