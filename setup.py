@@ -84,7 +84,7 @@ setup(
     #   py_modules=["my_module"],
     #
     packages=["geological_toolbox"],  # Required
-    package_data={"geological_toolbox": ["alembic.ini", "alembic/**/", "alembic/versions/*.py"]},
+    package_data={"geological_toolbox": ["alembic.ini", "alembic/env.py", "alembic/versions/*.py"]},
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is

@@ -346,6 +346,7 @@ class Well(Base, AbstractGeoObject):
 
         try:
             self.marker.remove(marker)
+            WellMarker.delete_from_db(marker, self.session)
         except ValueError as e:
             raise ValueError(str(e) + "\nWellMarker with ID " + str(marker.id) + " not found in list!")
 
