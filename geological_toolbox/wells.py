@@ -26,7 +26,7 @@ class WellMarker(Base, AbstractDBObject):
     """
     __tablename__ = "well_marker"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence("wellmarker_id_seq"), primary_key=True)
+    id = sq.Column(sq.INTEGER, sq.Sequence("well_marker_id_seq"), primary_key=True)
     drill_depth = sq.Column(sq.FLOAT)
 
     # define relationship to stratigraphic table
@@ -129,7 +129,7 @@ class WellMarker(Base, AbstractDBObject):
     @classmethod
     def load_all_by_stratigraphy_from_db(cls, horizon: StratigraphicObject, session: Session) -> List["WellMarker"]:
         """
-        Returns all WellMarker in the database which are related to the StratigraphicObject 'horizon'
+        Returns all WellMarker in the database which are related to the StratigraphicObject "horizon"
 
         :param horizon: stratigraphic object for the database query
         :param session: represents the database connection as SQLAlchemy Session
@@ -142,7 +142,7 @@ class WellMarker(Base, AbstractDBObject):
                                                    max_easting: float, min_northing: float, max_northing: float,
                                                    session: Session) -> List["WellMarker"]:
         """
-        Returns all WellMarker in the database which are related to the StratigraphicObject 'horizon' and are located
+        Returns all WellMarker in the database which are related to the StratigraphicObject "horizon" and are located
         within the given extent
 
         :param horizon: stratigraphic object for the database query
@@ -176,7 +176,7 @@ class Well(Base, AbstractGeoObject):
     """
     __tablename__ = "wells"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence("well_id_seq"), primary_key=True)
+    id = sq.Column(sq.INTEGER, sq.Sequence("wells_id_seq"), primary_key=True)
     drill_depth = sq.Column(sq.FLOAT)
     wellname = sq.Column(sq.VARCHAR(100), unique=True)
     shortwellname = sq.Column(sq.VARCHAR(100), default="")
@@ -205,7 +205,7 @@ class Well(Base, AbstractGeoObject):
         AbstractGeoObject.__init__(self, *args, **kwargs)
 
     def __repr__(self) -> str:
-        return "<Well(id='{}', well_name='{}', short_name='{}', depth='{}', marker='{}', logs='{}' + 'comment='{}'," + \
+        return "<Well(id='{}', well_name='{}', short_name='{}', depth='{}', marker='{}', logs='{}', comment='{}'," + \
                " marker='{}')>".format(self.id, self.well_name, self.short_name, self.easting, self.northing,
                                        self.altitude, self.depth, self.comment, repr(self.marker))
 
@@ -381,7 +381,7 @@ class Well(Base, AbstractGeoObject):
             raise ValueError(str(e) + "\nWellLog with ID " + str(log.id) + " not found in list!")
 
     @classmethod
-    def load_by_wellname_from_db(cls, name: str, session: Session) -> None:
+    def load_by_wellname_from_db(cls, name: str, session: Session) -> "Well" or None:
         """
         Returns the well with the given name in the database connected to the SQLAlchemy Session session
 

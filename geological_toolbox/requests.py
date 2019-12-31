@@ -52,7 +52,7 @@ class Requests:
             try:
                 extent[i] = float(extent[i])
             except ValueError as e:
-                raise ValueError('At least on extent element cannot be converted to float!\n{}'.format(e))
+                raise ValueError("At least on extent element cannot be converted to float!\n{}".format(e))
         if extent[0] > extent[1]:
             raise ListOrderException("min easting > max easting")
         if extent[2] > extent[3]:
@@ -60,7 +60,7 @@ class Requests:
 
     @staticmethod
     def create_thickness_point(sorted_dict: dict, well_id: int, marker_1: int, marker_2: int, session: Session,
-                               use_faulted: bool = False, fault_name: str = '',
+                               use_faulted: bool = False, fault_name: str = "",
                                add_properties: Tuple = tuple()) -> GeoPoint:
         """
         Generate a new GeoPoint with thickness property from 2 well marker
@@ -100,7 +100,7 @@ class Requests:
             point.add_property(faulted)
         for prop in add_properties:
             if len(prop) < 4:
-                raise ValueError('property tuple has less than 4 entries!')
+                raise ValueError("property tuple has less than 4 entries!")
             new_property = Property(prop[0], PropertyTypes[prop[1]], prop[2], prop[3], session)
             point.add_property(new_property)
         return point
@@ -120,7 +120,7 @@ class Requests:
         :param extent: extension rectangle as list which borders the well distribution. The list has the following
                order: (min easting, max easting, min northing, max northing)
         :param use_faulted: if True, also sections with faults between marker_1 and marker_2 are returned
-        :param fault_name: unit name of fault marker (default: 'Fault')
+        :param fault_name: unit name of fault marker (default: "Fault")
         :return: A list of GeoPoints each with a thickness property
         :raises AttributeError: if marker_1 and marker_2 are equal
         :raises DatabaseException: if the database query results in less than 2 marker of a well_id
@@ -154,7 +154,7 @@ class Requests:
             raise TypeError("session is not of type SQLAlchemy Session")
 
         if marker_1 == marker_2:
-            raise AttributeError('marker_1 and marker_2 cannot be equal!')
+            raise AttributeError("marker_1 and marker_2 cannot be equal!")
 
         if extent is not None:
             Requests.check_extent(extent)
@@ -200,19 +200,19 @@ class Requests:
         geopoints = list()
         for well_id in sorted_dict:
             if len(sorted_dict[well_id]) < 2:
-                raise DatabaseException('Not enough well marker in dictionary')
+                raise DatabaseException("Not enough well marker in dictionary")
             if len(sorted_dict[well_id]) == 2:
                 sorted_dict[well_id][0].session = session
                 try:
                     if summarise_multiple:
                         point = Requests.create_thickness_point(
                             sorted_dict, well_id, 0, 1, session, use_faulted, fault_name,
-                            ((0, "INT", 'summarised', 'bool'),))
+                            ((0, "INT", "summarised", "bool"),))
                         geopoints.append(point)
                     else:
                         point = Requests.create_thickness_point(
                             sorted_dict, well_id, 0, 1, session, use_faulted, fault_name,
-                            ((0, "INT", 'multiple marker', 'bool'),))
+                            ((0, "INT", "multiple marker", "bool"),))
                         geopoints.append(point)
                 # FaultException -> do nothing except catching the exception
                 except FaultException:
@@ -276,7 +276,7 @@ class Requests:
     @staticmethod
     def interpolate_geopoints(points: GeoPoint, property_name: str, method: str) -> None:
         """
-        Interpolate the property values of the given GeoPoints using the interpolation method 'method'
+        Interpolate the property values of the given GeoPoints using the interpolation method "method"
 
         .. todo:: - Integrate functionality
                   - define interpolation methods

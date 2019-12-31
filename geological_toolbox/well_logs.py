@@ -26,7 +26,7 @@ class WellLogValue(Base, AbstractDBObject):
     # define db table stratigraphic_name and columns
     __tablename__ = "logging_association"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence("loggingassoc_id_seq"), primary_key=True)
+    id = sq.Column(sq.INTEGER, sq.Sequence("logging_association_id_seq"), primary_key=True)
     log_depth = sq.Column(sq.FLOAT)
     log_value = sq.Column(sq.FLOAT)
 
@@ -170,10 +170,10 @@ class WellLog(Base, AbstractLogClass):
 
     def get_value_by_depth(self, depth: float) -> WellLogValue or None:
         """
-        Returns the value at depth 'depth'
+        Returns the value at depth "depth"
 
         :param depth: depth of the requested marker
-        :return: Returns the value at depth 'depth'
+        :return: Returns the value at depth "depth"
         :raises ValueError: if no marker was found for the committed depth or depth is not compatible to float
         """
         depth = float(depth)

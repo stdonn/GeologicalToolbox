@@ -28,22 +28,22 @@ class GeoPoint(Base, AbstractGeoObject):
     :raises ValueError: if has_z is not compatible to type bool
     """
     # define db table name and columns
-    __tablename__ = 'geopoints'
+    __tablename__ = "geopoints"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence('geopoints_id_seq'), primary_key=True)
+    id = sq.Column(sq.INTEGER, sq.Sequence("geopoints_id_seq"), primary_key=True)
     has_z = sq.Column(sq.BOOLEAN, default=False)
-    horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'), default=-1)
+    horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey("stratigraphy.id"), default=-1)
 
     # define relationship to stratigraphic table
     hor = relationship("StratigraphicObject")
 
-    line_id = sq.Column(sq.INTEGER, sq.ForeignKey('lines.id'), default=None, nullable=True)
+    line_id = sq.Column(sq.INTEGER, sq.ForeignKey("lines.id"), default=None, nullable=True)
     line_pos = sq.Column(sq.INTEGER, default=-1)
 
     # make the points unique -> coordinates + horizon + belongs to one line?
     sq.UniqueConstraint(AbstractGeoObject.east, AbstractGeoObject.north, AbstractGeoObject.alt, horizon_id,
                         AbstractGeoObject.name_col, line_id, line_pos, name="u_point_constraint")
-    sq.Index('geopoint_coordinate_index', AbstractGeoObject.east, AbstractGeoObject.north)
+    sq.Index("geopoint_coordinate_index", AbstractGeoObject.east, AbstractGeoObject.north)
 
     # add Property relation
     # order by property name
@@ -97,7 +97,7 @@ class GeoPoint(Base, AbstractGeoObject):
         see getter
         """
         if (value is not None) and (type(value) is not StratigraphicObject):
-            raise TypeError('type of committed value ({}) is not StratigraphicObject!'.format(type(value)))
+            raise TypeError("type of committed value ({}) is not StratigraphicObject!".format(type(value)))
 
         if value is None:
             self.hor = None
@@ -134,7 +134,7 @@ class GeoPoint(Base, AbstractGeoObject):
         :raises TypeError: if log is not of type Property
         """
         if type(prop) is not Property:
-            raise TypeError('property {} is not of type Property!'.format(str(prop)))
+            raise TypeError("property {} is not of type Property!".format(str(prop)))
 
         self.properties.append(prop)
 
@@ -148,12 +148,12 @@ class GeoPoint(Base, AbstractGeoObject):
         :raises ValueError: if log is not part of self.properties
         """
         if type(prop) is not Property:
-            raise TypeError('property {} is not of type Property!'.format(str(prop)))
+            raise TypeError("property {} is not of type Property!".format(str(prop)))
 
         try:
             self.properties.remove(prop)
         except ValueError as e:
-            raise ValueError(str(e) + '\nProperty with ID ' + str(prop.id) + ' not found in list!')
+            raise ValueError(str(e) + "\nProperty with ID " + str(prop.id) + " not found in list!")
 
     def has_property(self, property_name: str) -> bool:
         """
@@ -282,19 +282,19 @@ class Line(Base, AbstractDBObject):
     """
 
     # define db table name and columns
-    __tablename__ = 'lines'
+    __tablename__ = "lines"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence('line_id_seq'), primary_key=True)
+    id = sq.Column(sq.INTEGER, sq.Sequence("lines_id_seq"), primary_key=True)
     closed = sq.Column(sq.BOOLEAN)
 
     # set stratigraphy of the line
-    horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey('stratigraphy.id'))
+    horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey("stratigraphy.id"))
     hor = relationship("StratigraphicObject")
 
     # add GeoPoint relation, important is the ordering by line_pos value
     # collection_class function automatically reorders this value in case of insertion or deletion of points
-    points = relationship("GeoPoint", order_by=GeoPoint.line_pos, collection_class=ordering_list('line_pos'),
-                          backref="line", primaryjoin='Line.id==GeoPoint.line_id',
+    points = relationship("GeoPoint", order_by=GeoPoint.line_pos, collection_class=ordering_list("line_pos"),
+                          backref="line", primaryjoin="Line.id==GeoPoint.line_id",
                           cascade="all, delete, delete-orphan")
 
     def __init__(self, closed: bool, horizon: StratigraphicObject, points: List[GeoPoint], *args, **kwargs) -> None:
@@ -303,7 +303,7 @@ class Line(Base, AbstractDBObject):
         """
         for pnt in points:
             if type(pnt) is not GeoPoint:
-                raise ValueError('At least on point in points is not of type GeoPoint!')
+                raise ValueError("At least on point in points is not of type GeoPoint!")
 
         self.is_closed = bool(closed)
         self.horizon = horizon
@@ -367,7 +367,7 @@ class Line(Base, AbstractDBObject):
         see getter
         """
         if (value is not None) and (type(value) is not StratigraphicObject):
-            raise TypeError('type of committed value ({}) is not StratigraphicObject!'.format(type(value)))
+            raise TypeError("type of committed value ({}) is not StratigraphicObject!".format(type(value)))
 
         if value is None:
             self.hor = None
@@ -390,7 +390,7 @@ class Line(Base, AbstractDBObject):
         """
         position = int(position)
         if type(point) is not GeoPoint:
-            raise TypeError('point {} is not of type GeoPoint!'.format(str(point)))
+            raise TypeError("point {} is not of type GeoPoint!".format(str(point)))
         else:
             self.points.insert(position, point)
 
@@ -412,7 +412,7 @@ class Line(Base, AbstractDBObject):
 
         for pnt in points:
             if type(pnt) is not GeoPoint:
-                raise TypeError('At least on point in points is not of type GeoPoint!')
+                raise TypeError("At least on point in points is not of type GeoPoint!")
 
         # use slicing for points insert
         if len(self.points) <= position:
@@ -444,12 +444,12 @@ class Line(Base, AbstractDBObject):
         :raises ValueError: Raises ValueError the point is not part of the line
         """
         if type(point) is not GeoPoint:
-            raise TypeError('point {} is not of type GeoPoint!'.format(str(point)))
+            raise TypeError("point {} is not of type GeoPoint!".format(str(point)))
 
         try:
             self.points.remove(point)
         except ValueError as e:
-            raise ValueError(str(e) + '\nGeoPoint with ID ' + str(point.id) + ' not found in list!')
+            raise ValueError(str(e) + "\nGeoPoint with ID " + str(point.id) + " not found in list!")
 
         # check doubled values and stratigraphy in the line
         self.__remove_doubled_points()
@@ -470,7 +470,7 @@ class Line(Base, AbstractDBObject):
             northing = float(northing)
             altitude = float(altitude)
         except ValueError:
-            raise ValueError('On of the input coordinates is not of type float!')
+            raise ValueError("On of the input coordinates is not of type float!")
 
         # iterate over a copy of the list to avoid iteration issues caused by the deletion of values
         for pnt in self.points[:]:
@@ -483,7 +483,7 @@ class Line(Base, AbstractDBObject):
                 self.__check_line()
                 return
 
-        raise ValueError('Point not found with coordinates {0}/{1}/{2}'.format(easting, northing, altitude))
+        raise ValueError("Point not found with coordinates {0}/{1}/{2}".format(easting, northing, altitude))
 
     def __check_line(self) -> None:
         """

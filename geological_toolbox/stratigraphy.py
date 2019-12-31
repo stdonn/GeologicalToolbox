@@ -22,9 +22,9 @@ class StratigraphicObject(Base, AbstractDBObject):
     :raises ValueError: if age is not compatible to float
     """
     # define db table name and columns
-    __tablename__ = 'stratigraphy'
+    __tablename__ = "stratigraphy"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence('strat_id_seq'), primary_key=True)
+    id = sq.Column(sq.INTEGER, sq.Sequence("stratigraphy_id_seq"), primary_key=True)
     unit_name = sq.Column(sq.VARCHAR(50), unique=True)
     age = sq.Column(sq.FLOAT(), default=-1)
 

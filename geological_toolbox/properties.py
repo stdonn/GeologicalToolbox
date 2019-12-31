@@ -31,10 +31,10 @@ class Property(Base, AbstractLogClass):
     :param kwargs: parameters for AbstractLogClass initialisation
     """
     # define db table name and columns
-    __tablename__ = 'properties'
+    __tablename__ = "properties"
 
-    id = sq.Column(sq.INTEGER, sq.Sequence('properties_id_seq'), primary_key=True)
-    point_id = sq.Column(sq.INTEGER, sq.ForeignKey('geopoints.id'), default=-1)
+    id = sq.Column(sq.INTEGER, sq.Sequence("properties_id_seq"), primary_key=True)
+    point_id = sq.Column(sq.INTEGER, sq.ForeignKey("geopoints.id"), default=-1)
     prop_type = sq.Column(sq.VARCHAR(20), default="STRING")
     prop_value = sq.Column(sq.TEXT, default="")
 
