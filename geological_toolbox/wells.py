@@ -182,13 +182,13 @@ class Well(Base, AbstractGeoObject):
     shortwellname = sq.Column(sq.VARCHAR(100), default="")
 
     # define markers relationship
-    marker = relationship("WellMarker", order_by=WellMarker.drill_depth,
-                          backref="well", primaryjoin="Well.id == WellMarker.well_id",
-                          cascade="all, delete, delete-orphan")
+    marker: List[WellMarker] = relationship("WellMarker", order_by=WellMarker.drill_depth,
+                                            backref="well", primaryjoin="Well.id == WellMarker.well_id",
+                                            cascade="all, delete, delete-orphan")
 
-    logs = relationship("WellLog", order_by=WellLog.id,
-                        backref="well", primaryjoin="Well.id == WellLog.well_id",
-                        cascade="all, delete, delete-orphan")
+    logs: List[WellLog] = relationship("WellLog", order_by=WellLog.id,
+                                       backref="well", primaryjoin="Well.id == WellLog.well_id",
+                                       cascade="all, delete, delete-orphan")
 
     sq.Index("coordinate_index", AbstractGeoObject.east, AbstractGeoObject.north)
 
@@ -379,6 +379,17 @@ class Well(Base, AbstractGeoObject):
             self.logs.remove(log)
         except ValueError as e:
             raise ValueError(str(e) + "\nWellLog with ID " + str(log.id) + " not found in list!")
+
+    def get_log(self, name: str) -> WellLog or None:
+        """
+        Returns the log with log-name name or none
+        :param name: log-name for search
+        :return: log with log-name name
+        """
+        for log in self.logs:
+            if log.name == name:
+                return log
+        return None
 
     @classmethod
     def load_by_wellname_from_db(cls, name: str, session: Session) -> "Well" or None:
