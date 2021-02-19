@@ -380,16 +380,27 @@ class Well(Base, AbstractGeoObject):
         except ValueError as e:
             raise ValueError(str(e) + "\nWellLog with ID " + str(log.id) + " not found in list!")
 
-    def get_log(self, name: str) -> WellLog or None:
+    def get_log(self, log_name: str) -> WellLog or None:
         """
         Returns the log with log-name name or none
-        :param name: log-name for search
-        :return: log with log-name name
+        :param log_name: log to search
+        :return: resulting WellLog object or None
         """
         for log in self.logs:
-            if log.name == name:
+            if log.property_name == name:
                 return log
         return None
+
+    def has_log(self, log_name: str) -> bool:
+        """
+        Return true if the well has a log with name log_name, else False
+        :param log_name: name of the requested log
+        :return: true if the well has a log with name log_name, else False
+        """
+        for log in self.logs:
+            if log.property_name == name:
+                return True
+        return False
 
     @classmethod
     def load_by_wellname_from_db(cls, name: str, session: Session) -> "Well" or None:

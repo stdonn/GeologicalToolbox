@@ -3,17 +3,17 @@
 Module providing basic geometries (points and lines) for storing geological data in a database.
 """
 
-import sqlalchemy as sq
-from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm.session import Session
 from typing import List
 
+import sqlalchemy as sq
+from geological_toolbox.constants import float_precision
 from geological_toolbox.db_handler import Base, AbstractDBObject
 from geological_toolbox.geo_object import AbstractGeoObject
 from geological_toolbox.properties import Property
 from geological_toolbox.stratigraphy import StratigraphicObject
-from geological_toolbox.constants import float_precision
+from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.session import Session
 
 
 class GeoPoint(Base, AbstractGeoObject):
@@ -35,7 +35,7 @@ class GeoPoint(Base, AbstractGeoObject):
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey("stratigraphy.id"), default=-1)
 
     # define relationship to stratigraphic table
-    hor = relationship("StratigraphicObject")
+    hor: StratigraphicObject = relationship("StratigraphicObject")
 
     line_id = sq.Column(sq.INTEGER, sq.ForeignKey("lines.id"), default=None, nullable=True)
     line_pos = sq.Column(sq.INTEGER, default=-1)
@@ -47,9 +47,9 @@ class GeoPoint(Base, AbstractGeoObject):
 
     # add Property relation
     # order by property name
-    properties = relationship("Property", order_by=Property.prop_name, backref="point",
-                              primaryjoin="GeoPoint.id==Property.point_id",
-                              cascade="all, delete, delete-orphan")
+    properties: List[Property] = relationship("Property", order_by=Property.prop_name, backref="point",
+                                              primaryjoin="GeoPoint.id==Property.point_id",
+                                              cascade="all, delete, delete-orphan")
 
     def __init__(self, horizon: StratigraphicObject or None, has_z: bool, *args, **kwargs) -> None:
         """
@@ -289,13 +289,14 @@ class Line(Base, AbstractDBObject):
 
     # set stratigraphy of the line
     horizon_id = sq.Column(sq.INTEGER, sq.ForeignKey("stratigraphy.id"))
-    hor = relationship("StratigraphicObject")
+    hor: StratigraphicObject = relationship("StratigraphicObject")
 
     # add GeoPoint relation, important is the ordering by line_pos value
     # collection_class function automatically reorders this value in case of insertion or deletion of points
-    points = relationship("GeoPoint", order_by=GeoPoint.line_pos, collection_class=ordering_list("line_pos"),
-                          backref="line", primaryjoin="Line.id==GeoPoint.line_id",
-                          cascade="all, delete, delete-orphan")
+    points: List[GeoPoint] = relationship("GeoPoint", order_by=GeoPoint.line_pos,
+                                          collection_class=ordering_list("line_pos"),
+                                          backref="line", primaryjoin="Line.id==GeoPoint.line_id",
+                                          cascade="all, delete, delete-orphan")
 
     def __init__(self, closed: bool, horizon: StratigraphicObject, points: List[GeoPoint], *args, **kwargs) -> None:
         """
