@@ -387,7 +387,7 @@ class Well(Base, AbstractGeoObject):
         :return: resulting WellLog object or None
         """
         for log in self.logs:
-            if log.property_name == name:
+            if log.property_name == log_name:
                 return log
         return None
 
