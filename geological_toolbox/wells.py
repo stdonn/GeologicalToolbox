@@ -398,7 +398,7 @@ class Well(Base, AbstractGeoObject):
         :return: true if the well has a log with name log_name, else False
         """
         for log in self.logs:
-            if log.property_name == name:
+            if log.property_name == log_name:
                 return True
         return False
 
